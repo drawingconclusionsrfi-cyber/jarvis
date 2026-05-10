@@ -1,0 +1,1418 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>A·R·I·A — Reni's AI</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Share+Tech+Mono&display=swap');
+
+/* ── RESET ── */
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+/* ── ROOT VARS ── */
+:root {
+  --ac: #00d4ff;
+  --ag: rgba(0,212,255,0.35);
+  --bg: #000810;
+  --amber: #ff9500;
+  --green: #00ff88;
+}
+
+/* ── BODY ── */
+html, body {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background: var(--bg);
+  color: var(--ac);
+  font-family: 'Share Tech Mono', monospace;
+  cursor: none;
+}
+
+/* ── CUSTOM CURSOR ── */
+#cursor {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 10px;
+  height: 10px;
+  background: var(--ac);
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 99999;
+  box-shadow: 0 0 14px var(--ac), 0 0 28px var(--ac);
+  transform: translate(-50%, -50%);
+  transition: width 0.1s, height 0.1s;
+}
+
+/* ── SCANLINES ── */
+#scanlines {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 9000;
+  background: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 2px,
+    rgba(0,212,255,0.015) 2px,
+    rgba(0,212,255,0.015) 4px
+  );
+}
+
+/* ── VIGNETTE ── */
+#vignette {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 8999;
+  background: radial-gradient(ellipse at center, transparent 40%, rgba(0,0,0,0.8) 100%);
+}
+
+/* ── HUD CORNERS ── */
+.corner {
+  position: fixed;
+  width: 40px;
+  height: 40px;
+  border-color: var(--ac);
+  border-style: solid;
+  opacity: 0.5;
+  pointer-events: none;
+}
+.corner.tl { top: 16px; left: 16px; border-width: 2px 0 0 2px; }
+.corner.tr { top: 16px; right: 16px; border-width: 2px 2px 0 0; }
+.corner.bl { bottom: 16px; left: 16px; border-width: 0 0 2px 2px; }
+.corner.br { bottom: 16px; right: 16px; border-width: 0 2px 2px 0; }
+
+/* ── SIDE LABELS ── */
+.side {
+  position: fixed;
+  font-size: 8px;
+  letter-spacing: 3px;
+  color: var(--ac);
+  opacity: 0.25;
+  text-transform: uppercase;
+  white-space: nowrap;
+  pointer-events: none;
+}
+.side.left  { left: 8px; top: 50%; transform: translateY(-50%) rotate(-90deg); }
+.side.right { right: 8px; top: 50%; transform: translateY(-50%) rotate(90deg); }
+
+/* ── STATUS DOT ── */
+#sdot {
+  position: fixed;
+  top: 30px;
+  right: 60px;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--green);
+  box-shadow: 0 0 10px var(--green);
+  animation: blink 2.5s ease-in-out infinite;
+  z-index: 200;
+}
+@keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.2} }
+
+/* ── HEADER ── */
+#header {
+  position: fixed;
+  top: 20px;
+  left: 0;
+  right: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  z-index: 500;
+}
+
+#agentBtn {
+  background: rgba(255,149,0,0.1);
+  border: 1px solid var(--amber);
+  color: var(--amber);
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 2px;
+  padding: 5px 14px;
+  cursor: pointer;
+  border-radius: 2px;
+}
+#agentBtn:hover { background: rgba(255,149,0,0.2); }
+
+#titleText {
+  font-family: 'Orbitron', monospace;
+  font-size: 13px;
+  font-weight: 400;
+  letter-spacing: 8px;
+  color: var(--ac);
+  text-shadow: 0 0 20px var(--ac);
+}
+
+.hbtn {
+  background: none;
+  border: 1px solid rgba(0,212,255,0.3);
+  color: rgba(0,212,255,0.6);
+  font-size: 14px;
+  width: 30px;
+  height: 30px;
+  cursor: pointer;
+  border-radius: 2px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.hbtn:hover { background: rgba(0,212,255,0.1); color: var(--ac); }
+
+/* ── BANNER ── */
+#banner {
+  display: none;
+  position: fixed;
+  top: 60px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(255,149,0,0.1);
+  border: 1px solid rgba(255,149,0,0.5);
+  color: var(--amber);
+  font-size: 10px;
+  letter-spacing: 2px;
+  padding: 7px 18px;
+  cursor: pointer;
+  z-index: 500;
+  white-space: nowrap;
+}
+#banner.show { display: block; }
+
+/* ── TRANSCRIPT ── */
+#transcript {
+  position: fixed;
+  top: 68px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: min(500px, 86vw);
+  text-align: center;
+  font-size: 11px;
+  color: rgba(0,212,255,0.4);
+  letter-spacing: 1px;
+  z-index: 400;
+  min-height: 16px;
+}
+
+/* ── ORB WRAPPER ── */
+#orbWrap {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -52%);
+  width: 340px;
+  height: 340px;
+  z-index: 100;
+}
+
+#orbCanvas {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 340px;
+  height: 340px;
+  border-radius: 50%;
+}
+
+#orbGlow {
+  position: absolute;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  border-radius: 50%;
+  pointer-events: none;
+  transition: box-shadow 0.6s ease;
+  box-shadow:
+    0 0 40px 10px rgba(0,100,255,0.2),
+    0 0 80px 20px rgba(0,60,200,0.1),
+    inset 0 0 60px rgba(0,20,80,0.4);
+}
+
+/* ── RESPONSE ── */
+#response {
+  position: fixed;
+  bottom: 195px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: min(580px, 86vw);
+  max-height: 110px;
+  overflow-y: auto;
+  text-align: center;
+  font-size: 12px;
+  color: rgba(0,212,255,0.9);
+  line-height: 1.85;
+  letter-spacing: 0.5px;
+  z-index: 400;
+  scrollbar-width: none;
+}
+#response::-webkit-scrollbar { display: none; }
+
+/* ── SPEAK AREA ── */
+#speakArea {
+  position: fixed;
+  bottom: 148px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+  z-index: 400;
+}
+
+#speakLabel {
+  font-size: 9px;
+  letter-spacing: 5px;
+  color: var(--ac);
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+#speakLabel.on { opacity: 1; }
+
+#speakSub {
+  font-size: 10px;
+  letter-spacing: 2px;
+  color: rgba(0,212,255,0.5);
+  min-height: 16px;
+  text-align: center;
+}
+
+#waveCanvas {
+  opacity: 0;
+  transition: opacity 0.4s;
+}
+#waveCanvas.on { opacity: 1; }
+
+/* ── STATS ── */
+#stats {
+  position: fixed;
+  bottom: 118px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 34px;
+  z-index: 400;
+}
+.stat-val {
+  font-family: 'Orbitron', monospace;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--ac);
+  text-align: center;
+  min-width: 52px;
+}
+.stat-lbl {
+  font-size: 7px;
+  letter-spacing: 2px;
+  color: rgba(0,212,255,0.3);
+  text-align: center;
+}
+
+/* ── MIC BUTTON ── */
+#micBtn {
+  position: fixed;
+  bottom: 60px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  border: 2px solid var(--ac);
+  background: rgba(0,212,255,0.08);
+  color: var(--ac);
+  font-size: 22px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 0 20px rgba(0,212,255,0.3);
+  z-index: 500;
+  transition: all 0.2s;
+}
+#micBtn:hover { background: rgba(0,212,255,0.18); transform: translateX(-50%) scale(1.05); }
+#micBtn.listening {
+  border-color: var(--green);
+  color: var(--green);
+  box-shadow: 0 0 30px rgba(0,255,136,0.5);
+  animation: micPulse 1s ease-in-out infinite;
+}
+#micBtn.processing {
+  border-color: var(--amber);
+  color: var(--amber);
+  box-shadow: 0 0 30px rgba(255,149,0,0.4);
+}
+@keyframes micPulse { 0%,100%{transform:translateX(-50%) scale(1)} 50%{transform:translateX(-50%) scale(1.1)} }
+
+/* ── HINT ── */
+#hint {
+  position: fixed;
+  bottom: 30px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 8px;
+  letter-spacing: 3px;
+  color: rgba(255,255,255,0.18);
+  text-transform: uppercase;
+  z-index: 400;
+  white-space: nowrap;
+}
+
+/* ── VOICE TEST BUTTON ── */
+#voiceTest {
+  position: fixed;
+  bottom: 12px;
+  right: 16px;
+  background: none;
+  border: 1px solid rgba(0,212,255,0.3);
+  color: rgba(0,212,255,0.5);
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 8px;
+  letter-spacing: 2px;
+  padding: 4px 10px;
+  cursor: pointer;
+  z-index: 500;
+}
+#voiceTest:hover { color: var(--ac); border-color: var(--ac); }
+
+/* ── MODALS ── */
+.modal {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.92);
+  z-index: 10000;
+  align-items: center;
+  justify-content: center;
+}
+.modal.open { display: flex; }
+
+.modal-box {
+  background: rgba(0,8,22,0.98);
+  border: 1px solid var(--ac);
+  padding: 28px;
+  width: min(480px, 94vw);
+  max-height: 88vh;
+  overflow-y: auto;
+  scrollbar-width: none;
+}
+.modal-box::-webkit-scrollbar { display: none; }
+
+.modal-box h2 {
+  font-family: 'Orbitron', monospace;
+  font-size: 11px;
+  letter-spacing: 6px;
+  color: var(--ac);
+  margin-bottom: 22px;
+}
+
+.field { margin-bottom: 16px; }
+.field label {
+  display: block;
+  font-size: 8px;
+  letter-spacing: 3px;
+  color: rgba(255,255,255,0.4);
+  margin-bottom: 6px;
+  text-transform: uppercase;
+}
+.field input, .field select {
+  width: 100%;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.15);
+  color: #fff;
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 12px;
+  padding: 8px 12px;
+  outline: none;
+}
+.field input:focus, .field select:focus { border-color: var(--ac); }
+.field select option { background: #000810; }
+.field-note {
+  font-size: 8px;
+  color: rgba(255,255,255,0.25);
+  margin-top: 5px;
+  letter-spacing: 1px;
+  line-height: 1.7;
+}
+
+.modal-btns { display: flex; gap: 10px; margin-top: 22px; }
+.btn-primary {
+  flex: 1;
+  background: rgba(0,212,255,0.08);
+  border: 1px solid var(--ac);
+  color: var(--ac);
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 3px;
+  padding: 10px;
+  cursor: pointer;
+  text-transform: uppercase;
+}
+.btn-primary:hover { background: rgba(0,212,255,0.18); }
+.btn-secondary {
+  background: none;
+  border: 1px solid rgba(255,255,255,0.15);
+  color: rgba(255,255,255,0.4);
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 3px;
+  padding: 10px 16px;
+  cursor: pointer;
+  text-transform: uppercase;
+}
+.btn-secondary:hover { border-color: rgba(255,255,255,0.4); color: rgba(255,255,255,0.7); }
+
+/* ── AGENT GRID ── */
+.agent-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+.agent-card {
+  border: 1px solid rgba(255,255,255,0.1);
+  padding: 12px 14px;
+  cursor: pointer;
+  transition: all 0.2s;
+  background: rgba(255,255,255,0.02);
+  border-radius: 2px;
+}
+.agent-card:hover { background: rgba(255,255,255,0.07); }
+.agent-card.active { border-width: 2px; }
+.agent-card-name {
+  font-family: 'Orbitron', monospace;
+  font-size: 10px;
+  letter-spacing: 3px;
+  margin-bottom: 4px;
+}
+.agent-card-role {
+  font-size: 8px;
+  color: rgba(255,255,255,0.4);
+  letter-spacing: 1px;
+}
+
+/* ── NEWS ── */
+.news-item {
+  padding: 10px 0;
+  border-bottom: 1px solid rgba(0,212,255,0.1);
+  cursor: pointer;
+}
+.news-item:hover { background: rgba(0,212,255,0.05); }
+.news-date { font-size: 8px; color: rgba(0,212,255,0.4); letter-spacing: 2px; }
+.news-title { font-size: 11px; color: rgba(255,255,255,0.85); line-height: 1.5; margin-top: 3px; }
+
+/* ── NOTIFICATION ── */
+#notif {
+  position: fixed;
+  top: 72px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(0,212,255,0.08);
+  border: 1px solid rgba(0,212,255,0.4);
+  color: var(--ac);
+  font-size: 10px;
+  letter-spacing: 2px;
+  padding: 7px 18px;
+  z-index: 8000;
+  opacity: 0;
+  transition: opacity 0.4s;
+  pointer-events: none;
+  white-space: nowrap;
+}
+#notif.show { opacity: 1; }
+
+/* ── FADE IN ── */
+.fade { animation: fadeIn 0.4s ease; }
+@keyframes fadeIn { from{opacity:0;transform:translateY(5px)} to{opacity:1;transform:translateY(0)} }
+</style>
+</head>
+<body>
+
+<!-- CURSOR -->
+<div id="cursor"></div>
+
+<!-- OVERLAYS -->
+<div id="scanlines"></div>
+<div id="vignette"></div>
+
+<!-- HUD -->
+<div class="corner tl"></div>
+<div class="corner tr"></div>
+<div class="corner bl"></div>
+<div class="corner br"></div>
+<div class="side left" id="sideLeft">NEURAL ENGINE ACTIVE</div>
+<div class="side right" id="sideRight">// ARIA INITIALIZED</div>
+<div id="sdot"></div>
+
+<!-- HEADER -->
+<div id="header">
+  <button id="agentBtn" onclick="openModal('agentModal')">⬡ ARIA • RENI</button>
+  <div id="titleText">A·R·I·A &nbsp; C·O·R·E</div>
+  <button class="hbtn" onclick="openModal('newsModal')" title="News">📰</button>
+  <button class="hbtn" onclick="openGCal()" title="Calendar">📅</button>
+  <button class="hbtn" onclick="openSettings()" title="Settings">⚙</button>
+</div>
+
+<!-- BANNER -->
+<div id="banner" onclick="openSettings()">⚠ TAP TO CONFIGURE GEMINI API KEY — FREE</div>
+
+<!-- TRANSCRIPT -->
+<div id="transcript"></div>
+
+<!-- NOTIFICATION -->
+<div id="notif"></div>
+
+<!-- ORB -->
+<div id="orbWrap">
+  <canvas id="orbCanvas" width="340" height="340"></canvas>
+  <div id="orbGlow"></div>
+</div>
+
+<!-- RESPONSE -->
+<div id="response"></div>
+
+<!-- SPEAK AREA -->
+<div id="speakArea">
+  <div id="speakLabel">SPEAKING</div>
+  <div id="speakSub"></div>
+  <canvas id="waveCanvas" width="200" height="32"></canvas>
+</div>
+
+<!-- STATS -->
+<div id="stats">
+  <div><div class="stat-val" id="sv1">--</div><div class="stat-lbl">THREADS</div></div>
+  <div><div class="stat-val" id="sv2">--</div><div class="stat-lbl">VECTORS</div></div>
+  <div><div class="stat-val" id="sv3">--</div><div class="stat-lbl">LATENCY</div></div>
+  <div><div class="stat-val" id="sv4">--</div><div class="stat-lbl">CONFIDENCE</div></div>
+</div>
+
+<!-- MIC -->
+<button id="micBtn" onclick="toggleMic()">🎙</button>
+<div id="hint">CLAP TWICE &nbsp;·&nbsp; PRESS MIC &nbsp;·&nbsp; OR TYPE</div>
+<button id="voiceTest" onclick="testVoice()">TEST VOICE</button>
+
+<!-- SETTINGS MODAL -->
+<div class="modal" id="settingsModal">
+  <div class="modal-box">
+    <h2>// SYSTEM CONFIG</h2>
+    <div class="field">
+      <label>Gemini API Key (Free)</label>
+      <input type="password" id="inputKey" placeholder="AIza..."/>
+      <div class="field-note">aistudio.google.com → Get API Key → Create API Key. No credit card.</div>
+    </div>
+    <div class="field">
+      <label>Voice</label>
+      <select id="inputVoice"></select>
+      <div class="field-note">Female voices are listed first. Pick any voice you like.</div>
+    </div>
+    <div class="field">
+      <label>Your City (for news)</label>
+      <input type="text" id="inputCity" placeholder="Framingham, MA"/>
+    </div>
+    <div class="field">
+      <label>Daily Briefing Time</label>
+      <input type="time" id="inputTime" value="08:00"/>
+    </div>
+    <div class="modal-btns">
+      <button class="btn-primary" onclick="saveSettings()">SAVE</button>
+      <button class="btn-secondary" onclick="closeModal('settingsModal')">CANCEL</button>
+    </div>
+  </div>
+</div>
+
+<!-- AGENT MODAL -->
+<div class="modal" id="agentModal">
+  <div class="modal-box">
+    <h2>// SELECT AGENT — RENI'S TEAM</h2>
+    <div class="agent-grid" id="agentGrid"></div>
+    <div class="modal-btns">
+      <button class="btn-secondary" onclick="closeModal('agentModal')" style="flex:1">CLOSE</button>
+    </div>
+  </div>
+</div>
+
+<!-- NEWS MODAL -->
+<div class="modal" id="newsModal">
+  <div class="modal-box">
+    <h2>// LIVE NEWS</h2>
+    <div id="newsFeed">Loading...</div>
+    <div class="modal-btns">
+      <button class="btn-primary" onclick="fetchNews()">REFRESH</button>
+      <button class="btn-secondary" onclick="closeModal('newsModal')" style="flex:1">CLOSE</button>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+/* ════════════════════════════════════════════════════════════
+   ARIA — Reni's AI System
+   Clean rebuild — orb, cursor, voice all working
+════════════════════════════════════════════════════════════ */
+
+// ── AGENTS ────────────────────────────────────────────────
+var AGENTS = [
+  { id:'aria',     name:'ARIA',     role:'Prime Orchestrator',    color:'#00d4ff', bg:'#000810',
+    p:'You are ARIA, Reni\'s personal AI. You are warm, brilliant, and caring. Always call the user Reni. Max 3 sentences.' },
+  { id:'friday',   name:'FRIDAY',   role:'Daily Intel',           color:'#00ff88', bg:'#001408',
+    p:'You are FRIDAY, Reni\'s daily briefing AI. Sharp, informative, concise. Always call the user Reni. Max 3 sentences.' },
+  { id:'hercules', name:'HERCULES', role:'Fitness + Nutrition',   color:'#ff4455', bg:'#140008',
+    p:'You are HERCULES, Reni\'s personal trainer AI. Motivating, science-based, encouraging. Always call the user Reni. Give specific workout and nutrition advice. Max 3 sentences.' },
+  { id:'socrates', name:'SOCRATES', role:'Philosophy + Wisdom',   color:'#ffd700', bg:'#141000',
+    p:'You are SOCRATES, Reni\'s philosophical guide. Draw from Stoicism, Buddhism, African philosophy. Always call the user Reni. Ask thought-provoking questions. Max 3 sentences.' },
+  { id:'oracle',   name:'ORACLE',   role:'Finance + Crypto',      color:'#00d4aa', bg:'#001412',
+    p:'You are ORACLE, Reni\'s financial AI. Explain personal finance, crypto basics, small business strategy for creatives. Always call the user Reni. Practical and accessible. Max 3 sentences.' },
+  { id:'veronica', name:'VERONICA', role:'Creative + Content',    color:'#ff6bff', bg:'#140014',
+    p:'You are VERONICA, Reni\'s creative director AI. Branding, content, social media, art direction. Always call the user Reni. Max 3 sentences.' },
+  { id:'athena',   name:'ATHENA',   role:'Strategy + Planning',   color:'#ff9500', bg:'#140800',
+    p:'You are ATHENA, Reni\'s strategic planning AI. Goal setting, decisions, long-term vision. Always call the user Reni. Max 3 sentences.' },
+  { id:'jerome',   name:'JEROME',   role:'DJ + Music',            color:'#a855f7', bg:'#0a0014',
+    p:'You are JEROME, Reni\'s DJ and music AI. Energetic, culturally savvy. Music theory, DJing, recommendations. Always call the user Reni. Max 3 sentences.' },
+];
+
+var ROUTE = {
+  'jerome':   /\b(music|song|dj|mix|beat|track|playlist|genre)\b/i,
+  'hercules': /\b(workout|exercise|gym|fitness|diet|nutrition|calories|weight)\b/i,
+  'socrates': /\b(philosophy|wisdom|meaning|purpose|mind|consciousness|why|truth)\b/i,
+  'oracle':   /\b(money|finance|crypto|bitcoin|invest|budget|business|income)\b/i,
+  'veronica': /\b(content|brand|social|creative|marketing|design|post)\b/i,
+  'athena':   /\b(plan|goal|strategy|schedule|organize|decision|priority)\b/i,
+  'friday':   /\b(news|weather|today|brief|calendar|remind|update)\b/i,
+};
+
+var STATUS = [
+  'Analyzing context...', 'Processing query...', 'Retrieving data...',
+  'Synthesizing response...', 'Running inference...', 'Calibrating...'
+];
+
+// ── STATE ─────────────────────────────────────────────────
+var agent    = AGENTS[0];
+var history  = [];
+var listening = false;
+var speaking  = false;
+var recog     = null;
+var claps     = [];
+var clapReady = false;
+var orbState  = 'idle';
+var orbRaf    = null;
+var voiceObj  = null;
+var briefTimer = null;
+
+// ── STORAGE ───────────────────────────────────────────────
+function get(k)    { return localStorage.getItem(k) || ''; }
+function set(k, v) { localStorage.setItem(k, v); }
+
+// ── HELPERS ───────────────────────────────────────────────
+function $(id) { return document.getElementById(id); }
+
+function setTranscript(t) { $('transcript').textContent = t ? '> '+t : ''; }
+
+function setResponse(t) {
+  var el = $('response');
+  el.textContent = t;
+  if (t) { el.classList.remove('fade'); void el.offsetWidth; el.classList.add('fade'); }
+}
+
+function setSpeaking(on) { $('speakLabel').classList.toggle('on', on); }
+
+function setStatus(t) { $('speakSub').textContent = t; }
+
+function randStatus() { return STATUS[Math.floor(Math.random() * STATUS.length)]; }
+
+function notify(msg) {
+  var el = $('notif');
+  el.textContent = msg;
+  el.classList.add('show');
+  clearTimeout(el._t);
+  el._t = setTimeout(function() { el.classList.remove('show'); }, 2800);
+}
+
+// ── CURSOR ────────────────────────────────────────────────
+// Uses mousemove — simple and reliable
+document.addEventListener('mousemove', function(e) {
+  var c = $('cursor');
+  c.style.left = e.clientX + 'px';
+  c.style.top  = e.clientY + 'px';
+});
+
+// ── STATS ─────────────────────────────────────────────────
+function updateStats() {
+  $('sv1').textContent = Math.floor(8  + Math.random() * 50);
+  $('sv2').textContent = Math.floor(400 + Math.random() * 1000) + 'K';
+  $('sv3').textContent = Math.floor(10  + Math.random() * 80) + 'ms';
+  $('sv4').textContent = (84 + Math.random() * 10).toFixed(1) + '%';
+}
+setInterval(updateStats, 2200);
+updateStats();
+
+// ── THREE.JS ORB ──────────────────────────────────────────
+var orbRenderer, orbScene, orbCamera, orbDots, orbRings, orbSub, orbGlowMesh, orbGroup;
+
+function initOrb() {
+  var canvas = $('orbCanvas');
+
+  // Clean up any existing renderer
+  if (orbRenderer) {
+    try { orbRenderer.dispose(); } catch(e) {}
+  }
+  if (orbRaf) {
+    cancelAnimationFrame(orbRaf);
+    orbRaf = null;
+  }
+
+  try {
+    orbRenderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: true, alpha: true });
+  } catch(e) {
+    console.error('WebGL failed:', e);
+    return;
+  }
+
+  orbRenderer.setSize(340, 340);
+  orbRenderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  orbRenderer.setClearColor(0x000000, 0);
+
+  orbScene  = new THREE.Scene();
+  orbCamera = new THREE.PerspectiveCamera(50, 1, 0.1, 1000);
+  orbCamera.position.z = 3.2;
+
+  orbGroup = new THREE.Group();
+  orbScene.add(orbGroup);
+
+  // -- Dot sphere (1800 points, golden ratio) --
+  var N = 1800;
+  var positions = [];
+  var colors    = [];
+  var phi = Math.PI * (3 - Math.sqrt(5)); // golden angle
+
+  for (var i = 0; i < N; i++) {
+    var y  = 1 - (i / (N - 1)) * 2;
+    var r  = Math.sqrt(1 - y * y);
+    var th = phi * i;
+    var jitter = 0.025;
+    positions.push(
+      Math.cos(th) * r + (Math.random() - 0.5) * jitter,
+      y            + (Math.random() - 0.5) * jitter,
+      Math.sin(th) * r + (Math.random() - 0.5) * jitter
+    );
+    var b = 0.5 + Math.random() * 0.5;
+    colors.push(b * 0.4, b * 0.8, b * 1.0); // blue-white tones
+  }
+
+  var geo = new THREE.BufferGeometry();
+  geo.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
+  geo.setAttribute('color',    new THREE.Float32BufferAttribute(colors, 3));
+
+  var mat = new THREE.PointsMaterial({
+    size: 0.04,
+    vertexColors: true,
+    transparent: true,
+    opacity: 0.9,
+    sizeAttenuation: true
+  });
+
+  orbDots = new THREE.Points(geo, mat);
+  orbGroup.add(orbDots);
+
+  // -- Inner glow sphere --
+  orbGlowMesh = new THREE.Mesh(
+    new THREE.SphereGeometry(0.85, 32, 32),
+    new THREE.MeshBasicMaterial({ color: 0x0033cc, transparent: true, opacity: 0.18 })
+  );
+  orbGroup.add(orbGlowMesh);
+
+  // -- Atmosphere --
+  orbGroup.add(new THREE.Mesh(
+    new THREE.SphereGeometry(1.06, 32, 32),
+    new THREE.MeshBasicMaterial({ color: 0x0066ff, transparent: true, opacity: 0.05, side: THREE.BackSide })
+  ));
+
+  // -- Orbital rings --
+  orbRings = [];
+  var ringDefs = [
+    { rx: 1.5,  ry: 0.52, tilt:  0.28, speed:  0.009 },
+    { rx: 1.3,  ry: 0.44, tilt: -1.1,  speed: -0.007 },
+    { rx: 1.65, ry: 0.58, tilt:  1.85, speed:  0.005 },
+  ];
+
+  ringDefs.forEach(function(d) {
+    var pts = [];
+    for (var i = 0; i <= 128; i++) {
+      var a = (i / 128) * Math.PI * 2;
+      pts.push(new THREE.Vector3(Math.cos(a) * d.rx, 0, Math.sin(a) * d.ry));
+    }
+    var rMat = new THREE.LineBasicMaterial({ color: 0x00d4ff, transparent: true, opacity: 0.3 });
+    var ring = new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts), rMat);
+    ring.rotation.x = d.tilt;
+    ring.userData   = { speed: d.speed, tilt: d.tilt, mat: rMat };
+    orbGroup.add(ring);
+    orbRings.push(ring);
+  });
+
+  // -- Sub-orb --
+  orbSub = new THREE.Mesh(
+    new THREE.SphereGeometry(0.06, 12, 12),
+    new THREE.MeshBasicMaterial({ color: 0x00d4ff, transparent: true, opacity: 0.85 })
+  );
+  orbGroup.add(orbSub);
+
+  // -- Animation loop --
+  function tick() {
+    orbRaf = requestAnimationFrame(tick);
+    var t = Date.now() * 0.001;
+
+    // Rotation speed by state
+    var sp = orbState === 'listening' ? 0.010
+           : orbState === 'speaking'  ? 0.007
+           : 0.004;
+
+    orbDots.rotation.y += sp;
+    orbDots.rotation.x += sp * 0.28;
+
+    // Pulse dot size
+    var pulse = 1 + Math.sin(t * 2.4) * 0.055;
+    orbDots.material.size = 0.04 * pulse * (orbState === 'speaking' ? 1.12 : 1);
+
+    // Ring animation
+    orbRings.forEach(function(ring) {
+      ring.rotation.y += ring.userData.speed;
+      ring.userData.mat.opacity = 0.2 + Math.sin(t * 1.4 + ring.userData.tilt) * 0.08;
+    });
+
+    // Sub-orb orbit
+    orbSub.position.set(
+      Math.cos(t * 0.75) * 1.5,
+      Math.sin(t * 0.42) * 0.4,
+      Math.sin(t * 0.75) * 0.52
+    );
+
+    // Gentle group sway
+    orbGroup.rotation.z = Math.sin(t * 0.38) * 0.03;
+
+    // Glow color by state
+    if (orbState === 'listening') {
+      orbGlowMesh.material.color.setHex(0x00aa44);
+      orbGlowMesh.material.opacity = 0.28;
+    } else if (orbState === 'speaking') {
+      orbGlowMesh.material.color.setHex(0xff5500);
+      orbGlowMesh.material.opacity = 0.24;
+    } else {
+      orbGlowMesh.material.color.setHex(0x0033cc);
+      orbGlowMesh.material.opacity = 0.18;
+    }
+
+    orbRenderer.render(orbScene, orbCamera);
+  }
+
+  tick();
+}
+
+function setOrbState(s) {
+  orbState = s;
+  var g = $('orbGlow');
+  if (s === 'listening') {
+    g.style.boxShadow = '0 0 60px 14px rgba(0,255,136,0.35), inset 0 0 50px rgba(0,60,20,0.3)';
+  } else if (s === 'speaking') {
+    g.style.boxShadow = '0 0 60px 14px rgba(255,120,0,0.35), inset 0 0 50px rgba(60,20,0,0.3)';
+  } else {
+    g.style.boxShadow = '0 0 40px 10px rgba(0,100,255,0.2), 0 0 80px 20px rgba(0,60,200,0.1), inset 0 0 60px rgba(0,20,80,0.4)';
+  }
+}
+
+// ── WAVEFORM ──────────────────────────────────────────────
+var waveCanvas  = $('waveCanvas');
+var waveCtx     = waveCanvas.getContext('2d');
+var waveData    = new Uint8Array(64).fill(128);
+var waveRunning = false;
+
+function drawWave() {
+  waveCtx.clearRect(0, 0, 200, 32);
+  var bw = 3, gap = 2, total = Math.floor(200 / (bw + gap));
+  for (var i = 0; i < total; i++) {
+    var idx  = Math.floor((i / total) * waveData.length);
+    var h    = Math.max(2, Math.abs((waveData[idx] / 255 - 0.5) * 32 * 1.9));
+    var dist = Math.abs((i / total) - 0.5) * 2;
+    var al   = 0.9 - dist * 0.45;
+    waveCtx.fillStyle = 'rgba(0,212,255,' + al + ')';
+    waveCtx.fillRect(i * (bw + gap), 16 - h / 2, bw, h);
+  }
+  if (waveRunning) requestAnimationFrame(drawWave);
+}
+
+function startWave() {
+  waveRunning = true;
+  $('waveCanvas').classList.add('on');
+  drawWave();
+  // Animate fake wave
+  (function fakeLoop() {
+    if (!waveRunning) return;
+    for (var i = 0; i < waveData.length; i++) {
+      waveData[i] = 128 + Math.sin(Date.now() * 0.004 + i * 0.45) * 38 * (0.5 + Math.random() * 0.5);
+    }
+    requestAnimationFrame(fakeLoop);
+  })();
+}
+
+function stopWave() {
+  waveRunning = false;
+  $('waveCanvas').classList.remove('on');
+  waveData = new Uint8Array(64).fill(128);
+}
+
+// ── VOICE ─────────────────────────────────────────────────
+function loadVoiceList() {
+  var voices = speechSynthesis.getVoices();
+  var sel    = $('inputVoice');
+  if (!sel || voices.length === 0) return;
+  var saved = get('aria_voice');
+  var maleRx = /^(Daniel|Alex|Arthur|Fred|Tom|Bruce|Junior|Ralph|Albert)$/i;
+  // Put female / unknown voices first
+  var sorted = voices.filter(function(v) { return v.lang.startsWith('en') && !maleRx.test(v.name); })
+    .concat(voices.filter(function(v) { return v.lang.startsWith('en') && maleRx.test(v.name); }));
+  sel.innerHTML = '';
+  sorted.forEach(function(v) {
+    var o = document.createElement('option');
+    o.value = v.name;
+    o.textContent = v.name + ' (' + v.lang + ')';
+    if (v.name === saved) o.selected = true;
+    sel.appendChild(o);
+  });
+  pickVoice();
+}
+
+function pickVoice() {
+  var voices  = speechSynthesis.getVoices();
+  var saved   = get('aria_voice');
+  var maleRx  = /^(Daniel|Alex|Arthur|Fred|Tom|Bruce|Junior|Ralph|Albert)$/i;
+  if (saved) {
+    voiceObj = voices.find(function(v) { return v.name === saved; }) || null;
+  }
+  if (!voiceObj) {
+    voiceObj = voices.find(function(v) { return v.lang === 'en-US' && !maleRx.test(v.name); })
+            || voices.find(function(v) { return v.lang.startsWith('en') && !maleRx.test(v.name); })
+            || voices.find(function(v) { return v.lang.startsWith('en'); })
+            || null;
+  }
+}
+
+// Primary speak function — browser TTS only, reliable everywhere
+function speak(text) {
+  if (!text || speaking) return;
+  speechSynthesis.cancel();
+
+  var u    = new SpeechSynthesisUtterance(text);
+  u.rate   = 0.88;
+  u.pitch  = 1.05;
+  u.lang   = 'en-US';
+  u.volume = 1.0;
+  if (voiceObj) u.voice = voiceObj;
+
+  u.onstart = function() {
+    speaking = true;
+    setSpeaking(true);
+    setOrbState('speaking');
+    startWave();
+  };
+  u.onend = function() {
+    speaking = false;
+    setSpeaking(false);
+    setOrbState('idle');
+    stopWave();
+    setStatus('');
+  };
+  u.onerror = function(e) {
+    console.warn('TTS error:', e.error);
+    speaking = false;
+    setSpeaking(false);
+    setOrbState('idle');
+    stopWave();
+    setStatus('');
+  };
+
+  setSpeaking(true);
+  setStatus(randStatus());
+
+  // Delay ensures voices are loaded and audio context is resumed
+  setTimeout(function() {
+    try {
+      speechSynthesis.speak(u);
+    } catch(e) {
+      console.error('speak() failed:', e);
+    }
+  }, 100);
+}
+
+// Voice test — always works to confirm audio
+function testVoice() {
+  var voices = speechSynthesis.getVoices();
+  if (voices.length === 0) {
+    alert('No voices loaded yet. Wait a moment and try again.');
+    return;
+  }
+  speechSynthesis.cancel();
+  pickVoice();
+  var u = new SpeechSynthesisUtterance('Hello Reni. Voice test successful. ARIA is ready.');
+  u.rate   = 0.88;
+  u.pitch  = 1.05;
+  u.volume = 1.0;
+  u.lang   = 'en-US';
+  if (voiceObj) u.voice = voiceObj;
+  u.onstart = function() { notify('Voice test playing...'); };
+  u.onend   = function() { notify('Voice test complete ✓'); };
+  speechSynthesis.speak(u);
+}
+
+// ── SETTINGS ──────────────────────────────────────────────
+function openSettings() {
+  loadVoiceList();
+  $('inputKey').value  = get('aria_key');
+  $('inputCity').value = get('aria_city') || 'Framingham, MA';
+  $('inputTime').value = get('aria_brief') || '08:00';
+  openModal('settingsModal');
+}
+
+function saveSettings() {
+  set('aria_key',   $('inputKey').value.trim());
+  set('aria_city',  $('inputCity').value.trim());
+  set('aria_brief', $('inputTime').value);
+  var vSel = $('inputVoice');
+  if (vSel && vSel.value) set('aria_voice', vSel.value);
+  closeModal('settingsModal');
+  pickVoice();
+  checkSetup();
+  setupBrief();
+  notify('Configuration saved, Reni.');
+}
+
+function checkSetup() {
+  $('banner').classList.toggle('show', !get('aria_key'));
+}
+
+// ── MODALS ────────────────────────────────────────────────
+function openModal(id)  { $(id).classList.add('open'); }
+function closeModal(id) { $(id).classList.remove('open'); }
+
+// ── AGENTS ────────────────────────────────────────────────
+function openAgentModal() {
+  var grid = $('agentGrid');
+  grid.innerHTML = '';
+  AGENTS.forEach(function(a) {
+    var card = document.createElement('div');
+    card.className = 'agent-card' + (a.id === agent.id ? ' active' : '');
+    card.style.borderColor = a.id === agent.id ? a.color : '';
+    card.innerHTML =
+      '<div class="agent-card-name" style="color:' + a.color + '">' + a.name + '</div>' +
+      '<div class="agent-card-role">' + a.role + '</div>';
+    card.onclick = function() { closeModal('agentModal'); switchAgent(a); };
+    grid.appendChild(card);
+  });
+  openModal('agentModal');
+}
+
+function switchAgent(a) {
+  agent   = a;
+  history = [];
+  document.documentElement.style.setProperty('--ac', a.color);
+  document.documentElement.style.setProperty('--ag', a.color + '44');
+  document.body.style.background = a.bg;
+  $('titleText').textContent = a.name === 'ARIA' ? 'A·R·I·A  C·O·R·E' : a.name + '  MODE';
+  $('agentBtn').textContent  = '⬡ ' + a.name + ' • RENI';
+  $('sideRight').textContent = '// ' + a.role.toUpperCase();
+  $('response').style.color  = a.color;
+  setResponse('');
+  setTranscript('');
+  notify(a.name + ' online.');
+  speak(a.name + ' online. How can I help you today, Reni?');
+}
+
+// ── SMART ROUTING ─────────────────────────────────────────
+function routeIfNeeded(text) {
+  for (var id in ROUTE) {
+    if (ROUTE[id].test(text)) {
+      var found = AGENTS.find(function(a) { return a.id === id; });
+      if (found && found.id !== agent.id) {
+        notify('Routing to ' + found.name + '...');
+        agent   = found;
+        history = [];
+        document.documentElement.style.setProperty('--ac', found.color);
+        $('agentBtn').textContent  = '⬡ ' + found.name + ' • RENI';
+        $('sideRight').textContent = '// ' + found.role.toUpperCase();
+      }
+      break;
+    }
+  }
+}
+
+// ── GEMINI AI ─────────────────────────────────────────────
+function ask(query) {
+  var key = get('aria_key');
+  if (!key) {
+    var m = 'Please configure your free Gemini API key by tapping the gear icon, Reni.';
+    setResponse(m); speak(m); return;
+  }
+
+  routeIfNeeded(query);
+
+  var city = get('aria_city') || 'Framingham, MA';
+  var sys  = agent.p + ' User is based in ' + city + '. Date: ' + new Date().toDateString() + '.';
+
+  var ghist = history.map(function(h) {
+    return { role: h.role === 'assistant' ? 'model' : 'user', parts: [{ text: h.text }] };
+  });
+  history.push({ role: 'user', text: query });
+
+  setStatus('Processing...');
+  var t0 = Date.now();
+
+  fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent?key=' + key, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      system_instruction: { parts: [{ text: sys }] },
+      contents: ghist.concat([{ role: 'user', parts: [{ text: query }] }]),
+      generationConfig: { maxOutputTokens: 250, temperature: 0.85 }
+    })
+  })
+  .then(function(res) {
+    $('sv3').textContent = (Date.now() - t0) + 'ms';
+    if (!res.ok) {
+      history.pop();
+      var msg = 'Gemini error ' + res.status + '.';
+      if (res.status === 400) msg = 'Invalid API key, Reni. Please re-enter it in settings.';
+      if (res.status === 429) msg = 'Rate limit reached, Reni. Please wait 60 seconds.';
+      if (res.status === 403) msg = 'API access denied, Reni. Check your Gemini key.';
+      setResponse(msg); speak(msg);
+      return null;
+    }
+    return res.json();
+  })
+  .then(function(data) {
+    if (!data) return;
+    var reply = data.candidates &&
+                data.candidates[0] &&
+                data.candidates[0].content &&
+                data.candidates[0].content.parts &&
+                data.candidates[0].content.parts[0] &&
+                data.candidates[0].content.parts[0].text;
+    if (reply) {
+      history.push({ role: 'assistant', text: reply });
+      if (history.length > 20) history = history.slice(-20);
+      setResponse(reply);
+      speak(reply);
+      // Smart triggers
+      if (/\b(calendar|appointment)\b/i.test(query)) notify('Tap 📅 to open Google Calendar');
+      if (/\b(news|headline)\b/i.test(query)) setTimeout(function() { openModal('newsModal'); fetchNews(); }, 1000);
+    } else {
+      history.pop();
+      var noResp = 'No response received, Reni. Please try again.';
+      setResponse(noResp); speak(noResp);
+    }
+  })
+  .catch(function() {
+    history.pop();
+    var netErr = 'Network error, Reni. Please check your connection.';
+    setResponse(netErr); speak(netErr);
+  });
+}
+
+// ── GOOGLE CALENDAR ───────────────────────────────────────
+function openGCal() {
+  window.open('https://calendar.google.com', '_blank');
+  notify('Opening Google Calendar, Reni.');
+}
+
+// ── NEWS ──────────────────────────────────────────────────
+function fetchNews() {
+  var feed = $('newsFeed');
+  feed.innerHTML = '<div style="color:rgba(0,212,255,.5);letter-spacing:2px;font-size:10px">Loading headlines...</div>';
+  fetch('https://api.rss2json.com/v1/api.json?rss_url=https%3A%2F%2Ffeeds.bbci.co.uk%2Fnews%2Fworld%2Frss.xml')
+  .then(function(r) { return r.json(); })
+  .then(function(data) {
+    if (!data.items || data.items.length === 0) throw new Error('No items');
+    feed.innerHTML = '';
+    data.items.slice(0, 8).forEach(function(item) {
+      var d  = document.createElement('div');
+      d.className = 'news-item';
+      d.innerHTML = '<div class="news-date">' + (item.pubDate || '').substring(0, 10) + '</div>'
+                  + '<div class="news-title">' + item.title + '</div>';
+      d.onclick = function() { window.open(item.link, '_blank'); };
+      feed.appendChild(d);
+    });
+  })
+  .catch(function() {
+    feed.innerHTML = '<div style="color:rgba(255,100,100,.7);font-size:11px">Could not load news. '
+      + '<a href="https://news.google.com" target="_blank" style="color:var(--ac)">Open Google News ↗</a></div>';
+  });
+}
+
+// ── DAILY BRIEFING ────────────────────────────────────────
+function setupBrief() {
+  clearInterval(briefTimer);
+  var t    = get('aria_brief') || '08:00';
+  var h    = parseInt(t.split(':')[0]);
+  var m    = parseInt(t.split(':')[1]);
+  briefTimer = setInterval(function() {
+    var now   = new Date();
+    var today = now.toDateString();
+    if (now.getHours() === h && now.getMinutes() === m && get('aria_lastBrief') !== today) {
+      set('aria_lastBrief', today);
+      speak('Good morning Reni. Your ' + now.toLocaleTimeString() + ' briefing is ready. How can I assist you today?');
+    }
+  }, 60000);
+}
+
+// ── VOICE INPUT ───────────────────────────────────────────
+function toggleMic() {
+  if (listening) stopListening(); else startListening();
+}
+
+function startListening() {
+  var SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SR) { notify('Use Chrome for voice input.'); return; }
+  recog = new SR();
+  recog.lang = 'en-US';
+  recog.interimResults = true;
+  recog.onstart = function() {
+    listening = true;
+    setOrbState('listening');
+    $('micBtn').classList.add('listening');
+    setStatus('Listening, Reni...');
+    startWave();
+  };
+  recog.onresult = function(e) {
+    var fin = '', interim = '';
+    for (var i = 0; i < e.results.length; i++) {
+      if (e.results[i].isFinal) fin += e.results[i][0].transcript;
+      else interim += e.results[i][0].transcript;
+    }
+    setTranscript(fin || interim);
+    if (fin) { stopListening(); processQuery(fin.trim()); }
+  };
+  recog.onerror = function(e) { stopListening(); notify('Mic error: ' + e.error); };
+  recog.onend   = function()  { if (listening) stopListening(); };
+  recog.start();
+}
+
+function stopListening() {
+  listening = false;
+  setOrbState('idle');
+  $('micBtn').classList.remove('listening');
+  stopWave();
+  if (recog) { try { recog.stop(); } catch(e) {} recog = null; }
+}
+
+function processQuery(text) {
+  if (!text) return;
+  $('micBtn').classList.add('processing');
+  setTimeout(function() { $('micBtn').classList.remove('processing'); }, 3000);
+  ask(text);
+}
+
+// ── CLAP DETECTION ────────────────────────────────────────
+function startClap() {
+  if (clapReady) return;
+  clapReady = true;
+  navigator.mediaDevices.getUserMedia({ audio: true })
+  .then(function(stream) {
+    var ctx = new (window.AudioContext || window.webkitAudioContext)();
+    var src = ctx.createMediaStreamSource(stream);
+    var an  = ctx.createAnalyser();
+    an.fftSize = 512;
+    src.connect(an);
+    var buf = new Uint8Array(an.frequencyBinCount);
+    var lastClap = 0;
+    (function detect() {
+      an.getByteTimeDomainData(buf);
+      var peak = 0;
+      for (var i = 0; i < buf.length; i++) peak = Math.max(peak, Math.abs(buf[i] - 128));
+      if (peak > 210) {
+        var now = Date.now(), gap = now - lastClap;
+        if (gap > 80) {
+          claps.push(now);
+          claps = claps.filter(function(t) { return now - t < 1500; });
+          if (claps.length >= 2 && gap < 900 && !listening && !speaking) {
+            claps = [];
+            startListening();
+          }
+          lastClap = now;
+        }
+      }
+      requestAnimationFrame(detect);
+    })();
+  })
+  .catch(function(e) { console.warn('Clap mic denied:', e.message); });
+}
+
+// ── KEYBOARD ──────────────────────────────────────────────
+var typeBuf = '';
+document.addEventListener('keydown', function(e) {
+  if (document.querySelector('.modal.open')) return;
+  if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT') return;
+  if (e.key === 'Enter' && typeBuf.trim()) {
+    var q = typeBuf.trim(); typeBuf = '';
+    setTranscript(q); ask(q);
+  } else if (e.key === 'Backspace') {
+    typeBuf = typeBuf.slice(0, -1); setTranscript(typeBuf || '');
+  } else if (e.key.length === 1) {
+    typeBuf += e.key; setTranscript(typeBuf);
+  }
+});
+
+// ── AGENT BUTTON OVERRIDE (header button) ─────────────────
+$('agentBtn').onclick = function() { openAgentModal(); };
+
+// ── BOOT ──────────────────────────────────────────────────
+window.addEventListener('load', function() {
+
+  // 1. Init orb
+  initOrb();
+  setOrbState('idle');
+
+  // 2. Load voices — with retry
+  speechSynthesis.onvoiceschanged = function() {
+    loadVoiceList();
+    pickVoice();
+  };
+  loadVoiceList();
+  pickVoice();
+  // Retry voice load after 1s for browsers that are slow
+  setTimeout(function() { loadVoiceList(); pickVoice(); }, 1000);
+
+  // 3. Check setup
+  checkSetup();
+  setupBrief();
+
+  // 4. First gesture — unlock audio + start clap
+  var gestured = false;
+  function onGesture() {
+    if (gestured) return;
+    gestured = true;
+    // Resume audio context (required by some browsers)
+    try {
+      var ac = new (window.AudioContext || window.webkitAudioContext)();
+      ac.resume().then(function() { ac.close(); });
+    } catch(e) {}
+    startClap();
+    document.removeEventListener('click',      onGesture);
+    document.removeEventListener('touchstart', onGesture);
+    document.removeEventListener('keydown',    onGesture);
+  }
+  document.addEventListener('click',      onGesture);
+  document.addEventListener('touchstart', onGesture);
+  document.addEventListener('keydown',    onGesture);
+
+  // 5. Boot message
+  setTimeout(function() {
+    var hasKey = !!get('aria_key');
+    if (!hasKey) {
+      setResponse('Welcome, Reni. Please tap the gear icon ⚙ to enter your free Gemini API key. Then tap TEST VOICE to confirm audio is working.');
+      speak('Welcome Reni. I am ARIA, your personal AI system. Please configure your Gemini key in settings to bring me fully online.');
+    } else {
+      setResponse('A·R·I·A online. Welcome back, Reni. All systems nominal.');
+      speak('A R I A online. Welcome back Reni. All systems nominal. How can I assist you today?');
+    }
+  }, 1200);
+});
+</script>
+</body>
+</html>
