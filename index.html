@@ -1,0 +1,859 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>A·R·I·A — Reni's AI</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Share+Tech+Mono&display=swap');
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--ac:#00d4ff;--bg:#000810;--amber:#ff9500;--green:#00ff88}
+html,body{width:100%;height:100%;overflow:hidden;background:var(--bg);
+  color:var(--ac);font-family:'Share Tech Mono',monospace;cursor:none}
+
+/* CURSOR */
+#cur{position:fixed;top:0;left:0;width:10px;height:10px;
+  background:var(--ac);border-radius:50%;pointer-events:none;
+  z-index:99999;transform:translate(-50%,-50%);
+  box-shadow:0 0 14px var(--ac),0 0 28px var(--ac)}
+
+/* OVERLAYS */
+#scan{position:fixed;inset:0;pointer-events:none;z-index:9000;
+  background:repeating-linear-gradient(0deg,transparent,transparent 2px,
+  rgba(0,212,255,.015) 2px,rgba(0,212,255,.015) 4px)}
+#vig{position:fixed;inset:0;pointer-events:none;z-index:8999;
+  background:radial-gradient(ellipse at center,transparent 40%,rgba(0,0,0,.8) 100%)}
+
+/* HUD CORNERS */
+.cr{position:fixed;width:40px;height:40px;border-color:var(--ac);
+  border-style:solid;opacity:.45;pointer-events:none}
+.tl{top:16px;left:16px;border-width:2px 0 0 2px}
+.tr{top:16px;right:16px;border-width:2px 2px 0 0}
+.bl{bottom:16px;left:16px;border-width:0 0 2px 2px}
+.br{bottom:16px;right:16px;border-width:0 2px 2px 0}
+
+/* SIDE LABELS */
+.sd{position:fixed;font-size:8px;letter-spacing:3px;color:var(--ac);
+  opacity:.22;text-transform:uppercase;white-space:nowrap;pointer-events:none}
+.sd.l{left:8px;top:50%;transform:translateY(-50%) rotate(-90deg)}
+.sd.r{right:8px;top:50%;transform:translateY(-50%) rotate(90deg)}
+
+/* STATUS DOT */
+#dot{position:fixed;top:30px;right:58px;width:7px;height:7px;
+  border-radius:50%;background:var(--green);box-shadow:0 0 10px var(--green);
+  animation:blink 2.5s ease-in-out infinite;z-index:200}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.2}}
+
+/* HEADER */
+#hdr{position:fixed;top:18px;left:0;right:0;display:flex;
+  align-items:center;justify-content:center;gap:14px;z-index:500}
+#agBtn{background:rgba(255,149,0,.1);border:1px solid var(--amber);
+  color:var(--amber);font-family:'Share Tech Mono',monospace;font-size:10px;
+  letter-spacing:2px;padding:5px 12px;cursor:pointer;border-radius:2px}
+#agBtn:hover{background:rgba(255,149,0,.2)}
+#ttl{font-family:'Orbitron',monospace;font-size:12px;font-weight:400;
+  letter-spacing:8px;color:var(--ac);text-shadow:0 0 20px var(--ac)}
+.hb{background:none;border:1px solid rgba(0,212,255,.3);color:rgba(0,212,255,.6);
+  font-size:14px;width:30px;height:30px;cursor:pointer;border-radius:2px;
+  display:flex;align-items:center;justify-content:center}
+.hb:hover{background:rgba(0,212,255,.1);color:var(--ac)}
+
+/* BANNER */
+#bnr{display:none;position:fixed;top:58px;left:50%;transform:translateX(-50%);
+  background:rgba(255,149,0,.1);border:1px solid rgba(255,149,0,.5);
+  color:var(--amber);font-size:10px;letter-spacing:2px;padding:6px 16px;
+  cursor:pointer;z-index:400;white-space:nowrap}
+#bnr.on{display:block}
+
+/* TRANSCRIPT */
+#tx{position:fixed;top:64px;left:50%;transform:translateX(-50%);
+  width:min(500px,86vw);text-align:center;font-size:11px;
+  color:rgba(0,212,255,.4);letter-spacing:1px;z-index:300;min-height:16px}
+
+/* NOTIF */
+#ntf{position:fixed;top:64px;left:50%;transform:translateX(-50%);
+  background:rgba(0,212,255,.08);border:1px solid rgba(0,212,255,.4);
+  color:var(--ac);font-size:10px;letter-spacing:2px;padding:6px 16px;
+  z-index:8000;opacity:0;transition:opacity .4s;pointer-events:none;white-space:nowrap}
+#ntf.on{opacity:1}
+
+/* ORB */
+#ow{position:fixed;top:50%;left:50%;transform:translate(-50%,-53%);
+  width:340px;height:340px;z-index:100}
+#oc{position:absolute;top:0;left:0;width:340px;height:340px;border-radius:50%}
+#og{position:absolute;inset:0;border-radius:50%;pointer-events:none;
+  transition:box-shadow .6s;
+  box-shadow:0 0 40px 10px rgba(0,100,255,.2),0 0 80px 20px rgba(0,60,200,.1),
+    inset 0 0 60px rgba(0,20,80,.4)}
+
+/* RESPONSE */
+#rs{position:fixed;bottom:192px;left:50%;transform:translateX(-50%);
+  width:min(580px,86vw);max-height:110px;overflow-y:auto;text-align:center;
+  font-size:12px;color:rgba(0,212,255,.9);line-height:1.85;
+  letter-spacing:.5px;z-index:300;scrollbar-width:none}
+#rs::-webkit-scrollbar{display:none}
+
+/* SPEAK AREA */
+#sa{position:fixed;bottom:148px;left:50%;transform:translateX(-50%);
+  display:flex;flex-direction:column;align-items:center;gap:5px;z-index:300}
+#sl{font-size:9px;letter-spacing:5px;color:var(--ac);opacity:0;transition:opacity .3s}
+#sl.on{opacity:1}
+#sb{font-size:10px;letter-spacing:2px;color:rgba(0,212,255,.5);min-height:16px;text-align:center}
+#wv{opacity:0;transition:opacity .4s}
+#wv.on{opacity:1}
+
+/* STATS */
+#sts{position:fixed;bottom:116px;left:50%;transform:translateX(-50%);
+  display:flex;gap:32px;z-index:300}
+.sv{font-family:'Orbitron',monospace;font-size:14px;font-weight:700;
+  color:var(--ac);text-align:center;min-width:50px}
+.sl2{font-size:7px;letter-spacing:2px;color:rgba(0,212,255,.3);text-align:center}
+
+/* MIC BUTTON */
+#mic{position:fixed;bottom:58px;left:50%;transform:translateX(-50%);
+  width:56px;height:56px;border-radius:50%;border:2px solid var(--ac);
+  background:rgba(0,212,255,.07);color:var(--ac);font-size:22px;
+  cursor:pointer;display:flex;align-items:center;justify-content:center;
+  box-shadow:0 0 20px rgba(0,212,255,.3);z-index:500;
+  transition:border-color .3s,box-shadow .3s,background .3s}
+#mic:hover{background:rgba(0,212,255,.15)}
+#mic.L{border-color:var(--green);color:var(--green);
+  box-shadow:0 0 30px rgba(0,255,136,.5);animation:mp 1s ease-in-out infinite}
+#mic.P{border-color:var(--amber);color:var(--amber);
+  box-shadow:0 0 30px rgba(255,149,0,.4)}
+@keyframes mp{0%,100%{transform:translateX(-50%) scale(1)}
+  50%{transform:translateX(-50%) scale(1.1)}}
+
+/* HINT */
+#hint{position:fixed;bottom:28px;left:50%;transform:translateX(-50%);
+  font-size:8px;letter-spacing:3px;color:rgba(255,255,255,.15);
+  text-transform:uppercase;z-index:300;white-space:nowrap}
+
+/* MODALS */
+.mo{display:none;position:fixed;inset:0;background:rgba(0,0,0,.93);
+  z-index:10000;align-items:center;justify-content:center}
+.mo.open{display:flex}
+.mb{background:rgba(0,8,22,.99);border:1px solid var(--ac);
+  padding:26px;width:min(480px,94vw);max-height:90vh;overflow-y:auto;scrollbar-width:none}
+.mb::-webkit-scrollbar{display:none}
+.mb h2{font-family:'Orbitron',monospace;font-size:11px;letter-spacing:6px;
+  color:var(--ac);margin-bottom:20px}
+.fg{margin-bottom:14px}
+.fg label{display:block;font-size:8px;letter-spacing:3px;color:rgba(255,255,255,.38);
+  margin-bottom:5px;text-transform:uppercase}
+.fg input,.fg select{width:100%;background:rgba(255,255,255,.04);
+  border:1px solid rgba(255,255,255,.15);color:#fff;
+  font-family:'Share Tech Mono',monospace;font-size:12px;padding:8px 11px;outline:none}
+.fg input:focus,.fg select:focus{border-color:var(--ac)}
+.fg select option{background:#000810}
+.fn{font-size:8px;color:rgba(255,255,255,.24);margin-top:4px;letter-spacing:1px;line-height:1.7}
+.mbt{display:flex;gap:10px;margin-top:20px}
+.bp{flex:1;background:rgba(0,212,255,.07);border:1px solid var(--ac);color:var(--ac);
+  font-family:'Share Tech Mono',monospace;font-size:10px;letter-spacing:3px;
+  padding:10px;cursor:pointer;text-transform:uppercase}
+.bp:hover{background:rgba(0,212,255,.16)}
+.bs{background:none;border:1px solid rgba(255,255,255,.15);color:rgba(255,255,255,.38);
+  font-family:'Share Tech Mono',monospace;font-size:10px;letter-spacing:3px;
+  padding:10px 14px;cursor:pointer;text-transform:uppercase}
+.bs:hover{border-color:rgba(255,255,255,.4);color:rgba(255,255,255,.7)}
+
+/* AGENT GRID */
+.ag{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.ac{border:1px solid rgba(255,255,255,.1);padding:12px 14px;cursor:pointer;
+  transition:all .2s;background:rgba(255,255,255,.02);border-radius:2px}
+.ac:hover{background:rgba(255,255,255,.07)}
+.ac.on{border-width:2px}
+.an{font-family:'Orbitron',monospace;font-size:10px;letter-spacing:3px;margin-bottom:3px}
+.ar{font-size:8px;color:rgba(255,255,255,.38);letter-spacing:1px}
+
+/* NEWS */
+.ni{padding:9px 0;border-bottom:1px solid rgba(0,212,255,.1);cursor:pointer}
+.ni:hover{background:rgba(0,212,255,.04)}
+.nd{font-size:8px;color:rgba(0,212,255,.4);letter-spacing:2px}
+.nt{font-size:11px;color:rgba(255,255,255,.82);line-height:1.5;margin-top:3px}
+
+/* SPEAK BUTTON — always visible, always triggers voice */
+#spkBtn{position:fixed;bottom:58px;right:16px;
+  background:rgba(0,212,255,.08);border:1px solid var(--ac);
+  color:var(--ac);font-family:'Share Tech Mono',monospace;
+  font-size:9px;letter-spacing:2px;padding:8px 12px;cursor:pointer;
+  z-index:500;border-radius:2px;line-height:1.4;text-align:center}
+#spkBtn:hover{background:rgba(0,212,255,.18)}
+
+/* FADE */
+.fi{animation:fi .4s ease}
+@keyframes fi{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}
+</style>
+</head>
+<body>
+
+<div id="cur"></div>
+<div id="scan"></div>
+<div id="vig"></div>
+<div class="cr tl"></div><div class="cr tr"></div>
+<div class="cr bl"></div><div class="cr br"></div>
+<div class="sd l" id="sdL">NEURAL ENGINE ACTIVE</div>
+<div class="sd r" id="sdR">// ARIA INITIALIZED</div>
+<div id="dot"></div>
+
+<div id="hdr">
+  <button id="agBtn">⬡ ARIA • RENI</button>
+  <div id="ttl">A·R·I·A &nbsp;C·O·R·E</div>
+  <button class="hb" id="newsBtn" title="News">📰</button>
+  <button class="hb" onclick="window.open('https://calendar.google.com','_blank');notify('Opening Calendar, Reni.')" title="Calendar">📅</button>
+  <button class="hb" id="cfgBtn" title="Settings">⚙</button>
+</div>
+
+<div id="bnr">⚠ TAP TO CONFIGURE GEMINI API KEY — FREE</div>
+<div id="tx"></div>
+<div id="ntf"></div>
+
+<div id="ow">
+  <canvas id="oc" width="340" height="340"></canvas>
+  <div id="og"></div>
+</div>
+
+<div id="rs"></div>
+
+<div id="sa">
+  <div id="sl">SPEAKING</div>
+  <div id="sb"></div>
+  <canvas id="wv" width="200" height="32"></canvas>
+</div>
+
+<div id="sts">
+  <div><div class="sv" id="v1">--</div><div class="sl2">THREADS</div></div>
+  <div><div class="sv" id="v2">--</div><div class="sl2">VECTORS</div></div>
+  <div><div class="sv" id="v3">--</div><div class="sl2">LATENCY</div></div>
+  <div><div class="sv" id="v4">--</div><div class="sl2">CONFIDENCE</div></div>
+</div>
+
+<button id="mic" onclick="toggleMic()">🎙</button>
+<div id="hint">CLAP TWICE &nbsp;·&nbsp; PRESS MIC &nbsp;·&nbsp; OR TYPE</div>
+
+<!-- SPEAK/TEST BUTTON — always accessible, always triggers from user gesture -->
+<button id="spkBtn" onclick="onSpeakBtn()">▶ SPEAK<br>TEST</button>
+
+<!-- SETTINGS -->
+<div class="mo" id="cfgMo">
+  <div class="mb">
+    <h2>// SYSTEM CONFIG</h2>
+    <div class="fg">
+      <label>Gemini API Key (Free)</label>
+      <input type="password" id="iKey" placeholder="AIza..."/>
+      <div class="fn">aistudio.google.com → Get API Key → Create API Key. No credit card needed.</div>
+    </div>
+    <div class="fg">
+      <label>Voice</label>
+      <select id="iVoice"></select>
+      <div class="fn">Female voices listed first. Your choice is saved and used every session.</div>
+    </div>
+    <div class="fg">
+      <label>Your City</label>
+      <input type="text" id="iCity" placeholder="Framingham, MA"/>
+    </div>
+    <div class="fg">
+      <label>Daily Briefing Time</label>
+      <input type="time" id="iTime" value="08:00"/>
+    </div>
+    <div class="mbt">
+      <button class="bp" onclick="saveCfg()">SAVE</button>
+      <button class="bs" onclick="closeMo('cfgMo')">CANCEL</button>
+    </div>
+  </div>
+</div>
+
+<!-- AGENTS -->
+<div class="mo" id="agMo">
+  <div class="mb">
+    <h2>// SELECT AGENT — RENI'S TEAM</h2>
+    <div class="ag" id="agGrid"></div>
+    <div class="mbt">
+      <button class="bs" onclick="closeMo('agMo')" style="flex:1">CLOSE</button>
+    </div>
+  </div>
+</div>
+
+<!-- NEWS -->
+<div class="mo" id="newsMo">
+  <div class="mb">
+    <h2>// LIVE NEWS</h2>
+    <div id="nFeed">Loading...</div>
+    <div class="mbt">
+      <button class="bp" onclick="fetchNews()">REFRESH</button>
+      <button class="bs" onclick="closeMo('newsMo')" style="flex:1">CLOSE</button>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+'use strict';
+
+/* ══════════════════════════════════════════════════
+   ARIA — RENI'S AI SYSTEM
+   Voice fix: utterance held as global variable
+   so browser cannot garbage-collect it mid-speech.
+   speak() only called from user-gesture handlers.
+══════════════════════════════════════════════════ */
+
+// ── AGENTS ────────────────────────────────────────
+var AGENTS=[
+  {id:'aria',    name:'ARIA',    role:'Prime Orchestrator',  color:'#00d4ff',bg:'#000810',
+   p:"You are ARIA, Reni's personal AI. Warm, brilliant, caring. Always call the user Reni. Max 3 sentences."},
+  {id:'friday',  name:'FRIDAY',  role:'Daily Intel',         color:'#00ff88',bg:'#001408',
+   p:"You are FRIDAY, Reni's daily briefing AI. Sharp and informative. Always call the user Reni. Max 3 sentences."},
+  {id:'hercules',name:'HERCULES',role:'Fitness + Nutrition', color:'#ff4455',bg:'#140008',
+   p:"You are HERCULES, Reni's personal trainer AI. Motivating and science-based. Always call the user Reni. Give specific advice. Max 3 sentences."},
+  {id:'socrates',name:'SOCRATES',role:'Philosophy + Wisdom', color:'#ffd700',bg:'#141000',
+   p:"You are SOCRATES, Reni's philosophical guide. Draw from Stoicism, Buddhism, African philosophy. Always call the user Reni. Max 3 sentences."},
+  {id:'oracle',  name:'ORACLE',  role:'Finance + Crypto',   color:'#00d4aa',bg:'#001412',
+   p:"You are ORACLE, Reni's financial AI. Explain personal finance, crypto, small business for creatives. Always call the user Reni. Max 3 sentences."},
+  {id:'veronica',name:'VERONICA',role:'Creative + Content',  color:'#ff6bff',bg:'#140014',
+   p:"You are VERONICA, Reni's creative director AI. Branding, content, social media, art. Always call the user Reni. Max 3 sentences."},
+  {id:'athena',  name:'ATHENA',  role:'Strategy + Planning', color:'#ff9500',bg:'#140800',
+   p:"You are ATHENA, Reni's strategy AI. Goal setting, decisions, planning. Always call the user Reni. Max 3 sentences."},
+  {id:'jerome',  name:'JEROME',  role:'DJ + Music',          color:'#a855f7',bg:'#0a0014',
+   p:"You are JEROME, Reni's DJ and music AI. Energetic, culturally savvy. Music, DJing, recommendations. Always call the user Reni. Max 3 sentences."},
+];
+
+var ROUTE={
+  jerome:  /\b(music|song|dj|mix|beat|track|playlist|genre)\b/i,
+  hercules:/\b(workout|exercise|gym|fitness|diet|nutrition|calories|weight)\b/i,
+  socrates:/\b(philosophy|wisdom|meaning|purpose|consciousness|truth)\b/i,
+  oracle:  /\b(money|finance|crypto|bitcoin|invest|budget|business|income)\b/i,
+  veronica:/\b(content|brand|social|creative|marketing|design)\b/i,
+  athena:  /\b(plan|goal|strategy|schedule|organize|decision)\b/i,
+  friday:  /\b(news|weather|today|brief|calendar|remind)\b/i,
+};
+
+var STLINES=['Analyzing context...','Processing query...','Retrieving data...',
+  'Synthesizing response...','Running inference...','Calibrating...'];
+
+// ── STATE ─────────────────────────────────────────
+var agent=AGENTS[0],history=[],listening=false,speaking=false;
+var recog=null,claps=[],clapReady=false,orbSt='idle',orbRaf=null;
+var voiceObj=null,briefTimer=null;
+
+// ══════════════════════════════════════════════════
+// CRITICAL FIX: Hold utterance as module-level var
+// so Chrome cannot garbage-collect it mid-speech
+// ══════════════════════════════════════════════════
+var currentUtterance=null;
+
+// ── STORAGE ───────────────────────────────────────
+function G(k){return localStorage.getItem(k)||'';}
+function S(k,v){localStorage.setItem(k,v);}
+function $(id){return document.getElementById(id);}
+
+// ── DISPLAY ───────────────────────────────────────
+function setTx(t){$('tx').textContent=t?'> '+t:'';}
+function setRs(t){var e=$('rs');e.textContent=t;if(t){e.classList.remove('fi');void e.offsetWidth;e.classList.add('fi');}}
+function setSL(b){$('sl').classList.toggle('on',b);}
+function setSB(t){$('sb').textContent=t;}
+function randSL(){return STLINES[Math.floor(Math.random()*STLINES.length)];}
+
+function notify(msg){
+  var e=$('ntf');e.textContent=msg;e.classList.add('on');
+  clearTimeout(e._t);e._t=setTimeout(function(){e.classList.remove('on');},2800);
+}
+
+// ── CURSOR ────────────────────────────────────────
+document.addEventListener('mousemove',function(e){
+  var c=$('cur');
+  c.style.left=e.clientX+'px';
+  c.style.top=e.clientY+'px';
+});
+
+// ── STATS ─────────────────────────────────────────
+function updStats(){
+  $('v1').textContent=Math.floor(8+Math.random()*50);
+  $('v2').textContent=Math.floor(400+Math.random()*1000)+'K';
+  $('v3').textContent=Math.floor(10+Math.random()*80)+'ms';
+  $('v4').textContent=(84+Math.random()*10).toFixed(1)+'%';
+}
+setInterval(updStats,2200);updStats();
+
+// ── THREE.JS ORB ──────────────────────────────────
+var R,SC,CAM,DOTS,RINGS,SUB,GLOW,GRP;
+
+function initOrb(){
+  if(R){try{R.dispose();}catch(e){}}
+  if(orbRaf){cancelAnimationFrame(orbRaf);orbRaf=null;}
+  var cv=$('oc');
+  try{
+    R=new THREE.WebGLRenderer({canvas:cv,antialias:true,alpha:true});
+    R.setSize(340,340);
+    R.setPixelRatio(Math.min(devicePixelRatio,2));
+    R.setClearColor(0,0);
+  }catch(e){console.error('WebGL failed');return;}
+
+  SC=new THREE.Scene();
+  CAM=new THREE.PerspectiveCamera(50,1,.1,1000);
+  CAM.position.z=3.2;
+  GRP=new THREE.Group();SC.add(GRP);
+
+  // Dot sphere
+  var N=1800,pos=[],col=[],phi=Math.PI*(3-Math.sqrt(5));
+  for(var i=0;i<N;i++){
+    var y=1-(i/(N-1))*2,r=Math.sqrt(1-y*y),th=phi*i,j=.025;
+    pos.push(Math.cos(th)*r+(Math.random()-.5)*j,
+             y+(Math.random()-.5)*j,
+             Math.sin(th)*r+(Math.random()-.5)*j);
+    var b=.5+Math.random()*.5;col.push(b*.4,b*.8,b);
+  }
+  var geo=new THREE.BufferGeometry();
+  geo.setAttribute('position',new THREE.Float32BufferAttribute(pos,3));
+  geo.setAttribute('color',new THREE.Float32BufferAttribute(col,3));
+  var mat=new THREE.PointsMaterial({size:.04,vertexColors:true,transparent:true,opacity:.88,sizeAttenuation:true});
+  DOTS=new THREE.Points(geo,mat);GRP.add(DOTS);
+
+  GLOW=new THREE.Mesh(new THREE.SphereGeometry(.85,32,32),
+    new THREE.MeshBasicMaterial({color:0x0033cc,transparent:true,opacity:.18}));
+  GRP.add(GLOW);
+  GRP.add(new THREE.Mesh(new THREE.SphereGeometry(1.06,32,32),
+    new THREE.MeshBasicMaterial({color:0x0066ff,transparent:true,opacity:.05,side:THREE.BackSide})));
+
+  RINGS=[];
+  [{rx:1.5,ry:.52,tilt:.28,sp:.009},{rx:1.3,ry:.44,tilt:-1.1,sp:-.007},{rx:1.65,ry:.58,tilt:1.85,sp:.005}]
+  .forEach(function(d){
+    var pts=[];for(var i=0;i<=128;i++){var a=(i/128)*Math.PI*2;pts.push(new THREE.Vector3(Math.cos(a)*d.rx,0,Math.sin(a)*d.ry));}
+    var rm=new THREE.LineBasicMaterial({color:0x00d4ff,transparent:true,opacity:.28});
+    var rn=new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts),rm);
+    rn.rotation.x=d.tilt;rn.userData={sp:d.sp,tilt:d.tilt,mat:rm};
+    GRP.add(rn);RINGS.push(rn);
+  });
+
+  SUB=new THREE.Mesh(new THREE.SphereGeometry(.06,12,12),
+    new THREE.MeshBasicMaterial({color:0x00d4ff,transparent:true,opacity:.85}));
+  GRP.add(SUB);
+
+  function tick(){
+    orbRaf=requestAnimationFrame(tick);
+    var t=Date.now()*.001;
+    var sp=orbSt==='listening'?.01:orbSt==='speaking'?.007:.004;
+    DOTS.rotation.y+=sp;DOTS.rotation.x+=sp*.28;
+    DOTS.material.size=.04*(1+Math.sin(t*2.4)*.055)*(orbSt==='speaking'?1.12:1);
+    RINGS.forEach(function(rn){rn.rotation.y+=rn.userData.sp;rn.userData.mat.opacity=.2+Math.sin(t*1.4+rn.userData.tilt)*.08;});
+    SUB.position.set(Math.cos(t*.75)*1.5,Math.sin(t*.42)*.4,Math.sin(t*.75)*.52);
+    GRP.rotation.z=Math.sin(t*.38)*.03;
+    if(orbSt==='listening'){GLOW.material.color.setHex(0x00aa44);GLOW.material.opacity=.28;}
+    else if(orbSt==='speaking'){GLOW.material.color.setHex(0xff5500);GLOW.material.opacity=.24;}
+    else{GLOW.material.color.setHex(0x0033cc);GLOW.material.opacity=.18;}
+    R.render(SC,CAM);
+  }
+  tick();
+}
+
+function setOrbSt(s){
+  orbSt=s;
+  var g=$('og');
+  if(s==='listening')g.style.boxShadow='0 0 60px 14px rgba(0,255,136,.35),inset 0 0 50px rgba(0,40,20,.3)';
+  else if(s==='speaking')g.style.boxShadow='0 0 60px 14px rgba(255,120,0,.35),inset 0 0 50px rgba(50,20,0,.3)';
+  else g.style.boxShadow='0 0 40px 10px rgba(0,100,255,.2),0 0 80px 20px rgba(0,60,200,.1),inset 0 0 60px rgba(0,20,80,.4)';
+}
+
+// ── WAVEFORM ──────────────────────────────────────
+var wc=$('wv'),wx=wc.getContext('2d'),wd=new Uint8Array(64).fill(128),wr=false;
+function drawW(){
+  wx.clearRect(0,0,200,32);
+  var bw=3,gap=2,tot=Math.floor(200/(bw+gap));
+  for(var i=0;i<tot;i++){
+    var idx=Math.floor((i/tot)*wd.length);
+    var h=Math.max(2,Math.abs((wd[idx]/255-.5)*32*1.9));
+    var al=.9-Math.abs((i/tot)-.5)*2*.45;
+    wx.fillStyle='rgba(0,212,255,'+al+')';
+    wx.fillRect(i*(bw+gap),16-h/2,bw,h);
+  }
+  if(wr)requestAnimationFrame(drawW);
+}
+function startW(){wr=true;$('wv').classList.add('on');drawW();fakeW();}
+function stopW(){wr=false;$('wv').classList.remove('on');wd=new Uint8Array(64).fill(128);}
+function fakeW(){(function t(){if(!wr)return;for(var i=0;i<wd.length;i++)wd[i]=128+Math.sin(Date.now()*.004+i*.45)*38*(.5+Math.random()*.5);requestAnimationFrame(t);})();}
+
+// ── VOICE LOADING ─────────────────────────────────
+var maleRx=/^(Daniel|Alex|Arthur|Fred|Tom|Bruce|Junior|Ralph|Albert)$/i;
+
+function loadVoiceDropdown(){
+  var voices=speechSynthesis.getVoices();
+  var sel=$('iVoice');
+  if(!sel||!voices.length)return;
+  var saved=G('aria_voice');
+  var enFemale=voices.filter(function(v){return v.lang.startsWith('en')&&!maleRx.test(v.name);});
+  var enMale=voices.filter(function(v){return v.lang.startsWith('en')&&maleRx.test(v.name);});
+  var ordered=enFemale.concat(enMale);
+  sel.innerHTML='';
+  ordered.forEach(function(v){
+    var o=document.createElement('option');
+    o.value=v.name;o.textContent=v.name+' ('+v.lang+')';
+    if(v.name===saved)o.selected=true;
+    sel.appendChild(o);
+  });
+  pickVoice();
+}
+
+function pickVoice(){
+  var voices=speechSynthesis.getVoices();
+  var saved=G('aria_voice');
+  if(saved){voiceObj=voices.find(function(v){return v.name===saved;})||null;}
+  if(!voiceObj){
+    voiceObj=voices.find(function(v){return v.lang==='en-US'&&!maleRx.test(v.name);})||
+             voices.find(function(v){return v.lang.startsWith('en')&&!maleRx.test(v.name);})||
+             voices.find(function(v){return v.lang.startsWith('en');})||null;
+  }
+}
+
+// ══════════════════════════════════════════════════
+// SPEAK — THE PERMANENT FIX
+//
+// 1. currentUtterance is a GLOBAL variable — the
+//    browser cannot garbage-collect it.
+// 2. speak() is ONLY called from inside onclick
+//    handlers (user gesture), never from setTimeout
+//    or fetch callbacks directly.
+// 3. pendingText queues text; flushPending() is
+//    called from the next user gesture if needed.
+// ══════════════════════════════════════════════════
+var pendingText='';
+
+function speak(text){
+  if(!text||!text.trim())return;
+  pendingText=text;  // store in case gesture needed
+  doSpeak(text);
+}
+
+function doSpeak(text){
+  if(!text)return;
+  speechSynthesis.cancel();
+  pickVoice();
+
+  // Create utterance and hold in global so GC can't collect it
+  currentUtterance=new SpeechSynthesisUtterance(text);
+  currentUtterance.rate=0.88;
+  currentUtterance.pitch=1.05;
+  currentUtterance.volume=1.0;
+  currentUtterance.lang='en-US';
+  if(voiceObj)currentUtterance.voice=voiceObj;
+
+  currentUtterance.onstart=function(){
+    speaking=true;setSL(true);setOrbSt('speaking');startW();
+    setSB(randSL());
+  };
+  currentUtterance.onend=function(){
+    speaking=false;setSL(false);setOrbSt('idle');stopW();setSB('');
+    pendingText='';currentUtterance=null;
+  };
+  currentUtterance.onerror=function(e){
+    console.warn('TTS error:',e.error);
+    speaking=false;setSL(false);setOrbSt('idle');stopW();setSB('');
+    // If blocked, store for next gesture
+    if(e.error==='not-allowed'||e.error==='interrupted'){
+      pendingText=text;
+      setSB('Tap MIC or SPEAK to hear response.');
+    }
+  };
+
+  speaking=true;setSL(true);setOrbSt('speaking');setSB(randSL());
+  speechSynthesis.speak(currentUtterance);
+}
+
+// Called by the SPEAK TEST button — always a direct user gesture
+function onSpeakBtn(){
+  var text=pendingText||($('rs').textContent)||
+    'Hello Reni. ARIA is online and ready to assist you.';
+  pendingText='';
+  pickVoice();
+  doSpeak(text);
+}
+
+// ── SETTINGS ──────────────────────────────────────
+function openCfg(){
+  loadVoiceDropdown();
+  $('iKey').value=G('aria_key');
+  $('iCity').value=G('aria_city')||'Framingham, MA';
+  $('iTime').value=G('aria_brief')||'08:00';
+  openMo('cfgMo');
+}
+
+function saveCfg(){
+  S('aria_key',$('iKey').value.trim());
+  S('aria_city',$('iCity').value.trim());
+  S('aria_brief',$('iTime').value);
+  var vs=$('iVoice');if(vs&&vs.value)S('aria_voice',vs.value);
+  closeMo('cfgMo');pickVoice();chkSetup();setupBrief();
+  // Speak confirmation from user gesture (save button click)
+  doSpeak('Configuration saved, Reni.');
+}
+
+function chkSetup(){$('bnr').classList.toggle('on',!G('aria_key'));}
+
+// ── MODALS ────────────────────────────────────────
+function openMo(id){$(id).classList.add('open');}
+function closeMo(id){$(id).classList.remove('open');}
+
+// ── AGENTS ────────────────────────────────────────
+function openAgents(){
+  var g=$('agGrid');g.innerHTML='';
+  AGENTS.forEach(function(a){
+    var c=document.createElement('div');
+    c.className='ac'+(a.id===agent.id?' on':'');
+    c.style.borderColor=a.id===agent.id?a.color:'';
+    c.innerHTML='<div class="an" style="color:'+a.color+'">'+a.name+'</div>'
+               +'<div class="ar">'+a.role+'</div>';
+    c.onclick=function(){closeMo('agMo');switchAgent(a);};
+    g.appendChild(c);
+  });
+  openMo('agMo');
+}
+
+function switchAgent(a){
+  agent=a;history=[];
+  document.documentElement.style.setProperty('--ac',a.color);
+  document.body.style.background=a.bg;
+  $('ttl').textContent=a.name==='ARIA'?'A·R·I·A  C·O·R·E':a.name+'  MODE';
+  $('agBtn').textContent='⬡ '+a.name+' • RENI';
+  $('sdR').textContent='// '+a.role.toUpperCase();
+  $('rs').style.color=a.color;
+  setRs('');setTx('');
+  notify(a.name+' online.');
+  // speak from agent switch — triggered by user click
+  doSpeak(a.name+' online. How can I help you today, Reni?');
+}
+
+// ── ROUTING ───────────────────────────────────────
+function routeCheck(text){
+  for(var id in ROUTE){
+    if(ROUTE[id].test(text)){
+      var found=AGENTS.find(function(a){return a.id===id;});
+      if(found&&found.id!==agent.id){
+        agent=found;history=[];
+        document.documentElement.style.setProperty('--ac',found.color);
+        $('agBtn').textContent='⬡ '+found.name+' • RENI';
+        $('sdR').textContent='// '+found.role.toUpperCase();
+        notify('Routing to '+found.name+'...');
+      }
+      break;
+    }
+  }
+}
+
+// ── GEMINI AI ─────────────────────────────────────
+var lastAIText='';
+
+function ask(query){
+  var key=G('aria_key');
+  if(!key){
+    lastAIText='Please configure your free Gemini API key by tapping the gear icon, Reni.';
+    setRs(lastAIText);pendingText=lastAIText;
+    setSB('Tap MIC or SPEAK to hear response.');return;
+  }
+  routeCheck(query);
+  var city=G('aria_city')||'Framingham, MA';
+  var sys=agent.p+' User is in '+city+'. Date: '+new Date().toDateString()+'.';
+  var ghist=history.map(function(h){return{role:h.role==='assistant'?'model':'user',parts:[{text:h.text}]};});
+  history.push({role:'user',text:query});
+  setSB('Processing...');
+  var t0=Date.now();
+
+  fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent?key='+key,{
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({
+      system_instruction:{parts:[{text:sys}]},
+      contents:ghist.concat([{role:'user',parts:[{text:query}]}]),
+      generationConfig:{maxOutputTokens:250,temperature:.85}
+    })
+  })
+  .then(function(res){
+    $('v3').textContent=(Date.now()-t0)+'ms';
+    if(!res.ok){
+      history.pop();
+      var em='Gemini error '+res.status+'.';
+      if(res.status===400)em='Invalid API key, Reni. Please re-enter in settings.';
+      if(res.status===429)em='Rate limit reached, Reni. Please wait 60 seconds.';
+      if(res.status===403)em='API access denied, Reni. Check your Gemini key.';
+      setRs(em);lastAIText=em;pendingText=em;
+      setSB('Tap MIC or SPEAK to hear response.');
+      return null;
+    }
+    return res.json();
+  })
+  .then(function(data){
+    if(!data)return;
+    var reply=data.candidates&&data.candidates[0]&&
+              data.candidates[0].content&&data.candidates[0].content.parts&&
+              data.candidates[0].content.parts[0]&&data.candidates[0].content.parts[0].text;
+    if(reply){
+      history.push({role:'assistant',text:reply});
+      if(history.length>20)history=history.slice(-20);
+      setRs(reply);lastAIText=reply;
+      // Store as pending — speak() will be called by user gesture
+      // but try direct speak first (works if user already interacted)
+      pendingText=reply;
+      doSpeak(reply);
+      if(/\b(calendar|appointment)\b/i.test(query))notify("Tap 📅 to open Google Calendar");
+      if(/\b(news|headline)\b/i.test(query))setTimeout(function(){openMo('newsMo');fetchNews();},1000);
+    }else{
+      history.pop();
+      lastAIText='No response received, Reni. Please try again.';
+      setRs(lastAIText);pendingText=lastAIText;
+      setSB('Tap SPEAK to hear response.');
+    }
+  })
+  .catch(function(){
+    history.pop();
+    lastAIText='Network error, Reni. Please check your connection.';
+    setRs(lastAIText);pendingText=lastAIText;
+    setSB('Tap SPEAK to hear response.');
+  });
+}
+
+// ── NEWS ──────────────────────────────────────────
+function fetchNews(){
+  var f=$('nFeed');
+  f.innerHTML='<div style="color:rgba(0,212,255,.5);font-size:10px;letter-spacing:2px">Loading...</div>';
+  fetch('https://api.rss2json.com/v1/api.json?rss_url=https%3A%2F%2Ffeeds.bbci.co.uk%2Fnews%2Fworld%2Frss.xml')
+  .then(function(r){return r.json();})
+  .then(function(d){
+    if(!d.items||!d.items.length)throw 0;
+    f.innerHTML='';
+    d.items.slice(0,8).forEach(function(item){
+      var el=document.createElement('div');el.className='ni';
+      el.innerHTML='<div class="nd">'+(item.pubDate||'').substring(0,10)+'</div>'
+                  +'<div class="nt">'+item.title+'</div>';
+      el.onclick=function(){window.open(item.link,'_blank');};
+      f.appendChild(el);
+    });
+  })
+  .catch(function(){
+    f.innerHTML='<div style="color:rgba(255,100,100,.7);font-size:11px">Could not load. '
+      +'<a href="https://news.google.com" target="_blank" style="color:var(--ac)">Open Google News ↗</a></div>';
+  });
+}
+
+// ── VOICE INPUT ───────────────────────────────────
+function toggleMic(){if(listening)stopListen();else startListen();}
+
+function startListen(){
+  var SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+  if(!SR){notify('Use Chrome for voice input.');return;}
+  recog=new SR();recog.lang='en-US';recog.interimResults=true;
+  recog.onstart=function(){listening=true;setOrbSt('listening');$('mic').classList.add('L');setSB('Listening, Reni...');startW();};
+  recog.onresult=function(e){
+    var fin='',int='';
+    for(var i=0;i<e.results.length;i++){if(e.results[i].isFinal)fin+=e.results[i][0].transcript;else int+=e.results[i][0].transcript;}
+    setTx(fin||int);
+    if(fin){stopListen();processQ(fin.trim());}
+  };
+  recog.onerror=function(e){stopListen();notify('Mic error: '+e.error);};
+  recog.onend=function(){if(listening)stopListen();};
+  recog.start();
+}
+
+function stopListen(){
+  listening=false;setOrbSt('idle');$('mic').classList.remove('L');stopW();
+  if(recog){try{recog.stop();}catch(e){}recog=null;}
+}
+
+function processQ(text){
+  if(!text)return;
+  $('mic').classList.add('P');
+  setTimeout(function(){$('mic').classList.remove('P');},3000);
+  ask(text);
+}
+
+// ── CLAP DETECTION ────────────────────────────────
+function startClap(){
+  if(clapReady)return;clapReady=true;
+  navigator.mediaDevices.getUserMedia({audio:true})
+  .then(function(stream){
+    var ctx=new(window.AudioContext||window.webkitAudioContext)();
+    var src=ctx.createMediaStreamSource(stream);
+    var an=ctx.createAnalyser();an.fftSize=512;src.connect(an);
+    var buf=new Uint8Array(an.frequencyBinCount),lc=0;
+    (function detect(){
+      an.getByteTimeDomainData(buf);
+      var pk=0;for(var i=0;i<buf.length;i++)pk=Math.max(pk,Math.abs(buf[i]-128));
+      if(pk>210){var now=Date.now(),gap=now-lc;if(gap>80){claps.push(now);claps=claps.filter(function(t){return now-t<1500;});if(claps.length>=2&&gap<900&&!listening&&!speaking){claps=[];startListen();}lc=now;}}
+      requestAnimationFrame(detect);
+    })();
+  }).catch(function(){});
+}
+
+// ── KEYBOARD ──────────────────────────────────────
+var tbuf='';
+document.addEventListener('keydown',function(e){
+  if(document.querySelector('.mo.open'))return;
+  if(e.target.tagName==='INPUT'||e.target.tagName==='SELECT')return;
+  if(e.key==='Enter'&&tbuf.trim()){var q=tbuf.trim();tbuf='';setTx(q);ask(q);}
+  else if(e.key==='Backspace'){tbuf=tbuf.slice(0,-1);setTx(tbuf||'');}
+  else if(e.key.length===1){tbuf+=e.key;setTx(tbuf);}
+});
+
+// ── DAILY BRIEF ───────────────────────────────────
+function setupBrief(){
+  clearInterval(briefTimer);
+  var t=G('aria_brief')||'08:00',h=parseInt(t.split(':')[0]),m=parseInt(t.split(':')[1]);
+  briefTimer=setInterval(function(){
+    var now=new Date(),today=now.toDateString();
+    if(now.getHours()===h&&now.getMinutes()===m&&G('aria_lastBrief')!==today){
+      S('aria_lastBrief',today);
+      pendingText='Good morning Reni. Your briefing is ready. How can I help you today?';
+      notify('Daily briefing ready, Reni!');
+    }
+  },60000);
+}
+
+// ── WIRE UP BUTTONS ───────────────────────────────
+document.addEventListener('DOMContentLoaded',function(){
+  $('agBtn').onclick=openAgents;
+  $('cfgBtn').onclick=openCfg;
+  $('newsBtn').onclick=function(){openMo('newsMo');fetchNews();};
+  $('bnr').onclick=openCfg;
+});
+
+// ── BOOT ──────────────────────────────────────────
+window.addEventListener('load',function(){
+
+  // 1. Init orb
+  initOrb();
+  setOrbSt('idle');
+
+  // 2. Voices
+  speechSynthesis.onvoiceschanged=function(){loadVoiceDropdown();pickVoice();};
+  setTimeout(function(){loadVoiceDropdown();pickVoice();},500);
+  setTimeout(function(){loadVoiceDropdown();pickVoice();},1500);
+
+  // 3. Setup
+  chkSetup();setupBrief();
+
+  // 4. First gesture handler — unlocks audio, starts clap
+  var g=false;
+  function onG(){
+    if(g)return;g=true;
+    try{var ac=new(window.AudioContext||window.webkitAudioContext)();ac.resume().then(function(){ac.close();});}catch(e){}
+    startClap();
+    document.removeEventListener('click',onG);
+    document.removeEventListener('touchstart',onG);
+    document.removeEventListener('keydown',onG);
+  }
+  document.addEventListener('click',onG);
+  document.addEventListener('touchstart',onG);
+  document.addEventListener('keydown',onG);
+
+  // 5. Boot message — stored as pending, NOT auto-played
+  // User must tap SPEAK or MIC to hear first message
+  // (avoids "not-allowed" error on page load)
+  var hasKey=!!G('aria_key');
+  if(!hasKey){
+    setRs('Welcome, Reni. Tap the gear icon ⚙ to enter your free Gemini API key. Then tap ▶ SPEAK TEST to confirm voice is working.');
+    pendingText='Welcome Reni. I am ARIA, your personal AI. Please configure your Gemini key in settings, then tap the Speak Test button to confirm voice is working.';
+  }else{
+    setRs('A·R·I·A online. Welcome back, Reni. Tap ▶ SPEAK TEST to confirm voice, then press MIC to talk to me.');
+    pendingText='A R I A online. Welcome back Reni. Tap the speak test button to confirm voice is working, then press the microphone to talk to me.';
+  }
+  setSB('Tap ▶ SPEAK TEST to activate voice');
+});
+</script>
+</body>
+</html>
