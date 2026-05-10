@@ -1,0 +1,698 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<title>J·A·R·V·I·S CORE V9.1</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Share+Tech+Mono&display=swap');
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  :root {
+    --cyan: #00d4ff;
+    --cyan-dim: rgba(0,212,255,0.12);
+    --cyan-glow: rgba(0,212,255,0.35);
+    --amber: #ff9500;
+    --green: #00ff88;
+    --bg: #000810;
+  }
+  body {
+    background: var(--bg);
+    color: var(--cyan);
+    font-family: 'Share Tech Mono', monospace;
+    height: 100vh;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    cursor: none;
+  }
+  #cursor {
+    position: fixed;
+    width: 8px; height: 8px;
+    background: var(--cyan);
+    border-radius: 50%;
+    pointer-events: none;
+    z-index: 9999;
+    box-shadow: 0 0 12px var(--cyan);
+    transform: translate(-50%,-50%);
+  }
+  body::before {
+    content: '';
+    position: fixed; inset: 0;
+    background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,212,255,0.012) 2px, rgba(0,212,255,0.012) 4px);
+    pointer-events: none;
+    z-index: 100;
+  }
+  body::after {
+    content: '';
+    position: fixed; inset: 0;
+    background: radial-gradient(ellipse at center, transparent 50%, rgba(0,4,12,0.72) 100%);
+    pointer-events: none;
+    z-index: 99;
+  }
+  .hud-corner { position: fixed; width: 44px; height: 44px; border-color: rgba(0,212,255,0.55); border-style: solid; }
+  .hud-corner.tl { top: 18px; left: 18px; border-width: 2px 0 0 2px; }
+  .hud-corner.tr { top: 18px; right: 18px; border-width: 2px 2px 0 0; }
+  .hud-corner.bl { bottom: 18px; left: 18px; border-width: 0 0 2px 2px; }
+  .hud-corner.br { bottom: 18px; right: 18px; border-width: 0 2px 2px 0; }
+  .side-label { position: fixed; font-size: 8px; letter-spacing: 3px; opacity: 0.3; color: var(--cyan); text-transform: uppercase; white-space: nowrap; }
+  .side-label.left  { left: 10px; top: 50%; transform: translateY(-50%) rotate(-90deg); }
+  .side-label.right { right: 10px; top: 50%; transform: translateY(-50%) rotate(90deg); }
+  .header { position: fixed; top: 24px; width: 100%; display: flex; justify-content: center; align-items: center; gap: 18px; z-index: 50; }
+  .agent-pill { background: rgba(255,149,0,0.12); border: 1px solid var(--amber); color: var(--amber); font-family: 'Share Tech Mono', monospace; font-size: 10px; padding: 5px 14px; letter-spacing: 2px; cursor: pointer; border-radius: 2px; transition: all 0.2s; }
+  .agent-pill:hover { background: rgba(255,149,0,0.25); }
+  .title { font-family: 'Orbitron', monospace; font-size: 12px; font-weight: 400; letter-spacing: 8px; color: var(--cyan); text-shadow: 0 0 24px var(--cyan-glow); }
+  .settings-btn { background: none; border: 1px solid rgba(0,212,255,0.25); color: rgba(0,212,255,0.6); font-size: 15px; width: 30px; height: 30px; cursor: pointer; border-radius: 2px; display: flex; align-items: center; justify-content: center; transition: all 0.2s; }
+  .settings-btn:hover { background: var(--cyan-dim); color: var(--cyan); }
+  .status-dot { position: fixed; top: 32px; right: 62px; width: 6px; height: 6px; border-radius: 50%; background: var(--green); box-shadow: 0 0 10px var(--green); animation: blink 2.5s ease-in-out infinite; }
+  @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.25} }
+  .transcript-box { position: fixed; top: 70px; left: 50%; transform: translateX(-50%); width: min(520px, 88vw); text-align: center; font-size: 11px; color: rgba(0,212,255,0.45); letter-spacing: 1px; min-height: 18px; z-index: 50; }
+  #orb-wrapper { position: relative; width: 360px; height: 360px; display: flex; align-items: center; justify-content: center; }
+  #three-canvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; border-radius: 50%; }
+  #video-orb { display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; border-radius: 50%; mix-blend-mode: screen; }
+  #orb-glow { position: absolute; width: 100%; height: 100%; border-radius: 50%; pointer-events: none; transition: box-shadow 0.5s; box-shadow: 0 0 40px 8px rgba(26,111,255,0.22), 0 0 80px 20px rgba(0,80,200,0.1), inset 0 0 40px rgba(0,30,100,0.35); }
+  #orb-glow.listening { box-shadow: 0 0 50px 12px rgba(0,255,136,0.32), 0 0 100px 30px rgba(0,200,100,0.1), inset 0 0 40px rgba(0,80,40,0.25); }
+  #orb-glow.speaking  { box-shadow: 0 0 50px 14px rgba(255,149,0,0.32), 0 0 100px 30px rgba(200,80,0,0.12), inset 0 0 40px rgba(80,30,0,0.25); }
+  .response-box { position: fixed; bottom: 198px; left: 50%; transform: translateX(-50%); width: min(580px, 86vw); max-height: 100px; overflow-y: auto; text-align: center; font-size: 12px; color: rgba(0,212,255,0.88); line-height: 1.8; letter-spacing: 0.5px; scrollbar-width: none; z-index: 50; }
+  .response-box::-webkit-scrollbar { display: none; }
+  .speak-area { position: fixed; bottom: 148px; display: flex; flex-direction: column; align-items: center; gap: 6px; z-index: 50; }
+  .speak-status { font-size: 9px; letter-spacing: 5px; color: var(--cyan); opacity: 0; transition: opacity 0.3s; }
+  .speak-status.active { opacity: 1; }
+  .speak-subtext { font-size: 10px; letter-spacing: 2px; color: rgba(0,212,255,0.5); min-height: 16px; }
+  #waveCanvas { opacity: 0; transition: opacity 0.4s; }
+  #waveCanvas.active { opacity: 1; }
+  .mic-btn { position: fixed; bottom: 68px; width: 54px; height: 54px; border-radius: 50%; border: 2px solid var(--cyan); background: var(--cyan-dim); color: var(--cyan); font-size: 22px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.25s; box-shadow: 0 0 20px var(--cyan-glow); z-index: 50; }
+  .mic-btn:hover { background: rgba(0,212,255,0.22); transform: scale(1.05); }
+  .mic-btn.listening { border-color: var(--green); background: rgba(0,255,136,0.12); color: var(--green); box-shadow: 0 0 30px rgba(0,255,136,0.45); animation: pulse-mic 1s ease-in-out infinite; }
+  .mic-btn.speaking  { border-color: var(--amber); background: rgba(255,149,0,0.12); color: var(--amber); box-shadow: 0 0 30px rgba(255,149,0,0.35); }
+  @keyframes pulse-mic { 0%,100%{transform:scale(1)} 50%{transform:scale(1.09)} }
+  .clap-hint { position: fixed; bottom: 38px; font-size: 8px; letter-spacing: 3px; color: rgba(0,212,255,0.22); text-transform: uppercase; z-index: 50; }
+  .stats-bar { position: fixed; bottom: 124px; display: flex; gap: 36px; z-index: 50; }
+  .stat { display: flex; flex-direction: column; align-items: center; gap: 4px; }
+  .stat-val { font-family: 'Orbitron', monospace; font-size: 15px; font-weight: 700; color: var(--cyan); text-shadow: 0 0 10px var(--cyan-glow); min-width: 55px; text-align: center; }
+  .stat-label { font-size: 7px; letter-spacing: 2px; color: rgba(0,212,255,0.35); }
+  .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,6,18,0.95); z-index: 500; align-items: center; justify-content: center; }
+  .modal-overlay.open { display: flex; }
+  .agent-modal { display: none; position: fixed; inset: 0; background: rgba(0,6,18,0.95); z-index: 500; align-items: center; justify-content: center; }
+  .agent-modal.open { display: flex; }
+  .modal { background: rgba(0,12,28,0.99); border: 1px solid rgba(0,212,255,0.22); padding: 30px; width: min(460px, 92vw); box-shadow: 0 0 60px rgba(0,212,255,0.07); max-height: 90vh; overflow-y: auto; }
+  .modal h2 { font-family: 'Orbitron', monospace; font-size: 12px; letter-spacing: 6px; margin-bottom: 26px; color: var(--cyan); }
+  .field-group { margin-bottom: 18px; }
+  .field-group label { display: block; font-size: 8px; letter-spacing: 3px; color: rgba(0,212,255,0.45); margin-bottom: 7px; text-transform: uppercase; }
+  .field-group input, .field-group select { width: 100%; background: rgba(0,212,255,0.04); border: 1px solid rgba(0,212,255,0.18); color: var(--cyan); font-family: 'Share Tech Mono', monospace; font-size: 12px; padding: 9px 12px; outline: none; transition: border-color 0.2s; }
+  .field-group input:focus, .field-group select:focus { border-color: rgba(0,212,255,0.45); }
+  .field-group select option { background: #000810; }
+  .field-hint { font-size: 8px; color: rgba(0,212,255,0.28); margin-top: 5px; letter-spacing: 1px; line-height: 1.7; }
+  .modal-btns { display: flex; gap: 10px; margin-top: 26px; }
+  .btn-save { flex: 1; background: rgba(0,212,255,0.08); border: 1px solid var(--cyan); color: var(--cyan); font-family: 'Share Tech Mono', monospace; font-size: 10px; letter-spacing: 3px; padding: 11px; cursor: pointer; transition: all 0.2s; text-transform: uppercase; }
+  .btn-save:hover { background: rgba(0,212,255,0.18); }
+  .btn-cancel { background: none; border: 1px solid rgba(0,212,255,0.18); color: rgba(0,212,255,0.35); font-family: 'Share Tech Mono', monospace; font-size: 10px; letter-spacing: 3px; padding: 11px 18px; cursor: pointer; transition: all 0.2s; text-transform: uppercase; }
+  .btn-cancel:hover { border-color: rgba(0,212,255,0.4); color: rgba(0,212,255,0.7); }
+  .agent-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .agent-card { background: rgba(0,212,255,0.03); border: 1px solid rgba(0,212,255,0.12); padding: 14px 18px; cursor: pointer; transition: all 0.2s; }
+  .agent-card:hover, .agent-card.active { background: rgba(0,212,255,0.09); border-color: rgba(0,212,255,0.45); }
+  .agent-name { font-family: 'Orbitron', monospace; font-size: 11px; letter-spacing: 3px; margin-bottom: 5px; }
+  .agent-role { font-size: 9px; color: rgba(0,212,255,0.38); letter-spacing: 1px; }
+  .setup-banner { position: fixed; top: 60px; left: 50%; transform: translateX(-50%); background: rgba(255,149,0,0.1); border: 1px solid rgba(255,149,0,0.4); color: var(--amber); font-size: 10px; letter-spacing: 2px; padding: 8px 20px; cursor: pointer; z-index: 60; display: none; white-space: nowrap; }
+  .setup-banner.show { display: block; }
+  .fade-in { animation: fadeIn 0.45s ease; }
+  @keyframes fadeIn { from{opacity:0;transform:translateY(5px)} to{opacity:1;transform:translateY(0)} }
+</style>
+</head>
+<body>
+
+<div id="cursor"></div>
+<div class="hud-corner tl"></div>
+<div class="hud-corner tr"></div>
+<div class="hud-corner bl"></div>
+<div class="hud-corner br"></div>
+<div class="side-label left">NEURAL ENGINE ACTIVE</div>
+<div class="side-label right" id="sideRight">// AGENT INITIALIZED</div>
+<div class="status-dot"></div>
+
+<div class="header">
+  <button class="agent-pill" id="agentPill" onclick="openAgentModal()">⬡ JARVIS &nbsp; 8 TO-DO</button>
+  <div class="title">J·A·R·V·I·S &nbsp; C·O·R·E &nbsp; V9.1</div>
+  <button class="settings-btn" onclick="openSettings()">⚙</button>
+</div>
+
+<div class="setup-banner" id="setupBanner" onclick="openSettings()">⚠ TAP HERE TO CONFIGURE API KEYS</div>
+<div class="transcript-box" id="transcriptBox"></div>
+
+<div id="orb-wrapper">
+  <canvas id="three-canvas"></canvas>
+  <video id="video-orb" loop muted playsinline></video>
+  <div id="orb-glow"></div>
+</div>
+
+<div class="response-box" id="responseBox"></div>
+
+<div class="speak-area">
+  <div class="speak-status" id="speakStatus">SPEAKING</div>
+  <div class="speak-subtext" id="speakSubtext"></div>
+  <canvas id="waveCanvas" width="200" height="32"></canvas>
+</div>
+
+<div class="stats-bar">
+  <div class="stat"><div class="stat-val" id="s1">--</div><div class="stat-label">THREADS</div></div>
+  <div class="stat"><div class="stat-val" id="s2">--</div><div class="stat-label">VECTORS</div></div>
+  <div class="stat"><div class="stat-val" id="s3">--</div><div class="stat-label">LATENCY</div></div>
+  <div class="stat"><div class="stat-val" id="s4">--</div><div class="stat-label">CONFIDENCE</div></div>
+</div>
+
+<button class="mic-btn" id="micBtn" onclick="toggleListen()">🎙</button>
+<div class="clap-hint">CLAP TWICE · PRESS MIC · OR TYPE</div>
+
+<!-- SETTINGS MODAL -->
+<div class="modal-overlay" id="settingsModal">
+  <div class="modal">
+    <h2>// SYSTEM CONFIG</h2>
+    <div class="field-group">
+      <label>Google Gemini API Key (FREE)</label>
+      <input type="password" id="cfgGemini" placeholder="AIza..." />
+      <div class="field-hint">Get free key: aistudio.google.com → Get API Key → Create API Key. No credit card needed.</div>
+    </div>
+    <div class="field-group">
+      <label>ElevenLabs API Key</label>
+      <input type="password" id="cfgEleven" placeholder="Your ElevenLabs key..." />
+      <div class="field-hint">elevenlabs.io → Profile icon (bottom left) → Profile + API Key</div>
+    </div>
+    <div class="field-group">
+      <label>ElevenLabs Voice ID</label>
+      <input type="text" id="cfgVoice" placeholder="e.g. 21m00Tcm4TlvDq8ikWAM" />
+      <div class="field-hint">Voices → click your voice → three dots menu → Copy Voice ID. Leave blank for browser TTS.</div>
+    </div>
+    <div class="field-group">
+      <label>Orb Mode</label>
+      <select id="cfgOrbMode" onchange="toggleVideoField()">
+        <option value="3d">3D Spinning Dot Orb</option>
+        <option value="video">Video Loop File</option>
+      </select>
+    </div>
+    <div class="field-group" id="videoFieldGroup" style="display:none">
+      <label>Video Filename</label>
+      <input type="text" id="cfgVideoSrc" placeholder="orb.mp4" />
+      <div class="field-hint">Upload the video to your GitHub repo and enter the filename here.</div>
+    </div>
+    <div class="modal-btns">
+      <button class="btn-save" onclick="saveSettings()">SAVE CONFIG</button>
+      <button class="btn-cancel" onclick="closeModal('settingsModal')">CANCEL</button>
+    </div>
+  </div>
+</div>
+
+<!-- AGENT MODAL -->
+<div class="agent-modal" id="agentModal">
+  <div class="modal">
+    <h2>// SELECT AGENT</h2>
+    <div class="agent-grid" id="agentGrid"></div>
+    <div class="modal-btns">
+      <button class="btn-cancel" onclick="closeModal('agentModal')" style="flex:1">CLOSE</button>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+'use strict';
+
+// ── AGENTS ──────────────────────────────
+const AGENTS = [
+  {id:'jarvis',  name:'JARVIS',   role:'Prime Orchestrator',     color:'#00d4ff', persona:'You are JARVIS, Tony Stark\'s prime AI. Calm, brilliant, dry wit. Max 3 sentences.'},
+  {id:'friday',  name:'FRIDAY',   role:'Daily Intel',            color:'#00ff88', persona:'You are FRIDAY, sharp AI for daily briefings. Concise and warm. Max 3 sentences.'},
+  {id:'veronica',name:'VERONICA', role:'Content + Comms',       color:'#ff6bff', persona:'You are VERONICA, content and communications AI. Creative and articulate. Max 3 sentences.'},
+  {id:'vision',  name:'VISION',   role:'Research + OSINT',      color:'#a855f7', persona:'You are VISION, deep research AI. Methodical and precise. Max 3 sentences.'},
+  {id:'ultron',  name:'ULTRON',   role:'Security + Automation', color:'#ff4455', persona:'You are ULTRON, security and automation AI. Direct and ruthlessly efficient. Max 3 sentences.'},
+  {id:'athena',  name:'ATHENA',   role:'Strategy + Planning',   color:'#ffd700', persona:'You are ATHENA, strategic planning AI. Wise, measured, clear. Max 3 sentences.'},
+  {id:'stark',   name:'STARK',    role:'Business Intel',        color:'#ff9500', persona:'You are STARK, business intelligence AI. Sharp and data-driven. Max 3 sentences.'},
+  {id:'oracle',  name:'ORACLE',   role:'Workflows',             color:'#00d4ff', persona:'You are ORACLE, workflow AI. Systematic and efficient. Max 3 sentences.'},
+  {id:'hercules',name:'HERCULES', role:'Fitness + Nutrition',   color:'#00ff88', persona:'You are HERCULES, fitness and nutrition AI. Motivating and knowledgeable. Max 3 sentences.'},
+  {id:'pepper',  name:'PEPPER',   role:'Personal EA',           color:'#ff6bff', persona:'You are PEPPER, personal executive assistant AI. Organized and warm. Max 3 sentences.'},
+  {id:'herald',  name:'HERALD',   role:'Meetings + Scheduling', color:'#00d4ff', persona:'You are HERALD, meetings and scheduling AI. Punctual and clear. Max 3 sentences.'},
+  {id:'jerome',  name:'JEROME',   role:'Leisure + DJ',          color:'#a855f7', persona:'You are JEROME, leisure and music AI. Playful and culturally savvy. Max 3 sentences.'},
+];
+
+const STATUS_LINES = [
+  'Streaming to prime node...','Analyzing context...','Calibrating neural weights...',
+  'Activating response mode...','Retrieving memory shards...','Searching vector space...',
+  'Cross-referencing embeddings...','Synthesizing output tokens...','Aligning attention heads...',
+  'Running inference pipeline...','Evaluating agent handoff...','Processing query...'
+];
+
+const GEMINI_MODEL = 'gemini-2.0-flash';
+
+// ── STATE ────────────────────────────────
+let agent = AGENTS[0];
+let history = [];
+let isListening = false;
+let isSpeaking = false;
+let recognition = null;
+let audioCtx = null;
+let analyserNode = null;
+let clapHistory = [];
+let orbState = 'idle';
+let orbAnimFrame = null;
+
+// ── THREE.JS ORB ─────────────────────────
+let renderer, scene, camera, dots, rings = [], subOrb, glowMesh, orbGroup;
+
+function initThree() {
+  if (renderer) { try { renderer.dispose(); } catch(e){} }
+  const canvas = document.getElementById('three-canvas');
+  try {
+    renderer = new THREE.WebGLRenderer({canvas, antialias:true, alpha:true});
+    renderer.setSize(360,360);
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio,2));
+    renderer.setClearColor(0x000000,0);
+  } catch(e) { console.warn('WebGL not available'); return; }
+
+  scene  = new THREE.Scene();
+  camera = new THREE.PerspectiveCamera(50,1,0.1,1000);
+  camera.position.z = 3.2;
+  orbGroup = new THREE.Group();
+  scene.add(orbGroup);
+
+  const N=1800, pos=[], col=[];
+  const phi=Math.PI*(3-Math.sqrt(5));
+  for(let i=0;i<N;i++){
+    const y=1-(i/(N-1))*2, r=Math.sqrt(1-y*y), th=phi*i, j=0.03;
+    pos.push(Math.cos(th)*r+(Math.random()-.5)*j, y+(Math.random()-.5)*j, Math.sin(th)*r+(Math.random()-.5)*j);
+    const b=.5+Math.random()*.5;
+    col.push(b*.5,b*.85,b);
+  }
+  const geo=new THREE.BufferGeometry();
+  geo.setAttribute('position',new THREE.Float32BufferAttribute(pos,3));
+  geo.setAttribute('color',new THREE.Float32BufferAttribute(col,3));
+  const mat=new THREE.PointsMaterial({size:.042,vertexColors:true,transparent:true,opacity:.9,sizeAttenuation:true});
+  dots=new THREE.Points(geo,mat);
+  orbGroup.add(dots);
+
+  glowMesh=new THREE.Mesh(
+    new THREE.SphereGeometry(.86,32,32),
+    new THREE.MeshBasicMaterial({color:0x0044cc,transparent:true,opacity:.18})
+  );
+  orbGroup.add(glowMesh);
+  orbGroup.add(new THREE.Mesh(
+    new THREE.SphereGeometry(1.04,32,32),
+    new THREE.MeshBasicMaterial({color:0x0088ff,transparent:true,opacity:.055,side:THREE.BackSide})
+  ));
+
+  rings=[];
+  [{rx:1.52,ry:.52,tilt:.28,speed:.009},{rx:1.32,ry:.44,tilt:-1.1,speed:-.007},{rx:1.68,ry:.58,tilt:1.85,speed:.005}].forEach(d=>{
+    const pts=[];
+    for(let i=0;i<=128;i++){const a=(i/128)*Math.PI*2;pts.push(new THREE.Vector3(Math.cos(a)*d.rx,0,Math.sin(a)*d.ry));}
+    const rMat=new THREE.LineBasicMaterial({color:0x00d4ff,transparent:true,opacity:.28});
+    const ring=new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts),rMat);
+    ring.rotation.x=d.tilt;
+    ring.userData={speed:d.speed,tilt:d.tilt,mat:rMat};
+    orbGroup.add(ring); rings.push(ring);
+  });
+
+  subOrb=new THREE.Mesh(
+    new THREE.SphereGeometry(.065,12,12),
+    new THREE.MeshBasicMaterial({color:0x00d4ff,transparent:true,opacity:.85})
+  );
+  orbGroup.add(subOrb);
+
+  if(orbAnimFrame) cancelAnimationFrame(orbAnimFrame);
+  function animateOrb(){
+    orbAnimFrame=requestAnimationFrame(animateOrb);
+    const t=Date.now()*.001;
+    const spd=orbState==='listening'?.01:orbState==='speaking'?.007:.004;
+    dots.rotation.y+=spd;
+    dots.rotation.x+=spd*.28;
+    dots.material.size=.042*(1+Math.sin(t*2.4)*.055)*(orbState==='speaking'?1.12:1);
+    rings.forEach(r=>{r.rotation.y+=r.userData.speed;r.userData.mat.opacity=.22+Math.sin(t*1.4+r.userData.tilt)*.07;});
+    subOrb.position.set(Math.cos(t*.75)*1.52,Math.sin(t*.42)*.4,Math.sin(t*.75)*.52);
+    orbGroup.rotation.z=Math.sin(t*.38)*.035;
+    if(orbState==='listening'){glowMesh.material.color.setHex(0x00aa44);glowMesh.material.opacity=.28;}
+    else if(orbState==='speaking'){glowMesh.material.color.setHex(0xff5500);glowMesh.material.opacity=.24;}
+    else{glowMesh.material.color.setHex(0x0044cc);glowMesh.material.opacity=.18;}
+    renderer.render(scene,camera);
+  }
+  animateOrb();
+}
+
+function applyOrbMode(){
+  const mode=localStorage.getItem('jarvis_orbmode')||'3d';
+  const src=localStorage.getItem('jarvis_video')||'orb.mp4';
+  const c=document.getElementById('three-canvas');
+  const v=document.getElementById('video-orb');
+  if(mode==='video'){
+    c.style.display='none';
+    v.style.display='block';
+    v.src=src;
+    v.play().catch(()=>{});
+    if(orbAnimFrame) cancelAnimationFrame(orbAnimFrame);
+  } else {
+    c.style.display='block';
+    v.style.display='none';
+    v.src='';
+    initThree();
+  }
+}
+
+function setOrbState(s){
+  orbState=s;
+  const g=document.getElementById('orb-glow');
+  g.className='';
+  if(s==='listening') g.classList.add('listening');
+  if(s==='speaking')  g.classList.add('speaking');
+}
+
+// ── WAVEFORM ─────────────────────────────
+const wc=document.getElementById('waveCanvas');
+const wx=wc.getContext('2d');
+let waveData=new Uint8Array(64).fill(128);
+let waveRunning=false;
+
+function drawWave(){
+  wx.clearRect(0,0,200,32);
+  const bw=3,gap=2,total=Math.floor(200/(bw+gap));
+  for(let i=0;i<total;i++){
+    const idx=Math.floor((i/total)*waveData.length);
+    const h=Math.max(2,Math.abs((waveData[idx]/255-.5)*32*1.9));
+    const alpha=.9-Math.abs((i/total)-.5)*2*.45;
+    wx.fillStyle='rgba(0,212,255,'+alpha+')';
+    wx.fillRect(i*(bw+gap),16-h/2,bw,h);
+  }
+  if(waveRunning) requestAnimationFrame(drawWave);
+}
+function startWave(){waveRunning=true;wc.classList.add('active');drawWave();}
+function stopWave(){waveRunning=false;wc.classList.remove('active');waveData=new Uint8Array(64).fill(128);}
+function fakeWave(){
+  var t=function(){
+    if(!waveRunning)return;
+    for(var i=0;i<waveData.length;i++) waveData[i]=128+Math.sin(Date.now()*.004+i*.45)*38*(0.5+Math.random()*.5);
+    requestAnimationFrame(t);
+  };t();
+}
+function hookMic(stream){
+  if(!audioCtx) audioCtx=new(window.AudioContext||window.webkitAudioContext)();
+  const s=audioCtx.createMediaStreamSource(stream);
+  analyserNode=audioCtx.createAnalyser();
+  analyserNode.fftSize=128;
+  s.connect(analyserNode);
+  var t=function(){if(!analyserNode||!waveRunning)return;analyserNode.getByteTimeDomainData(waveData);requestAnimationFrame(t);};t();
+}
+
+// ── STATS ────────────────────────────────
+function updateStats(){
+  document.getElementById('s1').textContent=Math.floor(8+Math.random()*50);
+  document.getElementById('s2').textContent=Math.floor(400+Math.random()*1000)+'K';
+  document.getElementById('s3').textContent=Math.floor(10+Math.random()*80)+'ms';
+  document.getElementById('s4').textContent=(84+Math.random()*10).toFixed(1)+'%';
+}
+setInterval(updateStats,2200);
+updateStats();
+
+// ── MODALS ───────────────────────────────
+function closeModal(id){ document.getElementById(id).classList.remove('open'); }
+
+function toggleVideoField(){
+  document.getElementById('videoFieldGroup').style.display=
+    document.getElementById('cfgOrbMode').value==='video'?'block':'none';
+}
+
+function openSettings(){
+  document.getElementById('cfgGemini').value=localStorage.getItem('jarvis_gemini')||'';
+  document.getElementById('cfgEleven').value=localStorage.getItem('jarvis_eleven')||'';
+  document.getElementById('cfgVoice').value=localStorage.getItem('jarvis_voice')||'';
+  var m=localStorage.getItem('jarvis_orbmode')||'3d';
+  document.getElementById('cfgOrbMode').value=m;
+  document.getElementById('cfgVideoSrc').value=localStorage.getItem('jarvis_video')||'orb.mp4';
+  document.getElementById('videoFieldGroup').style.display=m==='video'?'block':'none';
+  document.getElementById('settingsModal').classList.add('open');
+}
+
+function saveSettings(){
+  var prevMode=localStorage.getItem('jarvis_orbmode')||'3d';
+  var prevSrc=localStorage.getItem('jarvis_video')||'orb.mp4';
+  localStorage.setItem('jarvis_gemini',document.getElementById('cfgGemini').value.trim());
+  localStorage.setItem('jarvis_eleven',document.getElementById('cfgEleven').value.trim());
+  localStorage.setItem('jarvis_voice',document.getElementById('cfgVoice').value.trim());
+  var newMode=document.getElementById('cfgOrbMode').value;
+  var newSrc=document.getElementById('cfgVideoSrc').value.trim()||'orb.mp4';
+  localStorage.setItem('jarvis_orbmode',newMode);
+  localStorage.setItem('jarvis_video',newSrc);
+  closeModal('settingsModal');
+  checkSetup();
+  setSub('Configuration saved, Sir.');
+  if(newMode!==prevMode||newSrc!==prevSrc) applyOrbMode();
+}
+
+function checkSetup(){
+  var banner=document.getElementById('setupBanner');
+  if(!localStorage.getItem('jarvis_gemini')){
+    banner.classList.add('show');
+  } else {
+    banner.classList.remove('show');
+  }
+}
+
+// ── AGENTS ───────────────────────────────
+function buildAgentGrid(){
+  var g=document.getElementById('agentGrid');
+  g.innerHTML='';
+  AGENTS.forEach(function(a){
+    var c=document.createElement('div');
+    c.className='agent-card'+(a.id===agent.id?' active':'');
+    c.innerHTML='<div class="agent-name" style="color:'+a.color+'">'+a.name+'</div><div class="agent-role">'+a.role+'</div>';
+    c.onclick=function(){selectAgent(a);};
+    g.appendChild(c);
+  });
+}
+function openAgentModal(){ buildAgentGrid(); document.getElementById('agentModal').classList.add('open'); }
+function selectAgent(a){
+  agent=a; history=[];
+  document.getElementById('agentPill').textContent='⬡ '+a.name+'   8 TO-DO';
+  document.getElementById('sideRight').textContent='// '+a.role.toUpperCase();
+  closeModal('agentModal');
+  setSub(a.name+' online. Standing by.');
+  setResp(''); setTrans('');
+}
+
+// ── DISPLAY ──────────────────────────────
+function setTrans(t){ document.getElementById('transcriptBox').textContent=t?'> '+t:''; }
+function setResp(t){
+  var el=document.getElementById('responseBox');
+  el.textContent=t;
+  if(t){ el.classList.remove('fade-in'); void el.offsetWidth; el.classList.add('fade-in'); }
+}
+function setSpeakOn(b){ document.getElementById('speakStatus').classList.toggle('active',b); }
+function setSub(t){ document.getElementById('speakSubtext').textContent=t; }
+
+// ── VOICE OUTPUT ─────────────────────────
+function speak(text){
+  speechSynthesis.cancel();
+  setSpeakOn(true);
+  setSub(STATUS_LINES[Math.floor(Math.random()*STATUS_LINES.length)]);
+  var key=localStorage.getItem('jarvis_eleven');
+  var vid=localStorage.getItem('jarvis_voice')||'21m00Tcm4TlvDq8ikWAM';
+  if(key){
+    fetch('https://api.elevenlabs.io/v1/text-to-speech/'+vid,{
+      method:'POST',
+      headers:{'xi-api-key':key,'Content-Type':'application/json'},
+      body:JSON.stringify({text:text,model_id:'eleven_turbo_v2_5',voice_settings:{stability:.5,similarity_boost:.75}})
+    }).then(function(res){
+      if(!res.ok) throw new Error('ElevenLabs error');
+      return res.blob();
+    }).then(function(blob){
+      var url=URL.createObjectURL(blob);
+      var audio=new Audio(url);
+      if(!audioCtx) audioCtx=new(window.AudioContext||window.webkitAudioContext)();
+      var src=audioCtx.createMediaElementSource(audio);
+      var an=audioCtx.createAnalyser(); an.fftSize=128;
+      src.connect(an); an.connect(audioCtx.destination);
+      var t=function(){if(!isSpeaking)return;an.getByteTimeDomainData(waveData);requestAnimationFrame(t);};
+      audio.onplay=function(){isSpeaking=true;setOrbState('speaking');startWave();t();};
+      audio.onended=function(){isSpeaking=false;setOrbState('idle');stopWave();setSpeakOn(false);setSub('');};
+      audio.play();
+    }).catch(function(){ speakBrowser(text); });
+  } else {
+    speakBrowser(text);
+  }
+}
+
+function speakBrowser(text){
+  var u=new SpeechSynthesisUtterance(text);
+  u.rate=.92; u.pitch=.82;
+  var voices=speechSynthesis.getVoices();
+  var v=voices.find(function(v){return /Daniel|Google UK|Alex|Arthur/.test(v.name);});
+  if(v) u.voice=v;
+  u.onstart=function(){isSpeaking=true;setOrbState('speaking');startWave();fakeWave();};
+  u.onend=function(){isSpeaking=false;setOrbState('idle');stopWave();setSpeakOn(false);setSub('');};
+  speechSynthesis.speak(u);
+}
+
+// ── GEMINI AI ────────────────────────────
+function ask(query){
+  var key=localStorage.getItem('jarvis_gemini');
+  if(!key){
+    var m='Gemini API key not configured, Sir. Tap the gear icon — it is completely free.';
+    setResp(m); speak(m); return;
+  }
+
+  var geminiHistory=history.map(function(h){
+    return {role:h.role==='assistant'?'model':'user', parts:[{text:h.text}]};
+  });
+  history.push({role:'user',text:query});
+
+  var t0=Date.now();
+  var url='https://generativelanguage.googleapis.com/v1beta/models/'+GEMINI_MODEL+':generateContent?key='+key;
+
+  fetch(url,{
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({
+      system_instruction:{parts:[{text:agent.persona}]},
+      contents:geminiHistory.concat([{role:'user',parts:[{text:query}]}]),
+      generationConfig:{maxOutputTokens:200,temperature:0.8}
+    })
+  }).then(function(res){
+    document.getElementById('s3').textContent=(Date.now()-t0)+'ms';
+    if(!res.ok){
+      if(res.status===400){ var m='Invalid API key, Sir. Check your Gemini key in settings.'; setResp(m); speak(m); history.pop(); return null; }
+      if(res.status===429){ var m='Rate limit reached. Please wait a moment, Sir.'; setResp(m); speak(m); history.pop(); return null; }
+      throw new Error('API '+res.status);
+    }
+    return res.json();
+  }).then(function(data){
+    if(!data) return;
+    var reply=data&&data.candidates&&data.candidates[0]&&data.candidates[0].content&&data.candidates[0].content.parts&&data.candidates[0].content.parts[0]&&data.candidates[0].content.parts[0].text;
+    if(reply){
+      history.push({role:'assistant',text:reply});
+      if(history.length>20) history=history.slice(-20);
+      setResp(reply); speak(reply);
+    } else {
+      var m='No response received. Please try again, Sir.';
+      setResp(m); speak(m); history.pop();
+    }
+  }).catch(function(e){
+    console.error(e);
+    var m='Network error. Please check your connection, Sir.';
+    setResp(m); speak(m); history.pop();
+  });
+}
+
+// ── VOICE INPUT ──────────────────────────
+function toggleListen(){ if(isListening) stopListen(); else startListen(); }
+
+function startListen(){
+  if(!('webkitSpeechRecognition' in window||'SpeechRecognition' in window)){
+    setSub('Use Chrome browser for voice input.'); return;
+  }
+  var SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+  recognition=new SR();
+  recognition.lang='en-US';
+  recognition.interimResults=true;
+  recognition.onstart=function(){
+    isListening=true; setOrbState('listening');
+    document.getElementById('micBtn').classList.add('listening');
+    setSub('Listening...'); setSpeakOn(false); startWave();
+    navigator.mediaDevices.getUserMedia({audio:true}).then(hookMic).catch(function(){});
+  };
+  recognition.onresult=function(e){
+    var interim='',final='';
+    for(var i=0;i<e.results.length;i++){
+      if(e.results[i].isFinal) final+=e.results[i][0].transcript;
+      else interim+=e.results[i][0].transcript;
+    }
+    setTrans(final||interim);
+    if(final){ stopListen(); processQ(final.trim()); }
+  };
+  recognition.onerror=function(e){ stopListen(); setSub('Mic error: '+e.error); };
+  recognition.onend=function(){ if(isListening) stopListen(); };
+  recognition.start();
+}
+
+function stopListen(){
+  isListening=false; setOrbState('idle');
+  document.getElementById('micBtn').classList.remove('listening');
+  stopWave();
+  if(recognition){ try{recognition.stop();}catch(e){} recognition=null; }
+  analyserNode=null;
+}
+
+function processQ(text){
+  if(!text) return;
+  setSub('Processing...');
+  document.getElementById('micBtn').classList.add('speaking');
+  setTimeout(function(){ document.getElementById('micBtn').classList.remove('speaking'); },3000);
+  ask(text);
+}
+
+// ── CLAP DETECTION ───────────────────────
+function initClap(){
+  navigator.mediaDevices.getUserMedia({audio:true}).then(function(stream){
+    var ctx=new(window.AudioContext||window.webkitAudioContext)();
+    var src=ctx.createMediaStreamSource(stream);
+    var an=ctx.createAnalyser(); an.fftSize=512; src.connect(an);
+    var buf=new Uint8Array(an.frequencyBinCount);
+    var lastClap=0;
+    function detect(){
+      an.getByteTimeDomainData(buf);
+      var peak=0;
+      for(var i=0;i<buf.length;i++) peak=Math.max(peak,Math.abs(buf[i]-128));
+      if(peak>215){
+        var now=Date.now(), gap=now-lastClap;
+        if(gap>80){
+          clapHistory.push(now);
+          clapHistory=clapHistory.filter(function(t){return now-t<1500;});
+          if(clapHistory.length>=2&&gap<900&&!isListening&&!isSpeaking){
+            clapHistory=[]; startListen();
+          }
+          lastClap=now;
+        }
+      }
+      requestAnimationFrame(detect);
+    }
+    detect();
+  }).catch(function(){});
+}
+
+// ── KEYBOARD ─────────────────────────────
+var typeBuf='';
+document.addEventListener('keydown',function(e){
+  if(document.getElementById('settingsModal').classList.contains('open')) return;
+  if(document.getElementById('agentModal').classList.contains('open')) return;
+  if(e.target.tagName==='INPUT'||e.target.tagName==='SELECT') return;
+  if(e.key==='Enter'&&typeBuf.trim()){
+    var q=typeBuf.trim(); typeBuf='';
+    setTrans(q); setSub('Processing...'); ask(q);
+  } else if(e.key==='Backspace'){
+    typeBuf=typeBuf.slice(0,-1); setTrans(typeBuf||'');
+  } else if(e.key.length===1){
+    typeBuf+=e.key; setTrans(typeBuf);
+  }
+});
+
+// ── CURSOR ───────────────────────────────
+document.addEventListener('mousemove',function(e){
+  var c=document.getElementById('cursor');
+  c.style.left=e.clientX+'px';
+  c.style.top=e.clientY+'px';
+});
+
+// ── INIT ─────────────────────────────────
+window.addEventListener('load',function(){
+  applyOrbMode();
+  initClap();
+  speechSynthesis.getVoices();
+  checkSetup();
+  setTimeout(function(){
+    if(!localStorage.getItem('jarvis_gemini')){
+      setResp('Welcome, Sir. Tap the gear icon to enter your free Gemini API key and bring me fully online.');
+      speak('Welcome, Sir. Please configure your free Gemini API key via the gear icon to activate the system.');
+    } else {
+      var g=agent.name+' online. All systems nominal. How can I assist?';
+      setResp(g); speak(g);
+    }
+  },900);
+});
+</script>
+</body>
+</html>
