@@ -1,0 +1,558 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>J·A·R·V·I·S CORE V9.1</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Share+Tech+Mono&display=swap');
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --cyan:#00d4ff;--cdim:rgba(0,212,255,.12);--cglow:rgba(0,212,255,.35);
+  --amber:#ff9500;--green:#00ff88;--bg:#000810;
+}
+body{background:var(--bg);color:var(--cyan);font-family:'Share Tech Mono',monospace;
+  height:100vh;overflow:hidden;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;cursor:none}
+#cur{position:fixed;width:8px;height:8px;background:var(--cyan);border-radius:50%;
+  pointer-events:none;z-index:9999;box-shadow:0 0 12px var(--cyan);transform:translate(-50%,-50%)}
+body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:100;
+  background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,212,255,.012) 2px,rgba(0,212,255,.012) 4px)}
+body::after{content:'';position:fixed;inset:0;pointer-events:none;z-index:99;
+  background:radial-gradient(ellipse at center,transparent 50%,rgba(0,4,12,.72) 100%)}
+.hc{position:fixed;width:44px;height:44px;border-color:rgba(0,212,255,.55);border-style:solid}
+.tl{top:18px;left:18px;border-width:2px 0 0 2px}
+.tr{top:18px;right:18px;border-width:2px 2px 0 0}
+.bl{bottom:18px;left:18px;border-width:0 0 2px 2px}
+.br{bottom:18px;right:18px;border-width:0 2px 2px 0}
+.sl{position:fixed;font-size:8px;letter-spacing:3px;opacity:.3;color:var(--cyan);text-transform:uppercase;white-space:nowrap}
+.sl.l{left:10px;top:50%;transform:translateY(-50%) rotate(-90deg)}
+.sl.r{right:10px;top:50%;transform:translateY(-50%) rotate(90deg)}
+.hdr{position:fixed;top:24px;width:100%;display:flex;justify-content:center;align-items:center;gap:18px;z-index:50}
+.pill{background:rgba(255,149,0,.12);border:1px solid var(--amber);color:var(--amber);
+  font-family:'Share Tech Mono',monospace;font-size:10px;padding:5px 14px;letter-spacing:2px;
+  cursor:pointer;border-radius:2px;transition:all .2s}
+.pill:hover{background:rgba(255,149,0,.25)}
+.ttl{font-family:'Orbitron',monospace;font-size:12px;font-weight:400;letter-spacing:8px;
+  color:var(--cyan);text-shadow:0 0 24px var(--cglow)}
+.gbtn{background:none;border:1px solid rgba(0,212,255,.25);color:rgba(0,212,255,.6);
+  font-size:15px;width:30px;height:30px;cursor:pointer;border-radius:2px;
+  display:flex;align-items:center;justify-content:center;transition:all .2s}
+.gbtn:hover{background:var(--cdim);color:var(--cyan)}
+.sdot{position:fixed;top:32px;right:62px;width:6px;height:6px;border-radius:50%;
+  background:var(--green);box-shadow:0 0 10px var(--green);animation:blink 2.5s ease-in-out infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.25}}
+.tbox{position:fixed;top:70px;left:50%;transform:translateX(-50%);width:min(520px,88vw);
+  text-align:center;font-size:11px;color:rgba(0,212,255,.45);letter-spacing:1px;min-height:18px;z-index:50}
+#ow{position:relative;width:360px;height:360px;display:flex;align-items:center;justify-content:center}
+#tc{position:absolute;top:0;left:0;width:100%;height:100%;border-radius:50%}
+#vo{display:none;position:absolute;top:0;left:0;width:100%;height:100%;object-fit:cover;border-radius:50%;mix-blend-mode:screen}
+#og{position:absolute;width:100%;height:100%;border-radius:50%;pointer-events:none;transition:box-shadow .5s;
+  box-shadow:0 0 40px 8px rgba(26,111,255,.22),0 0 80px 20px rgba(0,80,200,.1),inset 0 0 40px rgba(0,30,100,.35)}
+#og.L{box-shadow:0 0 50px 12px rgba(0,255,136,.32),0 0 100px 30px rgba(0,200,100,.1),inset 0 0 40px rgba(0,80,40,.25)}
+#og.S{box-shadow:0 0 50px 14px rgba(255,149,0,.32),0 0 100px 30px rgba(200,80,0,.12),inset 0 0 40px rgba(80,30,0,.25)}
+.rbox{position:fixed;bottom:198px;left:50%;transform:translateX(-50%);width:min(580px,86vw);
+  max-height:100px;overflow-y:auto;text-align:center;font-size:12px;color:rgba(0,212,255,.88);
+  line-height:1.8;letter-spacing:.5px;scrollbar-width:none;z-index:50}
+.rbox::-webkit-scrollbar{display:none}
+.sa{position:fixed;bottom:148px;display:flex;flex-direction:column;align-items:center;gap:6px;z-index:50}
+.ss{font-size:9px;letter-spacing:5px;color:var(--cyan);opacity:0;transition:opacity .3s}
+.ss.on{opacity:1}
+.st{font-size:10px;letter-spacing:2px;color:rgba(0,212,255,.5);min-height:16px}
+#wc{opacity:0;transition:opacity .4s}
+#wc.on{opacity:1}
+.mb{position:fixed;bottom:68px;width:54px;height:54px;border-radius:50%;
+  border:2px solid var(--cyan);background:var(--cdim);color:var(--cyan);font-size:22px;
+  cursor:pointer;display:flex;align-items:center;justify-content:center;
+  transition:all .25s;box-shadow:0 0 20px var(--cglow);z-index:50}
+.mb:hover{background:rgba(0,212,255,.22);transform:scale(1.05)}
+.mb.L{border-color:var(--green);background:rgba(0,255,136,.12);color:var(--green);
+  box-shadow:0 0 30px rgba(0,255,136,.45);animation:pm 1s ease-in-out infinite}
+.mb.S{border-color:var(--amber);background:rgba(255,149,0,.12);color:var(--amber);
+  box-shadow:0 0 30px rgba(255,149,0,.35)}
+@keyframes pm{0%,100%{transform:scale(1)}50%{transform:scale(1.09)}}
+.ch{position:fixed;bottom:38px;font-size:8px;letter-spacing:3px;color:rgba(0,212,255,.22);text-transform:uppercase;z-index:50}
+.sbar{position:fixed;bottom:124px;display:flex;gap:36px;z-index:50}
+.sv{font-family:'Orbitron',monospace;font-size:15px;font-weight:700;color:var(--cyan);
+  text-shadow:0 0 10px var(--cglow);min-width:55px;text-align:center}
+.sl2{font-size:7px;letter-spacing:2px;color:rgba(0,212,255,.35)}
+.mo{display:none;position:fixed;inset:0;background:rgba(0,6,18,.95);z-index:500;align-items:center;justify-content:center}
+.mo.open{display:flex}
+.md{background:rgba(0,12,28,.99);border:1px solid rgba(0,212,255,.22);padding:30px;
+  width:min(460px,92vw);box-shadow:0 0 60px rgba(0,212,255,.07);max-height:90vh;overflow-y:auto}
+.md h2{font-family:'Orbitron',monospace;font-size:12px;letter-spacing:6px;margin-bottom:26px;color:var(--cyan)}
+.fg{margin-bottom:18px}
+.fg label{display:block;font-size:8px;letter-spacing:3px;color:rgba(0,212,255,.45);margin-bottom:7px;text-transform:uppercase}
+.fg input,.fg select{width:100%;background:rgba(0,212,255,.04);border:1px solid rgba(0,212,255,.18);
+  color:var(--cyan);font-family:'Share Tech Mono',monospace;font-size:12px;padding:9px 12px;outline:none;transition:border-color .2s}
+.fg input:focus,.fg select:focus{border-color:rgba(0,212,255,.45)}
+.fg select option{background:#000810}
+.fh{font-size:8px;color:rgba(0,212,255,.28);margin-top:5px;letter-spacing:1px;line-height:1.7}
+.mbtns{display:flex;gap:10px;margin-top:26px}
+.bsv{flex:1;background:rgba(0,212,255,.08);border:1px solid var(--cyan);color:var(--cyan);
+  font-family:'Share Tech Mono',monospace;font-size:10px;letter-spacing:3px;padding:11px;cursor:pointer;transition:all .2s;text-transform:uppercase}
+.bsv:hover{background:rgba(0,212,255,.18)}
+.bcn{background:none;border:1px solid rgba(0,212,255,.18);color:rgba(0,212,255,.35);
+  font-family:'Share Tech Mono',monospace;font-size:10px;letter-spacing:3px;padding:11px 18px;cursor:pointer;transition:all .2s;text-transform:uppercase}
+.bcn:hover{border-color:rgba(0,212,255,.4);color:rgba(0,212,255,.7)}
+.ag{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.ac{background:rgba(0,212,255,.03);border:1px solid rgba(0,212,255,.12);padding:14px 18px;cursor:pointer;transition:all .2s}
+.ac:hover,.ac.on{background:rgba(0,212,255,.09);border-color:rgba(0,212,255,.45)}
+.an{font-family:'Orbitron',monospace;font-size:11px;letter-spacing:3px;margin-bottom:5px}
+.ar{font-size:9px;color:rgba(0,212,255,.38);letter-spacing:1px}
+.bnr{position:fixed;top:60px;left:50%;transform:translateX(-50%);
+  background:rgba(255,149,0,.1);border:1px solid rgba(255,149,0,.4);color:var(--amber);
+  font-size:10px;letter-spacing:2px;padding:8px 20px;cursor:pointer;z-index:60;
+  display:none;white-space:nowrap}
+.bnr.on{display:block}
+.fi{animation:fi .45s ease}
+@keyframes fi{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:translateY(0)}}
+</style>
+</head>
+<body>
+<div id="cur"></div>
+<div class="hc tl"></div><div class="hc tr"></div><div class="hc bl"></div><div class="hc br"></div>
+<div class="sl l">NEURAL ENGINE ACTIVE</div>
+<div class="sl r" id="slr">// AGENT INITIALIZED</div>
+<div class="sdot"></div>
+
+<div class="hdr">
+  <button class="pill" id="apill" onclick="openAgents()">⬡ JARVIS &nbsp; 8 TO-DO</button>
+  <div class="ttl">J·A·R·V·I·S &nbsp; C·O·R·E &nbsp; V9.1</div>
+  <button class="gbtn" onclick="openCfg()">⚙</button>
+</div>
+
+<div class="bnr" id="bnr" onclick="openCfg()">⚠ TAP HERE TO CONFIGURE API KEYS</div>
+<div class="tbox" id="tbox"></div>
+
+<div id="ow">
+  <canvas id="tc"></canvas>
+  <video id="vo" loop muted playsinline></video>
+  <div id="og"></div>
+</div>
+
+<div class="rbox" id="rbox"></div>
+
+<div class="sa">
+  <div class="ss" id="ss">SPEAKING</div>
+  <div class="st" id="st"></div>
+  <canvas id="wc" width="200" height="32"></canvas>
+</div>
+
+<div class="sbar">
+  <div><div class="sv" id="sv1">--</div><div class="sl2">THREADS</div></div>
+  <div><div class="sv" id="sv2">--</div><div class="sl2">VECTORS</div></div>
+  <div><div class="sv" id="sv3">--</div><div class="sl2">LATENCY</div></div>
+  <div><div class="sv" id="sv4">--</div><div class="sl2">CONFIDENCE</div></div>
+</div>
+
+<button class="mb" id="mb" onclick="toggleMic()">🎙</button>
+<div class="ch">CLAP TWICE · PRESS MIC · OR TYPE</div>
+
+<!-- SETTINGS -->
+<div class="mo" id="cfgModal">
+  <div class="md">
+    <h2>// SYSTEM CONFIG</h2>
+    <div class="fg">
+      <label>Google Gemini API Key (FREE)</label>
+      <input type="password" id="cg" placeholder="AIza..."/>
+      <div class="fh">Get free key → aistudio.google.com → Get API Key → Create API Key. No credit card needed.</div>
+    </div>
+    <div class="fg">
+      <div class="fh" style="color:rgba(0,255,136,0.5);font-size:10px;letter-spacing:2px;border:1px solid rgba(0,255,136,0.2);padding:10px;">
+        ✓ VOICE: Using Puter.js (AWS Polly Neural — Joanna voice). Free, unlimited, no key needed.
+      </div>
+    </div>
+    <div class="fg">
+      <label>Orb Mode</label>
+      <select id="co" onchange="tvf()">
+        <option value="3d">3D Spinning Dot Orb</option>
+        <option value="video">Video Loop File</option>
+      </select>
+    </div>
+    <div class="fg" id="vfg" style="display:none">
+      <label>Video Filename</label>
+      <input type="text" id="cvs" placeholder="orb.mp4"/>
+      <div class="fh">Upload the video to your GitHub repo root and enter its filename here.</div>
+    </div>
+    <div class="mbtns">
+      <button class="bsv" onclick="saveCfg()">SAVE CONFIG</button>
+      <button class="bcn" onclick="close1('cfgModal')">CANCEL</button>
+    </div>
+  </div>
+</div>
+
+<!-- AGENTS -->
+<div class="mo" id="agModal">
+  <div class="md">
+    <h2>// SELECT AGENT</h2>
+    <div class="ag" id="agGrid"></div>
+    <div class="mbtns">
+      <button class="bcn" onclick="close1('agModal')" style="flex:1">CLOSE</button>
+    </div>
+  </div>
+</div>
+
+<script src="https://js.puter.com/v2/"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+// ── AGENTS ──────────────────────────────────────────────────────────────
+var AGENTS=[
+  {id:'jarvis', name:'JARVIS',   role:'Prime Orchestrator',     color:'#00d4ff',p:'You are JARVIS, Tony Stark\'s prime AI. Calm, brilliant, dry wit. Max 3 sentences.'},
+  {id:'friday', name:'FRIDAY',   role:'Daily Intel',            color:'#00ff88',p:'You are FRIDAY, sharp AI for daily briefings. Concise and warm. Max 3 sentences.'},
+  {id:'veronica',name:'VERONICA',role:'Content + Comms',       color:'#ff6bff',p:'You are VERONICA, content and comms AI. Creative and articulate. Max 3 sentences.'},
+  {id:'vision', name:'VISION',   role:'Research + OSINT',      color:'#a855f7',p:'You are VISION, deep research AI. Methodical and precise. Max 3 sentences.'},
+  {id:'ultron', name:'ULTRON',   role:'Security + Automation', color:'#ff4455',p:'You are ULTRON, security AI. Direct and ruthlessly efficient. Max 3 sentences.'},
+  {id:'athena', name:'ATHENA',   role:'Strategy + Planning',   color:'#ffd700',p:'You are ATHENA, strategic planning AI. Wise, measured, clear. Max 3 sentences.'},
+  {id:'stark',  name:'STARK',    role:'Business Intel',        color:'#ff9500',p:'You are STARK, business intelligence AI. Sharp and data-driven. Max 3 sentences.'},
+  {id:'oracle', name:'ORACLE',   role:'Workflows',             color:'#00d4ff',p:'You are ORACLE, workflow AI. Systematic and efficient. Max 3 sentences.'},
+  {id:'hercules',name:'HERCULES',role:'Fitness + Nutrition',   color:'#00ff88',p:'You are HERCULES, fitness AI. Motivating and knowledgeable. Max 3 sentences.'},
+  {id:'pepper', name:'PEPPER',   role:'Personal EA',           color:'#ff6bff',p:'You are PEPPER, personal assistant AI. Organized and warm. Max 3 sentences.'},
+  {id:'herald', name:'HERALD',   role:'Meetings + Scheduling', color:'#00d4ff',p:'You are HERALD, scheduling AI. Punctual and clear. Max 3 sentences.'},
+  {id:'jerome', name:'JEROME',   role:'Leisure + DJ',          color:'#a855f7',p:'You are JEROME, leisure and music AI. Playful and culturally savvy. Max 3 sentences.'},
+];
+var SL=['Streaming to prime node...','Analyzing context...','Calibrating neural weights...',
+  'Activating response mode...','Retrieving memory shards...','Searching vector space...',
+  'Cross-referencing embeddings...','Synthesizing output tokens...','Running inference pipeline...'];
+
+// ── STATE ────────────────────────────────────────────────────────────────
+var agent=AGENTS[0],hist=[],listening=false,speaking=false;
+var recog=null,actx=null,anode=null,claps=[],orbSt='idle',raf=null;
+
+// ── THREE.JS ORB ─────────────────────────────────────────────────────────
+var rdr,scn,cam,dts,rgs=[],sorb,glow,grp;
+
+function initOrb(){
+  if(rdr){try{rdr.dispose();}catch(e){}}
+  var cv=document.getElementById('tc');
+  try{
+    rdr=new THREE.WebGLRenderer({canvas:cv,antialias:true,alpha:true});
+    rdr.setSize(360,360);
+    rdr.setPixelRatio(Math.min(devicePixelRatio,2));
+    rdr.setClearColor(0,0);
+  }catch(e){return;}
+  scn=new THREE.Scene();
+  cam=new THREE.PerspectiveCamera(50,1,.1,1000);
+  cam.position.z=3.2;
+  grp=new THREE.Group();
+  scn.add(grp);
+
+  // Dot sphere
+  var N=1800,pos=[],col=[],ph=Math.PI*(3-Math.sqrt(5));
+  for(var i=0;i<N;i++){
+    var y=1-(i/(N-1))*2,r=Math.sqrt(1-y*y),th=ph*i,j=.03;
+    pos.push(Math.cos(th)*r+(Math.random()-.5)*j,y+(Math.random()-.5)*j,Math.sin(th)*r+(Math.random()-.5)*j);
+    var b=.5+Math.random()*.5;col.push(b*.5,b*.85,b);
+  }
+  var geo=new THREE.BufferGeometry();
+  geo.setAttribute('position',new THREE.Float32BufferAttribute(pos,3));
+  geo.setAttribute('color',new THREE.Float32BufferAttribute(col,3));
+  var mat=new THREE.PointsMaterial({size:.042,vertexColors:true,transparent:true,opacity:.9,sizeAttenuation:true});
+  dts=new THREE.Points(geo,mat);grp.add(dts);
+
+  glow=new THREE.Mesh(new THREE.SphereGeometry(.86,32,32),new THREE.MeshBasicMaterial({color:0x0044cc,transparent:true,opacity:.18}));
+  grp.add(glow);
+  grp.add(new THREE.Mesh(new THREE.SphereGeometry(1.04,32,32),new THREE.MeshBasicMaterial({color:0x0088ff,transparent:true,opacity:.055,side:THREE.BackSide})));
+
+  rgs=[];
+  [{rx:1.52,ry:.52,tilt:.28,sp:.009},{rx:1.32,ry:.44,tilt:-1.1,sp:-.007},{rx:1.68,ry:.58,tilt:1.85,sp:.005}].forEach(function(d){
+    var pts=[];for(var i=0;i<=128;i++){var a=(i/128)*Math.PI*2;pts.push(new THREE.Vector3(Math.cos(a)*d.rx,0,Math.sin(a)*d.ry));}
+    var rm=new THREE.LineBasicMaterial({color:0x00d4ff,transparent:true,opacity:.28});
+    var rn=new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts),rm);
+    rn.rotation.x=d.tilt;rn.userData={sp:d.sp,tilt:d.tilt,mat:rm};grp.add(rn);rgs.push(rn);
+  });
+
+  sorb=new THREE.Mesh(new THREE.SphereGeometry(.065,12,12),new THREE.MeshBasicMaterial({color:0x00d4ff,transparent:true,opacity:.85}));
+  grp.add(sorb);
+
+  if(raf)cancelAnimationFrame(raf);
+  function tick(){
+    raf=requestAnimationFrame(tick);
+    var t=Date.now()*.001;
+    var sp=orbSt==='listening'?.01:orbSt==='speaking'?.007:.004;
+    dts.rotation.y+=sp;dts.rotation.x+=sp*.28;
+    dts.material.size=.042*(1+Math.sin(t*2.4)*.055)*(orbSt==='speaking'?1.12:1);
+    rgs.forEach(function(rn){rn.rotation.y+=rn.userData.sp;rn.userData.mat.opacity=.22+Math.sin(t*1.4+rn.userData.tilt)*.07;});
+    sorb.position.set(Math.cos(t*.75)*1.52,Math.sin(t*.42)*.4,Math.sin(t*.75)*.52);
+    grp.rotation.z=Math.sin(t*.38)*.035;
+    if(orbSt==='listening'){glow.material.color.setHex(0x00aa44);glow.material.opacity=.28;}
+    else if(orbSt==='speaking'){glow.material.color.setHex(0xff5500);glow.material.opacity=.24;}
+    else{glow.material.color.setHex(0x0044cc);glow.material.opacity=.18;}
+    rdr.render(scn,cam);
+  }
+  tick();
+}
+
+function applyOrb(){
+  var mode=ls('jarvis_orbmode')||'3d',src=ls('jarvis_video')||'orb.mp4';
+  var c=document.getElementById('tc'),v=document.getElementById('vo');
+  if(mode==='video'){
+    c.style.display='none';v.style.display='block';v.src=src;v.play().catch(function(){});
+    if(raf)cancelAnimationFrame(raf);
+  }else{
+    c.style.display='block';v.style.display='none';v.src='';initOrb();
+  }
+}
+
+function setOrbSt(s){
+  orbSt=s;var g=document.getElementById('og');
+  g.className='';if(s==='listening')g.classList.add('L');if(s==='speaking')g.classList.add('S');
+}
+
+// ── WAVEFORM ──────────────────────────────────────────────────────────────
+var wcv=document.getElementById('wc'),wcx=wcv.getContext('2d');
+var wd=new Uint8Array(64).fill(128),wr=false;
+function drawW(){
+  wcx.clearRect(0,0,200,32);
+  var bw=3,gap=2,tot=Math.floor(200/(bw+gap));
+  for(var i=0;i<tot;i++){
+    var idx=Math.floor((i/tot)*wd.length);
+    var h=Math.max(2,Math.abs((wd[idx]/255-.5)*32*1.9));
+    var al=.9-Math.abs((i/tot)-.5)*2*.45;
+    wcx.fillStyle='rgba(0,212,255,'+al+')';
+    wcx.fillRect(i*(bw+gap),16-h/2,bw,h);
+  }
+  if(wr)requestAnimationFrame(drawW);
+}
+function startW(){wr=true;wcv.classList.add('on');drawW();}
+function stopW(){wr=false;wcv.classList.remove('on');wd=new Uint8Array(64).fill(128);}
+function fakeW(){
+  (function t(){if(!wr)return;for(var i=0;i<wd.length;i++)wd[i]=128+Math.sin(Date.now()*.004+i*.45)*38*(.5+Math.random()*.5);requestAnimationFrame(t);})();
+}
+function hookMic(stream){
+  if(!actx)actx=new(window.AudioContext||window.webkitAudioContext)();
+  var s=actx.createMediaStreamSource(stream);
+  anode=actx.createAnalyser();anode.fftSize=128;s.connect(anode);
+  (function t(){if(!anode||!wr)return;anode.getByteTimeDomainData(wd);requestAnimationFrame(t);})();
+}
+
+// ── STATS ────────────────────────────────────────────────────────────────
+function updStats(){
+  document.getElementById('sv1').textContent=Math.floor(8+Math.random()*50);
+  document.getElementById('sv2').textContent=Math.floor(400+Math.random()*1000)+'K';
+  document.getElementById('sv3').textContent=Math.floor(10+Math.random()*80)+'ms';
+  document.getElementById('sv4').textContent=(84+Math.random()*10).toFixed(1)+'%';
+}
+setInterval(updStats,2200);updStats();
+
+// ── HELPERS ──────────────────────────────────────────────────────────────
+function ls(k){return localStorage.getItem(k);}
+function lss(k,v){localStorage.setItem(k,v);}
+function close1(id){document.getElementById(id).classList.remove('open');}
+function setT(t){document.getElementById('tbox').textContent=t?'> '+t:'';}
+function setR(t){var el=document.getElementById('rbox');el.textContent=t;if(t){el.classList.remove('fi');void el.offsetWidth;el.classList.add('fi');}}
+function setSS(b){document.getElementById('ss').classList.toggle('on',b);}
+function setST(t){document.getElementById('st').textContent=t;}
+function randSL(){return SL[Math.floor(Math.random()*SL.length)];}
+
+// ── SETTINGS ─────────────────────────────────────────────────────────────
+function tvf(){document.getElementById('vfg').style.display=document.getElementById('co').value==='video'?'block':'none';}
+function openCfg(){
+  document.getElementById('cg').value=ls('jarvis_gemini')||'';
+  document.getElementById('ce').value=ls('jarvis_eleven')||'';
+  document.getElementById('cv').value=ls('jarvis_voice')||'';
+  var m=ls('jarvis_orbmode')||'3d';
+  document.getElementById('co').value=m;
+  document.getElementById('cvs').value=ls('jarvis_video')||'orb.mp4';
+  document.getElementById('vfg').style.display=m==='video'?'block':'none';
+  document.getElementById('cfgModal').classList.add('open');
+}
+function saveCfg(){
+  var pm=ls('jarvis_orbmode')||'3d',ps=ls('jarvis_video')||'orb.mp4';
+  lss('jarvis_gemini',document.getElementById('cg').value.trim());
+  lss('jarvis_eleven',document.getElementById('ce').value.trim());
+  lss('jarvis_voice',document.getElementById('cv').value.trim());
+  var nm=document.getElementById('co').value,ns=document.getElementById('cvs').value.trim()||'orb.mp4';
+  lss('jarvis_orbmode',nm);lss('jarvis_video',ns);
+  close1('cfgModal');chkSetup();setST('Configuration saved, Sir.');
+  if(nm!==pm||ns!==ps)applyOrb();
+}
+function chkSetup(){document.getElementById('bnr').classList.toggle('on',!ls('jarvis_gemini'));}
+
+// ── AGENTS ───────────────────────────────────────────────────────────────
+function openAgents(){
+  var g=document.getElementById('agGrid');g.innerHTML='';
+  AGENTS.forEach(function(a){
+    var c=document.createElement('div');c.className='ac'+(a.id===agent.id?' on':'');
+    c.innerHTML='<div class="an" style="color:'+a.color+'">'+a.name+'</div><div class="ar">'+a.role+'</div>';
+    c.onclick=function(){
+      agent=a;hist=[];
+      document.getElementById('apill').textContent='⬡ '+a.name+'   8 TO-DO';
+      document.getElementById('slr').textContent='// '+a.role.toUpperCase();
+      close1('agModal');setST(a.name+' online. Standing by.');setR('');setT('');
+    };
+    g.appendChild(c);
+  });
+  document.getElementById('agModal').classList.add('open');
+}
+
+// ── VOICE OUTPUT (Puter.js — free, no API key, AWS Polly neural) ────────
+function speak(text){
+  speechSynthesis.cancel();
+  setSS(true);setST(randSL());
+  if(window.puter&&window.puter.ai&&window.puter.ai.txt2speech){
+    window.puter.ai.txt2speech(text,{voice:'Joanna',engine:'neural',language:'en-US'})
+    .then(function(audio){
+      audio.onplay=function(){speaking=true;setOrbSt('speaking');startW();fakeW();};
+      audio.onended=function(){speaking=false;setOrbSt('idle');stopW();setSS(false);setST('');};
+      audio.play();
+    }).catch(function(){browserSpeak(text);});
+  }else{
+    browserSpeak(text);
+  }
+}
+function browserSpeak(text){
+  // Last resort browser TTS fallback
+  var u=new SpeechSynthesisUtterance(text);
+  u.rate=0.88;u.pitch=1.1;u.lang='en-US';
+  var voices=speechSynthesis.getVoices();
+  var maleNames=/Daniel|Alex|Arthur|Fred|Tom|Bruce|Junior/;
+  var v=voices.find(function(x){return x.lang==='en-US'&&!maleNames.test(x.name);});
+  if(!v)v=voices.find(function(x){return x.lang.startsWith('en');});
+  if(v)u.voice=v;
+  u.onstart=function(){speaking=true;setOrbSt('speaking');startW();fakeW();};
+  u.onend=function(){speaking=false;setOrbSt('idle');stopW();setSS(false);setST('');};
+  speechSynthesis.speak(u);
+}
+
+// ── GEMINI ────────────────────────────────────────────────────────────────
+function ask(query){
+  var key=ls('jarvis_gemini');
+  if(!key){var msg='Gemini API key not configured. Tap the gear icon — it is completely free.';setR(msg);speak(msg);return;}
+  var ghist=hist.map(function(h){return{role:h.role==='assistant'?'model':'user',parts:[{text:h.text}]};});
+  hist.push({role:'user',text:query});
+  var t0=Date.now();
+  fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent?key='+key,{
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({
+      system_instruction:{parts:[{text:agent.p}]},
+      contents:ghist.concat([{role:'user',parts:[{text:query}]}]),
+      generationConfig:{maxOutputTokens:200,temperature:.8}
+    })
+  }).then(function(res){
+    document.getElementById('sv3').textContent=(Date.now()-t0)+'ms';
+    if(!res.ok){
+      hist.pop();
+      res.json().then(function(j){console.error('Gemini API error:',JSON.stringify(j));}).catch(function(){});
+      var errMsg='';
+      if(res.status===400)errMsg='Invalid Gemini API key. Please re-enter it in settings.';
+      else if(res.status===429)errMsg='Rate limit reached. Please wait 60 seconds and try again.';
+      else if(res.status===403)errMsg='Gemini access denied. Enable Generative Language API in your Google project.';
+      else errMsg='Gemini error '+res.status+'. Check the browser console for details.';
+      setR(errMsg);browserSpeak(errMsg);return Promise.reject();
+    }
+    return res.json();
+  }).then(function(data){
+    if(!data)return;
+    var reply=data&&data.candidates&&data.candidates[0]&&data.candidates[0].content&&
+              data.candidates[0].content.parts&&data.candidates[0].content.parts[0]&&
+              data.candidates[0].content.parts[0].text;
+    if(reply){
+      hist.push({role:'assistant',text:reply});
+      if(hist.length>20)hist=hist.slice(-20);
+      setR(reply);speak(reply);
+    }else{
+      hist.pop();var noResp='No response received. Please try again.';setR(noResp);speak(noResp);
+    }
+  }).catch(function(err){
+    if(err){hist.pop();var netErr='Network error. Check your connection.';setR(netErr);speak(netErr);}
+  });
+}
+
+// ── VOICE INPUT ───────────────────────────────────────────────────────────
+function toggleMic(){if(listening)stopMic();else startMic();}
+function startMic(){
+  if(!('webkitSpeechRecognition'in window||'SpeechRecognition'in window)){setST('Use Chrome for voice input.');return;}
+  var SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+  recog=new SR();recog.lang='en-US';recog.interimResults=true;
+  recog.onstart=function(){
+    listening=true;setOrbSt('listening');
+    document.getElementById('mb').classList.add('L');
+    setST('Listening...');setSS(false);startW();
+    navigator.mediaDevices.getUserMedia({audio:true}).then(hookMic).catch(function(){});
+  };
+  recog.onresult=function(e){
+    var fin='',interim='';
+    for(var i=0;i<e.results.length;i++){if(e.results[i].isFinal)fin+=e.results[i][0].transcript;else interim+=e.results[i][0].transcript;}
+    setT(fin||interim);
+    if(fin){stopMic();doQuery(fin.trim());}
+  };
+  recog.onerror=function(e){stopMic();setST('Mic error: '+e.error);};
+  recog.onend=function(){if(listening)stopMic();};
+  recog.start();
+}
+function stopMic(){
+  listening=false;setOrbSt('idle');
+  document.getElementById('mb').classList.remove('L');
+  stopW();if(recog){try{recog.stop();}catch(e){}recog=null;}anode=null;
+}
+function doQuery(text){
+  if(!text)return;
+  setST('Processing...');
+  document.getElementById('mb').classList.add('S');
+  setTimeout(function(){document.getElementById('mb').classList.remove('S');},3000);
+  ask(text);
+}
+
+// ── CLAP DETECTION ────────────────────────────────────────────────────────
+function initClap(){
+  navigator.mediaDevices.getUserMedia({audio:true}).then(function(stream){
+    var ctx=new(window.AudioContext||window.webkitAudioContext)();
+    var src=ctx.createMediaStreamSource(stream),an=ctx.createAnalyser();
+    an.fftSize=512;src.connect(an);
+    var buf=new Uint8Array(an.frequencyBinCount),last=0;
+    (function detect(){
+      an.getByteTimeDomainData(buf);
+      var peak=0;for(var i=0;i<buf.length;i++)peak=Math.max(peak,Math.abs(buf[i]-128));
+      if(peak>215){
+        var now=Date.now(),gap=now-last;
+        if(gap>80){
+          claps.push(now);claps=claps.filter(function(t){return now-t<1500;});
+          if(claps.length>=2&&gap<900&&!listening&&!speaking){claps=[];startMic();}
+          last=now;
+        }
+      }
+      requestAnimationFrame(detect);
+    })();
+  }).catch(function(){});
+}
+
+// ── KEYBOARD ─────────────────────────────────────────────────────────────
+var tbuf='';
+document.addEventListener('keydown',function(e){
+  if(document.getElementById('cfgModal').classList.contains('open'))return;
+  if(document.getElementById('agModal').classList.contains('open'))return;
+  if(e.target.tagName==='INPUT'||e.target.tagName==='SELECT')return;
+  if(e.key==='Enter'&&tbuf.trim()){var q=tbuf.trim();tbuf='';setT(q);setST('Processing...');ask(q);}
+  else if(e.key==='Backspace'){tbuf=tbuf.slice(0,-1);setT(tbuf||'');}
+  else if(e.key.length===1){tbuf+=e.key;setT(tbuf);}
+});
+
+// ── CURSOR ────────────────────────────────────────────────────────────────
+document.addEventListener('mousemove',function(e){var c=document.getElementById('cur');c.style.left=e.clientX+'px';c.style.top=e.clientY+'px';});
+
+// ── BOOT ─────────────────────────────────────────────────────────────────
+window.addEventListener('load',function(){
+  applyOrb();speechSynthesis.getVoices();chkSetup();
+  // Clap detection needs a user gesture first on HTTPS (GitHub Pages)
+  // Start it on first click/tap anywhere on the page
+  function startClapOnGesture(){
+    initClap();
+    document.removeEventListener('click',startClapOnGesture);
+    document.removeEventListener('touchstart',startClapOnGesture);
+  }
+  document.addEventListener('click',startClapOnGesture);
+  document.addEventListener('touchstart',startClapOnGesture);
+  setTimeout(function(){
+    if(!ls('jarvis_gemini')){
+      setR('Welcome, Sir. Tap the gear icon to enter your free Gemini API key and bring me fully online.');
+      speak('Welcome Sir. Please configure your free Gemini API key via the gear icon to activate the system.');
+    }else{
+      var g=agent.name+' online. All systems nominal. How can I assist?';setR(g);speak(g);
+    }
+  },900);
+});
+</script>
+</body>
+</html>
