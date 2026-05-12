@@ -1,0 +1,1642 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ri Ri Williams — Reni's AI</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Share+Tech+Mono&display=swap');
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--ac:#00d4ff;--bg:#000810;--am:#ff9500;--gn:#00ff88}
+html,body{width:100%;height:100%;overflow:hidden;background:var(--bg);color:var(--ac);font-family:'Share Tech Mono',monospace;cursor:none}
+#CUR{position:fixed;top:0;left:0;width:12px;height:12px;background:var(--ac);border-radius:50%;pointer-events:none;z-index:9999;transform:translate(-50%,-50%);box-shadow:0 0 16px var(--ac),0 0 32px var(--ac)}
+body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:100;background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,212,255,.012) 2px,rgba(0,212,255,.012) 4px)}
+body::after{content:'';position:fixed;inset:0;pointer-events:none;z-index:99;background:radial-gradient(ellipse at center,transparent 40%,rgba(0,0,0,.8) 100%)}
+.CR{position:fixed;width:40px;height:40px;border:solid rgba(0,212,255,.5);pointer-events:none;z-index:150}
+.TL{top:16px;left:16px;border-width:2px 0 0 2px}.TR{top:16px;right:16px;border-width:2px 2px 0 0}
+.BL{bottom:16px;left:16px;border-width:0 0 2px 2px}.BR{bottom:16px;right:16px;border-width:0 2px 2px 0}
+.SD{position:fixed;font-size:8px;letter-spacing:3px;color:var(--ac);opacity:.22;text-transform:uppercase;white-space:nowrap;pointer-events:none;z-index:150}
+.SDL{left:8px;top:50%;transform:translateY(-50%) rotate(-90deg)}.SDR{right:8px;top:50%;transform:translateY(-50%) rotate(90deg)}
+#DOT{position:fixed;top:30px;right:56px;width:7px;height:7px;border-radius:50%;background:var(--gn);box-shadow:0 0 10px var(--gn);animation:blink 2.5s ease-in-out infinite;z-index:200}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.2}}
+#HDR{position:fixed;top:18px;left:0;right:0;display:flex;align-items:center;justify-content:center;gap:10px;z-index:500;flex-wrap:nowrap;padding:0 8px}
+#AGBTN{background:rgba(255,149,0,.1);border:1px solid var(--am);color:var(--am);font-family:'Share Tech Mono',monospace;font-size:10px;letter-spacing:2px;padding:5px 12px;cursor:pointer;border-radius:2px;white-space:nowrap}
+#AGBTN:hover{background:rgba(255,149,0,.2)}
+#TTL{font-family:'Orbitron',monospace;font-size:13px;font-weight:700;letter-spacing:4px;color:var(--ac);text-shadow:0 0 20px var(--ac);white-space:nowrap}
+.HB{background:none;border:1px solid rgba(0,212,255,.3);color:rgba(0,212,255,.6);font-size:14px;width:30px;height:30px;cursor:pointer;border-radius:2px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.HB:hover{background:rgba(0,212,255,.1);color:var(--ac)}
+#TX{position:fixed;top:64px;left:50%;transform:translateX(-50%);width:min(500px,86vw);text-align:center;font-size:11px;color:rgba(0,212,255,.4);letter-spacing:1px;z-index:300;min-height:16px}
+#NTF{position:fixed;top:64px;left:50%;transform:translateX(-50%);background:rgba(0,212,255,.08);border:1px solid rgba(0,212,255,.4);color:var(--ac);font-size:10px;letter-spacing:2px;padding:6px 16px;z-index:8000;opacity:0;transition:opacity .4s;pointer-events:none;white-space:nowrap}
+#NTF.on{opacity:1}
+#OFFTOAST{position:fixed;bottom:130px;left:50%;transform:translateX(-50%);background:rgba(255,149,0,.12);border:1px solid rgba(255,149,0,.5);color:var(--am);font-size:9px;letter-spacing:2px;padding:5px 14px;z-index:9000;opacity:0;transition:opacity .4s;pointer-events:none;white-space:nowrap}
+#OFFTOAST.on{opacity:1}
+#OW{position:fixed;top:50%;left:50%;transform:translate(-50%,-53%);width:340px;height:340px;z-index:110}
+#OC{position:absolute;top:0;left:0;width:340px;height:340px}
+#OG{position:absolute;top:0;left:0;width:340px;height:340px;border-radius:50%;pointer-events:none;transition:box-shadow .6s;box-shadow:0 0 60px 16px rgba(0,130,255,.45),0 0 100px 30px rgba(0,80,220,.2),inset 0 0 60px rgba(0,20,80,.4)}
+#RS{position:fixed;bottom:200px;left:50%;transform:translateX(-50%);width:min(620px,90vw);max-height:130px;overflow-y:auto;text-align:center;font-size:13px;color:rgba(0,212,255,.9);line-height:1.85;letter-spacing:.5px;z-index:300;scrollbar-width:none}
+#RS::-webkit-scrollbar{display:none}
+#SA{position:fixed;bottom:158px;left:50%;transform:translateX(-50%);display:flex;flex-direction:column;align-items:center;gap:5px;z-index:300}
+#SL{font-size:9px;letter-spacing:5px;color:var(--ac);opacity:0;transition:opacity .3s}
+#SL.on{opacity:1}
+#SB{font-size:10px;letter-spacing:2px;color:rgba(0,212,255,.5);min-height:16px;text-align:center}
+#WV{opacity:0;transition:opacity .4s}
+#WV.on{opacity:1}
+#STS{position:fixed;bottom:124px;left:50%;transform:translateX(-50%);display:flex;gap:32px;z-index:300}
+.SV{font-family:'Orbitron',monospace;font-size:14px;font-weight:700;color:var(--ac);text-align:center;min-width:50px}
+.SL2{font-size:7px;letter-spacing:2px;color:rgba(0,212,255,.3);text-align:center}
+#MIC{position:fixed;bottom:76px;left:calc(50% - 30px);width:50px;height:50px;border-radius:50%;border:2px solid var(--ac);background:rgba(0,212,255,.07);color:var(--ac);font-size:20px;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 0 20px rgba(0,212,255,.3);z-index:500;transition:all .3s}
+#MIC:hover{background:rgba(0,212,255,.15)}
+#MIC.L{border-color:var(--gn);color:var(--gn);box-shadow:0 0 30px rgba(0,255,136,.5);animation:MICP 1s ease-in-out infinite}
+#MIC.P{border-color:var(--am);color:var(--am)}
+@keyframes MICP{0%,100%{transform:scale(1)}50%{transform:scale(1.1)}}
+#STOPBTN{position:fixed;bottom:76px;left:calc(50% + 30px);width:40px;height:40px;border-radius:50%;border:2px solid rgba(255,80,80,.6);background:rgba(255,60,60,.08);color:rgba(255,100,100,.8);font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;z-index:500;transition:all .3s}
+#STOPBTN:hover{background:rgba(255,60,60,.2);border-color:rgba(255,80,80,1)}
+#SPKBTN{position:fixed;bottom:76px;right:16px;background:rgba(0,212,255,.08);border:1px solid var(--ac);color:var(--ac);font-family:'Share Tech Mono',monospace;font-size:9px;letter-spacing:2px;padding:8px 10px;cursor:pointer;z-index:500;border-radius:2px;line-height:1.5;text-align:center}
+#SPKBTN:hover{background:rgba(0,212,255,.2)}
+#INPUTBAR{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);width:min(580px,90vw);display:flex;gap:8px;z-index:500}
+#TYPEIN{flex:1;background:rgba(0,8,22,.9);border:1px solid rgba(0,212,255,.35);color:var(--ac);font-family:'Share Tech Mono',monospace;font-size:12px;padding:10px 14px;outline:none;border-radius:2px;letter-spacing:.5px}
+#TYPEIN:focus{border-color:var(--ac);box-shadow:0 0 10px rgba(0,212,255,.2)}
+#TYPEIN::placeholder{color:rgba(0,212,255,.25);font-size:10px;letter-spacing:2px}
+#SENDBTN{background:rgba(0,212,255,.1);border:1px solid var(--ac);color:var(--ac);font-family:'Share Tech Mono',monospace;font-size:10px;letter-spacing:2px;padding:10px 16px;cursor:pointer;border-radius:2px;white-space:nowrap}
+#SENDBTN:hover{background:rgba(0,212,255,.22)}
+.MO{display:none;position:fixed;inset:0;background:rgba(0,0,0,.93);z-index:10000;align-items:center;justify-content:center}
+.MO.open{display:flex}
+.MB{background:rgba(0,8,22,.99);border:1px solid var(--ac);padding:30px;width:min(580px,96vw);max-height:92vh;overflow-y:auto;scrollbar-width:none}
+.MB::-webkit-scrollbar{display:none}
+.MB h2{font-family:'Orbitron',monospace;font-size:13px;letter-spacing:6px;color:var(--ac);margin-bottom:22px}
+.FG{margin-bottom:14px}.FG label{display:block;font-size:8px;letter-spacing:3px;color:rgba(255,255,255,.38);margin-bottom:5px;text-transform:uppercase}
+.FG input,.FG select{width:100%;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.15);color:#fff;font-family:'Share Tech Mono',monospace;font-size:12px;padding:8px 11px;outline:none}
+.FG input:focus,.FG select:focus{border-color:var(--ac)}
+.FG select option{background:#000810}
+.FN{font-size:8px;color:rgba(255,255,255,.24);margin-top:4px;letter-spacing:1px;line-height:1.7}
+.MBT{display:flex;gap:10px;margin-top:20px}
+.BP{flex:1;background:rgba(0,212,255,.07);border:1px solid var(--ac);color:var(--ac);font-family:'Share Tech Mono',monospace;font-size:10px;letter-spacing:3px;padding:10px;cursor:pointer;text-transform:uppercase}
+.BP:hover{background:rgba(0,212,255,.16)}
+.BS{background:none;border:1px solid rgba(255,255,255,.15);color:rgba(255,255,255,.38);font-family:'Share Tech Mono',monospace;font-size:10px;letter-spacing:3px;padding:10px 14px;cursor:pointer;text-transform:uppercase}
+.BS:hover{border-color:rgba(255,255,255,.4);color:rgba(255,255,255,.7)}
+.AG{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.AC{border:1px solid rgba(255,255,255,.1);padding:12px 14px;cursor:pointer;transition:all .2s;background:rgba(255,255,255,.02);border-radius:2px}
+.AC:hover{background:rgba(255,255,255,.07)}.AC.on{border-width:2px}
+.AN{font-family:'Orbitron',monospace;font-size:10px;letter-spacing:3px;margin-bottom:3px}
+.AR{font-size:8px;color:rgba(255,255,255,.38);letter-spacing:1px}
+.NI{padding:14px 0;border-bottom:1px solid rgba(0,212,255,.15);cursor:pointer;position:relative}
+.NI:hover{background:rgba(0,212,255,.06)}
+.ND{font-size:11px;color:rgba(0,212,255,.5);letter-spacing:2px;margin-bottom:6px}
+.NT{font-size:15px;color:rgba(255,255,255,.92);line-height:1.6;margin-top:5px}
+.HI{padding:12px 0;border-bottom:1px solid rgba(0,212,255,.12);display:flex;flex-direction:column;gap:4px}
+.HI:last-child{border-bottom:none}
+.HIW{font-size:9px;letter-spacing:2px;color:rgba(0,212,255,.4)}
+.HIQ{font-size:12px;color:rgba(255,255,255,.7);line-height:1.5}
+.HIAlbl{font-size:8px;letter-spacing:2px;color:rgba(0,212,255,.4);margin-top:4px}
+.HIA{font-size:12px;color:rgba(0,212,255,.9);line-height:1.6;padding-left:10px;border-left:2px solid rgba(0,212,255,.3)}
+#CLRHIST{background:rgba(255,80,80,.08);border:1px solid rgba(255,80,80,.4);color:rgba(255,100,100,.8)}
+@keyframes FI{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}
+.FI{animation:FI .4s ease}
+@keyframes djFloat{0%,100%{transform:translateY(0) scale(1)}50%{transform:translateY(-8px) scale(1.05)}}
+@keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
+@media(max-width:480px){
+  #OW{width:260px;height:260px;transform:translate(-50%,-55%)}
+  #OC,#OG{width:260px;height:260px}
+  #RS{font-size:11px;max-height:90px;bottom:190px}
+  #STS{gap:18px;bottom:120px}
+  .SV{font-size:12px}
+  #TTL{font-size:10px;letter-spacing:2px}
+}
+</style>
+</head>
+<body>
+<div id="CUR"></div>
+<div class="CR TL"></div><div class="CR TR"></div><div class="CR BL"></div><div class="CR BR"></div>
+<div class="SD SDL">NEURAL ENGINE ACTIVE</div>
+<div class="SD SDR" id="SDR">// RI RI INITIALIZED</div>
+<div id="DOT"></div>
+<div id="HDR">
+  <button id="AGBTN">⬡ RI RI • RENI</button>
+  <div id="TTL">Ri Ri Williams</div>
+  <button class="HB" id="NEWSBTN" title="News">📰</button>
+  <button class="HB" id="CALBTN" title="Calendar">📅</button>
+  <button class="HB" id="HISTBTN" title="History">🕐</button>
+  <button class="HB" id="CFGBTN" title="Settings">⚙</button>
+  <button class="HB" id="HELPBTN" title="Commands" style="font-size:10px">❓</button>
+  <button class="HB" id="AUTOBTN" style="font-size:10px;letter-spacing:1px">👂OFF</button>
+</div>
+<div id="TX"></div>
+<div id="NTF"></div>
+<div id="OFFTOAST">⚡ RI RI OFFLINE — responding from memory</div>
+<div id="OW"><canvas id="OC" width="340" height="340"></canvas><div id="OG"></div></div>
+<div id="RS"></div>
+<div id="SA">
+  <div id="SL">SPEAKING</div>
+  <div id="SB"></div>
+  <canvas id="WV" width="200" height="32"></canvas>
+</div>
+<div id="STS">
+  <div><div class="SV" id="V1">--</div><div class="SL2">THREADS</div></div>
+  <div><div class="SV" id="V2">--</div><div class="SL2">VECTORS</div></div>
+  <div><div class="SV" id="V3">--</div><div class="SL2">LATENCY</div></div>
+  <div><div class="SV" id="V4">--</div><div class="SL2">CONFIDENCE</div></div>
+</div>
+<button id="MIC">🎙</button>
+<button id="STOPBTN" title="Stop">⏹</button>
+<button id="SPKBTN">▶ SPEAK<br>TEST</button>
+<div id="INPUTBAR">
+  <input id="TYPEIN" type="text" placeholder="TYPE A MESSAGE AND PRESS ENTER OR SEND..." autocomplete="off" spellcheck="false"/>
+  <button id="SENDBTN">SEND</button>
+</div>
+
+<!-- HISTORY MODAL -->
+<div class="MO" id="HISTMO">
+  <div class="MB">
+    <h2>// CONVERSATION HISTORY</h2>
+    <div id="HISTFEED" style="min-height:60px"></div>
+    <div class="MBT">
+      <button class="BS" id="CLOSEHIST" style="flex:1">← CLOSE</button>
+      <button class="BS" id="CLRHIST">CLEAR ALL</button>
+    </div>
+  </div>
+</div>
+
+<!-- HELP MODAL -->
+<div class="MO" id="HELPMO">
+  <div class="MB">
+    <h2>// VOICE COMMANDS</h2>
+    <div style="font-size:13px;line-height:2.2;color:rgba(0,212,255,.85)">
+      <div style="color:var(--ac);font-family:Orbitron,monospace;font-size:10px;letter-spacing:3px;margin-bottom:8px">MORNING ROUTINE</div>
+      "Good morning" → Schedule check → Headlines → Email → What's next<br>
+      <div style="color:var(--ac);font-family:Orbitron,monospace;font-size:10px;letter-spacing:3px;margin:10px 0 8px">AGENTS</div>
+      "Hey Ri Ri" · "Hey Friday" · "Hey Jerome" · "Hey Hercules"<br>
+      "Hey Socrates" · "Hey Oracle" · "Hey Veronica" · "Hey Athena"<br>
+      <div style="color:var(--ac);font-family:Orbitron,monospace;font-size:10px;letter-spacing:3px;margin:10px 0 8px">WEATHER</div>
+      "What's the weather" · "Weather tomorrow" · "Weather this week"<br>
+      "When is sunrise" · "When does it get dark"<br>
+      <div style="color:var(--ac);font-family:Orbitron,monospace;font-size:10px;letter-spacing:3px;margin:10px 0 8px">FREE DATABASES — NO LIMITS</div>
+      "Bitcoin price" · "Ethereum price" · "What is the inflation rate"<br>
+      "Convert 100 USD to EUR" · "Define resilience" · "Tell me about Japan"<br>
+      "Who is [anyone]" · "Give me a trivia question" · "NASA picture of the day"<br>
+      "Find a book by Toni Morrison" · "Where is the nearest Walmart"<br>
+      "Show me a picture of a sunset" · "Tell me a joke"<br>
+      <div style="color:var(--ac);font-family:Orbitron,monospace;font-size:10px;letter-spacing:3px;margin:10px 0 8px">SITES & ACTIONS</div>
+      "Open YouTube / Instagram / Gmail / Netflix / Spotify..." (20+ sites)<br>
+      "Open my calendar" · "Latest news headlines"<br>
+      <div style="color:var(--ac);font-family:Orbitron,monospace;font-size:10px;letter-spacing:3px;margin:10px 0 8px">TIPS</div>
+      👂 Toggle auto-listen · ⏹ Stop button · Clap twice to wake<br>
+      Type in the box at the bottom and press Enter or Send<br>
+    </div>
+    <div class="MBT"><button class="BS" id="CLOSEHELP" style="flex:1">← CLOSE</button></div>
+  </div>
+</div>
+
+<!-- SETTINGS MODAL -->
+<div class="MO" id="CFGMO">
+  <div class="MB">
+    <h2>// SYSTEM CONFIG</h2>
+    <div class="FG">
+      <label>API Keys</label>
+      <input type="text" id="IKEY" readonly style="opacity:.5;cursor:default"/>
+      <div class="FN">3 Gemini keys rotating automatically. No setup needed.</div>
+    </div>
+    <div class="FG">
+      <label>Voice</label>
+      <select id="IVOICE"></select>
+      <div class="FN">Female voices listed first.</div>
+    </div>
+    <div class="FG">
+      <label>Your City (for weather)</label>
+      <input type="text" id="ICITY" placeholder="Framingham, MA"/>
+    </div>
+    <div class="FG">
+      <label>Daily Briefing Time</label>
+      <input type="time" id="ITIME" value="08:00"/>
+    </div>
+    <div class="MBT">
+      <button class="BP" id="SAVEBTN">SAVE</button>
+      <button class="BS" id="CANCELCFG">CANCEL</button>
+    </div>
+  </div>
+</div>
+
+<!-- AGENTS MODAL -->
+<div class="MO" id="AGMO">
+  <div class="MB">
+    <h2>// SELECT AGENT</h2>
+    <div class="AG" id="AGGRID"></div>
+    <div class="MBT"><button class="BS" id="CLOSEAG" style="flex:1">CLOSE</button></div>
+  </div>
+</div>
+
+<!-- NEWS MODAL -->
+<div class="MO" id="NEWSMO">
+  <div class="MB">
+    <h2>// LIVE NEWS</h2>
+    <div style="font-size:10px;color:rgba(0,212,255,.4);letter-spacing:2px;margin-bottom:14px">TAP TO HEAR · DOUBLE-TAP TO OPEN</div>
+    <div id="NFEED">Loading...</div>
+    <div class="MBT">
+      <button class="BS" id="CLOSENEWS" style="flex:1">← BACK</button>
+      <button class="BP" id="REFRESHNEWS">REFRESH</button>
+      <button class="BS" id="OPENFOX">FOX 25 ↗</button>
+    </div>
+  </div>
+</div>
+
+<!-- DJ PANEL -->
+<div id="DJPANEL" style="display:none;position:fixed;inset:0;background:#050010;z-index:900;flex-direction:column;align-items:center;justify-content:flex-start;padding:20px 10px;overflow-y:auto;gap:12px">
+  <div style="width:100px;height:100px;position:relative;flex-shrink:0;animation:djFloat 3s ease-in-out infinite">
+    <canvas id="DJOC" width="100" height="100" style="position:absolute;top:0;left:0;width:100px;height:100px;border-radius:50%"></canvas>
+    <div style="position:absolute;inset:0;border-radius:50%;pointer-events:none;box-shadow:0 0 40px 14px rgba(168,85,247,.65),0 0 80px 30px rgba(168,85,247,.25)"></div>
+  </div>
+  <div style="font-family:Orbitron,monospace;font-size:13px;letter-spacing:8px;color:#a855f7;text-shadow:0 0 20px #a855f7">J·E·R·O·M·E &nbsp;DJ</div>
+  <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;justify-content:center">
+    <div id="DJSTATUS" style="font-size:11px;letter-spacing:2px;color:rgba(168,85,247,.7)">Ready to mix, Reni.</div>
+    <div style="font-family:Orbitron,monospace;font-size:20px;color:#a855f7"><span id="BPMVAL">128</span> BPM</div>
+  </div>
+  <div style="display:flex;gap:10px;align-items:center">
+    <button id="AIMODETOGGLE" onclick="toggleAIMode()" style="background:rgba(168,85,247,.2);border:2px solid #a855f7;color:#a855f7;font-family:Share Tech Mono,monospace;font-size:10px;letter-spacing:2px;padding:6px 14px;cursor:pointer">🤖 AI MODE: ON</button>
+    <button onclick="aiMix()" style="background:rgba(168,85,247,.1);border:1px solid #a855f7;color:#a855f7;font-family:Share Tech Mono,monospace;font-size:10px;letter-spacing:2px;padding:6px 12px;cursor:pointer">AI MIX</button>
+    <button onclick="syncDecks()" style="background:rgba(168,85,247,.1);border:1px solid #a855f7;color:#a855f7;font-family:Share Tech Mono,monospace;font-size:10px;letter-spacing:2px;padding:6px 12px;cursor:pointer">SYNC</button>
+  </div>
+  <div style="display:flex;gap:16px;align-items:flex-start;flex-wrap:wrap;justify-content:center">
+    <!-- DECK A -->
+    <div style="display:flex;flex-direction:column;align-items:center;gap:8px;min-width:200px">
+      <div style="font-size:9px;letter-spacing:4px;color:#a855f7;font-family:Orbitron,monospace">DECK A</div>
+      <div id="TRACK1NAME" style="font-size:10px;color:rgba(168,85,247,.6);max-width:180px;text-align:center;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">No track loaded</div>
+      <div id="PLATTERBOX1" style="position:relative;cursor:grab">
+        <div style="width:150px;height:150px;border-radius:50%;border:3px solid #a855f7;display:flex;align-items:center;justify-content:center;box-shadow:0 0 25px rgba(168,85,247,.4);overflow:hidden;background:#0a0018">
+          <div id="PI1" style="width:120px;height:120px;border-radius:50%;border:2px dashed rgba(168,85,247,.4);display:flex;align-items:center;justify-content:center">
+            <div style="width:20px;height:20px;border-radius:50%;background:#a855f7;box-shadow:0 0 10px #a855f7"></div>
+          </div>
+        </div>
+      </div>
+      <div style="display:flex;gap:6px">
+        <button id="PLAYBTN1" onclick="toggleDeck(1)" style="background:rgba(168,85,247,.2);border:1px solid #a855f7;color:#a855f7;font-size:16px;width:40px;height:40px;cursor:pointer;border-radius:4px">▶</button>
+        <button onclick="stopDeck(1)" style="background:rgba(168,85,247,.1);border:1px solid #a855f7;color:#a855f7;font-size:14px;width:40px;height:40px;cursor:pointer;border-radius:4px">⏹</button>
+        <button onclick="toggleReverse(1)" style="background:rgba(168,85,247,.1);border:1px solid #a855f7;color:#a855f7;font-size:10px;width:40px;height:40px;cursor:pointer;border-radius:4px">REV</button>
+      </div>
+      <div style="width:150px;height:4px;background:rgba(168,85,247,.2);border-radius:2px"><div id="PROG1" style="height:100%;background:#a855f7;border-radius:2px;width:0%;transition:width .5s"></div></div>
+      <label style="background:rgba(168,85,247,.15);border:1px solid #a855f7;color:#a855f7;font-family:Share Tech Mono,monospace;font-size:10px;letter-spacing:2px;padding:6px 12px;cursor:pointer">
+        📁 LOAD<input type="file" accept="audio/*" onchange="loadTrack(1,this)" style="display:none">
+      </label>
+    </div>
+    <!-- CROSSFADER -->
+    <div style="display:flex;flex-direction:column;align-items:center;gap:8px;padding-top:60px">
+      <div style="font-size:9px;letter-spacing:3px;color:#a855f7;font-family:Orbitron,monospace">CROSS</div>
+      <input type="range" id="CROSSFADER" min="0" max="100" value="50" oninput="setCross(this.value)" style="writing-mode:vertical-lr;height:120px;cursor:pointer;accent-color:#a855f7">
+      <div style="display:flex;flex-direction:column;gap:6px">
+        <button onclick="changeBPM(1)" style="background:rgba(168,85,247,.1);border:1px solid #a855f7;color:#a855f7;width:36px;height:28px;cursor:pointer;font-size:14px;border-radius:2px">+</button>
+        <button onclick="changeBPM(-1)" style="background:rgba(168,85,247,.1);border:1px solid #a855f7;color:#a855f7;width:36px;height:28px;cursor:pointer;font-size:14px;border-radius:2px">−</button>
+      </div>
+    </div>
+    <!-- DECK B -->
+    <div style="display:flex;flex-direction:column;align-items:center;gap:8px;min-width:200px">
+      <div style="font-size:9px;letter-spacing:4px;color:#a855f7;font-family:Orbitron,monospace">DECK B</div>
+      <div id="TRACK2NAME" style="font-size:10px;color:rgba(168,85,247,.6);max-width:180px;text-align:center;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">No track loaded</div>
+      <div id="PLATTERBOX2" style="position:relative;cursor:grab">
+        <div style="width:150px;height:150px;border-radius:50%;border:3px solid #a855f7;display:flex;align-items:center;justify-content:center;box-shadow:0 0 25px rgba(168,85,247,.4);overflow:hidden;background:#0a0018">
+          <div id="PI2" style="width:120px;height:120px;border-radius:50%;border:2px dashed rgba(168,85,247,.4);display:flex;align-items:center;justify-content:center">
+            <div style="width:20px;height:20px;border-radius:50%;background:#a855f7;box-shadow:0 0 10px #a855f7"></div>
+          </div>
+        </div>
+      </div>
+      <div style="display:flex;gap:6px">
+        <button id="PLAYBTN2" onclick="toggleDeck(2)" style="background:rgba(168,85,247,.2);border:1px solid #a855f7;color:#a855f7;font-size:16px;width:40px;height:40px;cursor:pointer;border-radius:4px">▶</button>
+        <button onclick="stopDeck(2)" style="background:rgba(168,85,247,.1);border:1px solid #a855f7;color:#a855f7;font-size:14px;width:40px;height:40px;cursor:pointer;border-radius:4px">⏹</button>
+        <button onclick="toggleReverse(2)" style="background:rgba(168,85,247,.1);border:1px solid #a855f7;color:#a855f7;font-size:10px;width:40px;height:40px;cursor:pointer;border-radius:4px">REV</button>
+      </div>
+      <div style="width:150px;height:4px;background:rgba(168,85,247,.2);border-radius:2px"><div id="PROG2" style="height:100%;background:#a855f7;border-radius:2px;width:0%;transition:width .5s"></div></div>
+      <label style="background:rgba(168,85,247,.15);border:1px solid #a855f7;color:#a855f7;font-family:Share Tech Mono,monospace;font-size:10px;letter-spacing:2px;padding:6px 12px;cursor:pointer">
+        📁 LOAD<input type="file" accept="audio/*" onchange="loadTrack(2,this)" style="display:none">
+      </label>
+    </div>
+  </div>
+  <button onclick="closeDJ()" style="background:none;border:1px solid #a855f7;color:#a855f7;font-family:Share Tech Mono,monospace;font-size:10px;letter-spacing:3px;padding:8px 20px;cursor:pointer;margin-top:4px">← BACK TO RI RI</button>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+(function() {
+'use strict';
+
+// ═══════════════════════════════════════════════════
+//  RI RI WILLIAMS v4 — GROUND-UP REBUILD
+//  Key fixes: single speech recognizer, strict scoping,
+//  no global var conflicts, weather tomorrow fixed
+// ═══════════════════════════════════════════════════
+
+// ── HELPERS ──────────────────────────────────────────
+function EL(id) { return document.getElementById(id); }
+function SG(k)  { return localStorage.getItem(k) || ''; }
+function SS(k,v){ localStorage.setItem(k, v); }
+function jparse(s, def) { try { return JSON.parse(s) || def; } catch(e) { return def; } }
+
+// ── AGENTS ───────────────────────────────────────────
+var AGENTS = [
+  {id:'aria',    name:'RI RI',    role:'Prime Orchestrator',        color:'#00d4ff', bg:'#000810',
+   p:"You are Ri Ri Williams, Reni's personal AI assistant. Warm, brilliant, concise. Always call the user Reni. Never invent calendar or appointment data — direct Reni to the calendar button. Max 3 sentences."},
+  {id:'friday',  name:'FRIDAY',   role:'Daily Intelligence',        color:'#00ff88', bg:'#001408',
+   p:"You are FRIDAY, Reni's briefing and scheduling AI. Sharp, informative, efficient. Always call the user Reni. Max 3 sentences."},
+  {id:'hercules',name:'HERCULES', role:'Fitness + Nutrition',       color:'#ff4455', bg:'#140008',
+   p:"You are HERCULES, Reni's fitness and nutrition AI. Motivating, science-based. Always call the user Reni. Max 3 sentences."},
+  {id:'socrates',name:'SOCRATES', role:'Philosophy + Wisdom',       color:'#ffd700', bg:'#141000',
+   p:"You are SOCRATES, Reni's philosophical guide. Stoic wisdom, deep thinking. Always call the user Reni. Max 3 sentences."},
+  {id:'oracle',  name:'ORACLE',   role:'Finance + Crypto',          color:'#00d4aa', bg:'#001412',
+   p:"You are ORACLE, Reni's finance and crypto AI. Personal finance, crypto markets, small business. Always call the user Reni. Max 3 sentences."},
+  {id:'veronica',name:'VERONICA', role:'Creative + Art Business',   color:'#ff6bff', bg:'#140014',
+   p:"You are VERONICA, Reni's creative AI and art business advisor. You help with: pricing artwork (calculate fair prices based on time, materials, market), writing Etsy product listings, generating Instagram captions for art posts, branding advice. Always call the user Reni. Be specific and actionable. Max 4 sentences."},
+  {id:'athena',  name:'ATHENA',   role:'Strategy + Planning',       color:'#ff9500', bg:'#140800',
+   p:"You are ATHENA, Reni's strategy AI. Goals, decisions, long-term planning. Always call the user Reni. Max 3 sentences."},
+  {id:'jerome',  name:'JEROME',   role:'DJ + Music',                color:'#a855f7', bg:'#0a0014',
+   p:"You are JEROME, Reni's DJ and music AI. Energetic, music-savvy. Always call the user Reni. Max 3 sentences."},
+];
+
+var ROUTE = {
+  jerome:  /\b(music|song|dj|mix|beat|track|playlist|record)\b/i,
+  hercules:/\b(workout|exercise|gym|fitness|diet|nutrition|calories)\b/i,
+  socrates:/\b(philosophy|wisdom|meaning|purpose|consciousness|stoic)\b/i,
+  oracle:  /\b(money|finance|crypto|bitcoin|invest|budget|stock)\b/i,
+  veronica:/\b(content|brand|social media|marketing|design|etsy|caption|art price)\b/i,
+  athena:  /\b(plan|goal|strategy|organize|decision|schedule)\b/i,
+  friday:  /\b(brief|remind|agenda)\b/i,
+};
+
+// ── GEMINI KEY ROTATION ───────────────────────────────
+var GEMINI_KEYS = [
+  'AIzaSyBtDlW6aDrUbmFpN3lzwK4OoSu0BdW5P2c',
+  'AIzaSyBu8F2gioCQ9HhOg1HDNLVKyQ5rvYbx5vM',
+  'AIzaSyBrZLmXrbatof91O6EVMCmbzGNYW2Ncpsc'
+];
+var gKeyIdx      = 0;
+var gKeyCooldown = [0, 0, 0];
+
+function getKey() {
+  var now = Date.now();
+  for (var ii = 0; ii < 3; ii++) {
+    var idx = (gKeyIdx + ii) % 3;
+    if (now >= gKeyCooldown[idx]) { gKeyIdx = idx; return idx; }
+  }
+  var best = 0;
+  for (var jj = 1; jj < 3; jj++) { if (gKeyCooldown[jj] < gKeyCooldown[best]) best = jj; }
+  gKeyIdx = best; return best;
+}
+function coolKey(idx) {
+  gKeyCooldown[idx] = Date.now() + 62000;
+  gKeyIdx = (idx + 1) % 3;
+  notify('⟳ Key ' + (idx+1) + ' resting — using key ' + (gKeyIdx+1) + '/3');
+}
+
+// ── APP STATE ─────────────────────────────────────────
+var currentAgent  = AGENTS[0];
+var previousAgent = null;
+var aiHistory     = [];
+var isSpeaking    = false;
+var pendingText   = '';
+var currentUtter  = null;
+var voiceChoice   = null;
+var autoListen    = false;
+var lastReqTime   = 0;
+var MIN_GAP       = 800; // reduced — 5s throttle blocked valid rapid queries
+var briefTimer    = null;
+
+// ── SINGLE SPEECH RECOGNITION MANAGER ────────────────
+// Chrome allows only ONE SpeechRecognition at a time.
+// We use ONE recognizer, in LISTEN mode only when user activates it.
+// NO background wake word listener - it causes not-allowed errors on GitHub Pages.
+// Wake word is handled by scanning interim results during active listen sessions.
+var SR_CLASS   = window.SpeechRecognition || window.webkitSpeechRecognition;
+var srEngine   = null;
+var srMode     = 'idle'; // 'idle' | 'listen'
+
+function srStop() {
+  if (srEngine) {
+    srEngine.onresult = null;
+    srEngine.onerror  = null;
+    srEngine.onend    = null;
+    try { srEngine.abort(); } catch(e) {}
+    srEngine = null;
+  }
+  srMode = 'idle';
+  EL('MIC').classList.remove('L', 'P');
+  setOrbState('idle');
+  stopWave();
+}
+
+function srStartListen() {
+  if (!SR_CLASS) { notify('Voice input requires Chrome or Edge.'); return; }
+  if (srMode === 'listen') { srStop(); return; } // toggle off
+  srStop(); // clean slate
+  
+  var engine = new SR_CLASS();
+  srEngine = engine;
+  srMode = 'listen';
+  engine.lang = 'en-US';
+  engine.continuous = false;
+  engine.interimResults = true;
+  engine.maxAlternatives = 1;
+
+  EL('MIC').classList.add('L');
+  setOrbState('listening');
+  setSB('Listening, Reni...');
+  startWave();
+
+  engine.onresult = function(e) {
+    var fin = '', intr = '';
+    for (var ii = 0; ii < e.results.length; ii++) {
+      if (e.results[ii].isFinal) fin += e.results[ii][0].transcript;
+      else intr += e.results[ii][0].transcript;
+    }
+    setTX(fin || intr);
+    if (fin) { srStop(); processQuery(fin.trim()); }
+  };
+
+  engine.onerror = function(ev) {
+    var err = ev.error;
+    srStop();
+    if (err === 'not-allowed') {
+      notify('Mic blocked. Allow microphone access in browser settings.');
+    } else if (err !== 'no-speech' && err !== 'aborted') {
+      notify('Mic error: ' + err);
+    }
+  };
+
+  engine.onend = function() {
+    if (srMode === 'listen') srStop(); // clean up if engine ended without result
+  };
+
+  try {
+    engine.start();
+  } catch(startErr) {
+    srStop();
+    notify('Cannot start mic. Check browser permissions.');
+  }
+}
+
+function toggleMic() {
+  if (srMode === 'listen') srStop();
+  else srStartListen();
+}
+
+// srStartWake is a no-op stub — kept for any remaining call sites
+function srStartWake() { /* disabled — causes mic conflicts on GitHub Pages */ }
+
+function processQuery(text) {
+  if (!text || !text.trim()) return;
+  EL('MIC').classList.add('P');
+  setTimeout(function() { EL('MIC').classList.remove('P'); }, 2000);
+  ask(text);
+}
+
+// ── CLAP DETECTION ────────────────────────────────────
+var clapList  = [];
+var clapReady = false;
+function startClap() {
+  if (clapReady || !navigator.mediaDevices) return;
+  clapReady = true;
+  navigator.mediaDevices.getUserMedia({audio:true, video:false})
+    .then(function(stream) {
+      var ac = new (window.AudioContext || window.webkitAudioContext)();
+      var src = ac.createMediaStreamSource(stream);
+      var an  = ac.createAnalyser(); an.fftSize = 512;
+      src.connect(an);
+      var buf = new Uint8Array(an.frequencyBinCount);
+      var lastClap = 0;
+      (function detect() {
+        an.getByteTimeDomainData(buf);
+        var pk = 0;
+        for (var ci = 0; ci < buf.length; ci++) pk = Math.max(pk, Math.abs(buf[ci] - 128));
+        if (pk > 210) {
+          var nowC = Date.now();
+          if (nowC - lastClap > 80) {
+            clapList.push(nowC);
+            clapList = clapList.filter(function(ct) { return nowC - ct < 1500; });
+            if (clapList.length >= 2 && nowC - lastClap < 900 && srMode !== 'listen' && !isSpeaking) {
+              clapList = []; srStartListen();
+            }
+            lastClap = nowC;
+          }
+        }
+        requestAnimationFrame(detect);
+      })();
+    }).catch(function() { clapReady = false; });
+}
+
+// ── MORNING ROUTINE STATE MACHINE ─────────────────────
+var MR = { active: false, step: null };
+
+function mrSpeak(msg) {
+  setRS(msg); doSpeak(msg); saveHistory('morning routine', msg);
+}
+
+function mrStart() {
+  MR.active = true; MR.step = 'schedule';
+  var hour  = new Date().getHours();
+  var greet = hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening';
+  var day   = new Date().toLocaleDateString('en-US', {weekday:'long', month:'long', day:'numeric'});
+  mrSpeak(greet + ' Reni! Today is ' + day + '. Would you like me to go over your schedule?');
+}
+
+function mrAdvance() {
+  if (MR.step === 'schedule') {
+    MR.step = 'news';
+    setTimeout(function() { mrSpeak('Would you like me to read off the top news headlines?'); }, 800);
+  } else if (MR.step === 'news') {
+    MR.step = 'email';
+    setTimeout(function() { mrSpeak('Would you like me to open your email?'); }, 800);
+  } else if (MR.step === 'email') {
+    MR.active = false; MR.step = null;
+    setTimeout(function() { mrSpeak('What else would you like to do today, Reni?'); }, 800);
+  }
+}
+
+function mrYesNo(query) {
+  if (!MR.active) return false;
+  var isYes = /\b(yes|yeah|yep|sure|please|go ahead|okay|ok|do it|absolutely|of course|yea)\b/i.test(query);
+  var isNo  = /\b(no|nope|nah|skip|not now|no thanks|pass|dont|don't)\b/i.test(query);
+  if (!isYes && !isNo) return false;
+
+  if (MR.step === 'schedule') {
+    if (isYes) { window.open('https://calendar.google.com', '_blank'); mrSpeak('Opening your Google Calendar now, Reni. Take your time.'); }
+    else mrSpeak('No problem, Reni.');
+    mrAdvance(); return true;
+  }
+  if (MR.step === 'news') {
+    if (isYes) {
+      setSB('Loading headlines...');
+      fetch('https://api.rss2json.com/v1/api.json?rss_url=' + encodeURIComponent('https://feeds.bbci.co.uk/news/world/rss.xml'))
+        .then(function(r) { return r.json(); })
+        .then(function(d) {
+          if (!d.items || !d.items.length) throw 0;
+          var txt = d.items.slice(0,5).map(function(it,i) { return (i+1) + '. ' + it.title; }).join('. ');
+          var readMsg = 'Here are your top 5 headlines, Reni. ' + txt;
+          mrSpeak(readMsg);
+          setTimeout(function() { mrAdvance(); }, Math.max(14000, readMsg.length * 65));
+        })
+        .catch(function() { mrSpeak('Could not load headlines right now, Reni.'); setTimeout(mrAdvance, 2000); });
+    } else { mrSpeak('No problem.'); mrAdvance(); }
+    return true;
+  }
+  if (MR.step === 'email') {
+    if (isYes) { window.open('https://mail.google.com', '_blank'); mrSpeak('Opening Gmail now, Reni.'); }
+    else mrSpeak('Alright, Reni.');
+    MR.active = false; MR.step = null;
+    setTimeout(function() { mrSpeak('What else would you like to do today, Reni?'); }, isYes ? 3000 : 1200);
+    return true;
+  }
+  return false;
+}
+
+// ── PERSISTENT MEMORY ─────────────────────────────────
+var memory = jparse(SG('aria_memory'), {topics:{}, mood:'neutral', agents:{}, facts:{}});
+
+function learnFrom(query) {
+  var topics = {
+    fitness:    /\b(workout|gym|diet|fitness|exercise|nutrition)\b/i,
+    music:      /\b(music|dj|song|beat|mix|playlist)\b/i,
+    finance:    /\b(money|crypto|invest|finance|budget|stock)\b/i,
+    philosophy: /\b(meaning|purpose|life|truth|philosophy|wisdom)\b/i,
+    creative:   /\b(design|brand|content|art|creative|social)\b/i,
+    news:       /\b(news|headline|latest|happening)\b/i,
+    teaching:   /\b(student|class|lesson|grade|school|teacher)\b/i,
+    comic:      /\b(comic|manga|illustration|drawing|sketch)\b/i,
+  };
+  for (var t in topics) {
+    if (topics[t].test(query)) memory.topics[t] = (memory.topics[t] || 0) + 1;
+  }
+  memory.agents[currentAgent.id] = (memory.agents[currentAgent.id] || 0) + 1;
+  if (/\b(great|amazing|love|awesome|excited|happy)\b/i.test(query)) memory.mood = 'positive';
+  else if (/\b(tired|stressed|sad|frustrated|bad|rough)\b/i.test(query)) memory.mood = 'support';
+  // Self-disclosure learning
+  var nm = query.match(/my name is ([A-Z][a-z]+)/i); if (nm) memory.facts.name = nm[1];
+  var jb = query.match(/i'?m? (?:a |an )?(\w+ (?:teacher|artist|designer|developer|nurse|doctor|student|manager))/i); if (jb) memory.facts.job = jb[1];
+  var pt = query.match(/my (?:dog|cat|pet|puppy) (?:is named?|'?s) ([A-Z][a-z]+)/i); if (pt) memory.facts.pet = pt[1];
+  try { SS('aria_memory', JSON.stringify(memory)); } catch(e) {}
+}
+
+function memCtx() {
+  var tops = Object.keys(memory.topics).sort(function(a,b) { return (memory.topics[b]||0) - (memory.topics[a]||0); });
+  var ctx = '';
+  if (tops.length) ctx += ' Reni\'s top interests: ' + tops.slice(0,3).join(', ') + '.';
+  if (memory.mood === 'positive') ctx += ' Reni is in a good mood.';
+  if (memory.mood === 'support')  ctx += ' Reni may need encouragement.';
+  if (memory.facts.job)  ctx += ' Reni works as a ' + memory.facts.job + '.';
+  if (memory.facts.city) ctx += ' Reni lives in ' + memory.facts.city + '.';
+  if (memory.facts.pet)  ctx += ' Reni has a pet named ' + memory.facts.pet + '.';
+  return ctx;
+}
+
+// ── CONVERSATION HISTORY ──────────────────────────────
+var convHist = jparse(SG('aria_history'), []);
+function saveHistory(q, a) {
+  convHist.push({q:q, a:a, t:new Date().toLocaleTimeString()});
+  if (convHist.length > 60) convHist.shift();
+  try { SS('aria_history', JSON.stringify(convHist)); } catch(e) {}
+}
+
+// ── RESPONSE CACHE ────────────────────────────────────
+var cache = {};
+function cacheGet(q) { return cache[q.toLowerCase().trim().substring(0,80)] || null; }
+function cacheSet(q, r) {
+  var k = q.toLowerCase().trim().substring(0,80);
+  cache[k] = r;
+  var keys = Object.keys(cache);
+  if (keys.length > 100) delete cache[keys[0]];
+}
+
+// ── OFFLINE REPLIES ───────────────────────────────────
+var OFFLINE = [
+  "I'm catching my breath Reni — the network is briefly throttled. Try again in a moment.",
+  "Signal interrupted. Give me a second and ask again, Reni.",
+  "Rate limited right now. One moment, Reni.",
+  "Still here Reni — just waiting on bandwidth. Try shortly.",
+  "Gemini is momentarily throttled. Ask me again in a few seconds, Reni."
+];
+function offlineReply() {
+  var r = OFFLINE[Math.floor(Math.random() * OFFLINE.length)];
+  setRS(r); pendingText = r; doSpeak(r);
+  var t = EL('OFFTOAST'); t.classList.add('on');
+  clearTimeout(t._t); t._t = setTimeout(function() { t.classList.remove('on'); }, 4000);
+}
+
+// ── DISPLAY ───────────────────────────────────────────
+document.addEventListener('mousemove', function(ev) {
+  EL('CUR').style.left = ev.clientX + 'px';
+  EL('CUR').style.top  = ev.clientY + 'px';
+});
+function setTX(t) { EL('TX').textContent = t ? '> ' + t : ''; }
+function setRS(t) {
+  var el = EL('RS');
+  if (t && typeof t === 'string') { el.textContent = t; el.classList.remove('FI'); void el.offsetWidth; el.classList.add('FI'); }
+}
+function setSL(b) { EL('SL').classList.toggle('on', b); }
+function setSB(t) { EL('SB').textContent = t; }
+var STLINES = ['Analyzing...','Processing...','Retrieving data...','Synthesizing...','Running inference...'];
+function randSL() { return STLINES[Math.floor(Math.random() * STLINES.length)]; }
+function notify(msg) {
+  var el = EL('NTF'); el.textContent = msg; el.classList.add('on');
+  clearTimeout(el._t); el._t = setTimeout(function() { el.classList.remove('on'); }, 2800);
+}
+var _realLatency = null; // set by callGemini, preserved by updStats
+function updStats() {
+  EL('V1').textContent = Math.floor(8 + Math.random() * 50);
+  EL('V2').textContent = Math.floor(400 + Math.random() * 1000) + 'K';
+  if (_realLatency !== null) { EL('V3').textContent = _realLatency + 'ms'; }
+  else { EL('V3').textContent = Math.floor(10 + Math.random() * 80) + 'ms'; }
+  EL('V4').textContent = (84 + Math.random() * 10).toFixed(1) + '%';
+}
+
+// ── FREE API FUNCTIONS ────────────────────────────────
+
+function apiWeather(query, cb) {
+  var city   = SG('aria_city') || 'Framingham, MA';
+  var isTmr  = /\btomorrow\b/i.test(query);
+  var isWeek = /\b(this week|week|next few days|7.?day|seven day|forecast)\b/i.test(query);
+  var CODES  = {0:'Clear sky',1:'Mainly clear',2:'Partly cloudy',3:'Overcast',45:'Foggy',48:'Icy fog',51:'Light drizzle',53:'Drizzle',55:'Heavy drizzle',61:'Light rain',63:'Moderate rain',65:'Heavy rain',71:'Light snow',73:'Moderate snow',75:'Heavy snow',80:'Rain showers',81:'Heavy showers',95:'Thunderstorm',99:'Severe thunderstorm'};
+  // Hardcoded Framingham coords — geocoding API failure will never break weather
+  var FB = {latitude:42.2793, longitude:-71.4162};
+
+  function fetchWeatherData(loc) {
+    return fetch('https://api.open-meteo.com/v1/forecast?latitude=' + loc.latitude + '&longitude=' + loc.longitude
+      + '&current=temperature_2m,apparent_temperature,relative_humidity_2m,weather_code,wind_speed_10m,uv_index'
+      + '&daily=temperature_2m_max,temperature_2m_min,precipitation_probability_max,weather_code,time'
+      + '&temperature_unit=fahrenheit&wind_speed_unit=mph&forecast_days=7&timezone=auto')
+      .then(function(r2) { if (!r2.ok) throw new Error('weather_http_' + r2.status); return r2.json(); })
+      .then(function(d) {
+        var cur = d.current, dy = d.daily;
+        if (!cur || !dy) throw new Error('weather_no_data');
+        if (isWeek) {
+          var lines = [];
+          for (var wi = 0; wi < Math.min(7, dy.time.length); wi++) {
+            var dn = wi===0?'Today':wi===1?'Tomorrow':new Date(dy.time[wi]+'T12:00:00').toLocaleDateString('en-US',{weekday:'short'});
+            lines.push(dn+': '+(CODES[dy.weather_code[wi]]||'Mixed')+', '+Math.round(dy.temperature_2m_max[wi])+'/'+Math.round(dy.temperature_2m_min[wi])+'°F, '+(dy.precipitation_probability_max[wi]||0)+'% rain');
+          }
+          cb('7-day forecast for '+city+': '+lines.join('. ')+'. (via Open-Meteo)');
+        } else if (isTmr) {
+          var tmrDate = new Date(dy.time[1]+'T12:00:00').toLocaleDateString('en-US',{weekday:'long',month:'short',day:'numeric'});
+          cb('Tomorrow\'s weather in '+city+' ('+tmrDate+'): '+(CODES[dy.weather_code[1]]||'Mixed')+', high '+Math.round(dy.temperature_2m_max[1])+'°F, low '+Math.round(dy.temperature_2m_min[1])+'°F, '+(dy.precipitation_probability_max[1]||0)+'% chance of rain. (via Open-Meteo)');
+        } else {
+          cb('Current weather in '+city+': '+(CODES[cur.weather_code]||CODES[dy.weather_code[0]]||'Mixed')+', '+Math.round(cur.temperature_2m)+'°F, feels like '+Math.round(cur.apparent_temperature)+'°F, humidity '+cur.relative_humidity_2m+'%, UV '+(cur.uv_index||0)+', wind '+Math.round(cur.wind_speed_10m)+' mph. Today: high '+Math.round(dy.temperature_2m_max[0])+'°F, low '+Math.round(dy.temperature_2m_min[0])+'°F, '+(dy.precipitation_probability_max[0]||0)+'% rain. (via Open-Meteo)');
+        }
+      });
+  }
+
+  fetch('https://geocoding-api.open-meteo.com/v1/search?name='+encodeURIComponent(city.split(',')[0].trim())+'&count=1&language=en&format=json')
+    .then(function(r) { if (!r.ok) throw 0; return r.json(); })
+    .then(function(geo) {
+      var loc = (geo.results && geo.results.length) ? geo.results[0] : FB;
+      return fetchWeatherData(loc);
+    })
+    .catch(function() {
+      // Geocoding failed or first weather call failed — use hardcoded Framingham coords directly
+      fetchWeatherData(FB).catch(function() { cb(null); });
+    });
+}
+
+function apiSunrise(query, cb) {
+  var city  = SG('aria_city') || 'Framingham, MA';
+  var isTmr = /tomorrow/i.test(query);
+  var FB2 = {latitude:42.2793, longitude:-71.4162};
+  function doSunrise(loc) {
+    return fetch('https://api.sunrisesunset.io/json?lat=' + loc.latitude + '&lng=' + loc.longitude + (isTmr ? '&date=tomorrow' : ''))
+      .then(function(r) { if (!r.ok) throw 0; return r.json(); })
+      .then(function(d) {
+        if (!d.results) throw 0;
+        cb((isTmr?'Tomorrow':'Today')+' in '+city+': Sunrise '+d.results.sunrise+', sunset '+d.results.sunset+', '+d.results.day_length+' of daylight. (via Sunrise-Sunset API)');
+      });
+  }
+  fetch('https://geocoding-api.open-meteo.com/v1/search?name='+encodeURIComponent(city.split(',')[0].trim())+'&count=1&language=en&format=json')
+    .then(function(r) { if (!r.ok) throw 0; return r.json(); })
+    .then(function(geo) {
+      var loc = (geo.results && geo.results.length) ? geo.results[0] : FB2;
+      return doSunrise(loc);
+    })
+    .catch(function() { doSunrise(FB2).catch(function() { cb(null); }); });
+}
+
+function apiWiki(query, cb) {
+  var q = query.replace(/\b(who is|what is|tell me about|who was|what are|define|explain)\b/gi,'').trim();
+  if (!q || q.length < 2) { cb(null); return; }
+  fetch('https://en.wikipedia.org/api/rest_v1/page/summary/' + encodeURIComponent(q))
+    .then(function(r) { if (!r.ok) throw 0; return r.json(); })
+    .then(function(d) {
+      if (d.extract && d.type !== 'disambiguation') cb(d.extract.split('.').slice(0,3).join('.') + '. (via Wikipedia)');
+      else cb(null);
+    }).catch(function() { cb(null); });
+}
+
+function apiWikidata(query, cb) {
+  var q = query.replace(/\b(when was|what year|who|which|what country|birthdate of|born|died|capital of)\b/gi,'').trim();
+  if (!q || q.length < 2) { cb(null); return; }
+  fetch('https://www.wikidata.org/w/api.php?action=wbsearchentities&search=' + encodeURIComponent(q) + '&language=en&limit=1&format=json&origin=*')
+    .then(function(r) { if (!r.ok) throw 0; return r.json(); })
+    .then(function(d) {
+      if (!d.search || !d.search.length) throw 0;
+      var item = d.search[0];
+      if (item.description) cb((item.label||q) + ': ' + item.description + '. (via Wikidata)');
+      else throw 0;
+    }).catch(function() { cb(null); });
+}
+
+function apiDict(word, cb) {
+  fetch('https://api.dictionaryapi.dev/api/v2/entries/en/' + encodeURIComponent(word))
+    .then(function(r) { if (!r.ok) throw 0; return r.json(); })
+    .then(function(d) {
+      var entry = d[0]; if (!entry) throw 0;
+      var m = entry.meanings[0]; if (!m) throw 0;
+      var def = m.definitions[0].definition;
+      var syns = m.definitions[0].synonyms && m.definitions[0].synonyms.length ? ' Synonyms: ' + m.definitions[0].synonyms.slice(0,3).join(', ') + '.' : '';
+      cb('"' + word + '" (' + m.partOfSpeech + '): ' + def + syns + ' (via Dictionary API)');
+    }).catch(function() { cb(null); });
+}
+
+function apiNumbers(query, cb) {
+  // numbersapi.com is HTTP-only — blocked by mixed-content on HTTPS. Use uselessfacts (HTTPS, free).
+  fetch('https://uselessfacts.jsph.pl/api/v2/facts/random?language=en')
+    .then(function(r) { if (!r.ok) throw 0; return r.json(); })
+    .then(function(d) { cb(d.text ? d.text + ' (via UselessFacts)' : null); })
+    .catch(function() { cb(null); });
+}
+
+function apiCountry(query, cb) {
+  var q = query.replace(/\b(tell me about|what is|where is|capital of|currency of|population of|country|info|about)\b/gi,'').trim();
+  if (!q || q.length < 2) { cb(null); return; }
+  fetch('https://restcountries.com/v3.1/name/' + encodeURIComponent(q) + '?fields=name,capital,population,currencies,region,languages')
+    .then(function(r) { if (!r.ok) throw 0; return r.json(); })
+    .then(function(d) {
+      var c = d[0]; if (!c) throw 0;
+      var cur = c.currencies ? Object.values(c.currencies).map(function(x){return x.name;}).join(', ') : 'N/A';
+      var lang = c.languages ? Object.values(c.languages).slice(0,2).join(', ') : 'N/A';
+      cb(c.name.common + ': Capital ' + (c.capital&&c.capital[0]||'N/A') + ', Population ' + (c.population?c.population.toLocaleString():'N/A') + ', ' + c.region + '. Currency: ' + cur + '. Languages: ' + lang + '. (via REST Countries)');
+    }).catch(function() { cb(null); });
+}
+
+function apiTrivia(cb) {
+  fetch('https://opentdb.com/api.php?amount=1&type=multiple')
+    .then(function(r) { return r.json(); })
+    .then(function(d) {
+      if (!d.results || !d.results.length) throw 0;
+      var item = d.results[0];
+      var q = item.question.replace(/&quot;/g,'"').replace(/&#039;/g,"'").replace(/&amp;/g,'&').replace(/&lt;/g,'<').replace(/&gt;/g,'>');
+      var a = item.correct_answer.replace(/&quot;/g,'"').replace(/&#039;/g,"'").replace(/&amp;/g,'&');
+      cb('Here\'s a ' + item.difficulty + ' trivia question: ' + q + ' The answer is: ' + a + '. (via Open Trivia DB)');
+    }).catch(function() { cb(null); });
+}
+
+function apiNasa(cb) {
+  fetch('https://api.nasa.gov/planetary/apod?api_key=DEMO_KEY')
+    .then(function(r) { if (!r.ok) throw 0; return r.json(); })
+    .then(function(d) {
+      if (!d.title || !d.explanation) throw 0;
+      cb('NASA Picture of the Day — "' + d.title + '": ' + d.explanation.split('.').slice(0,2).join('.') + '. (via NASA APOD)');
+    }).catch(function() { cb(null); });
+}
+
+function apiBook(query, cb) {
+  var q = query.replace(/\b(find|search|look up|book|books|by|author|written by|about|novel)\b/gi,'').trim();
+  if (!q || q.length < 2) { cb(null); return; }
+  fetch('https://openlibrary.org/search.json?q=' + encodeURIComponent(q) + '&limit=1&fields=title,author_name,first_publish_year,subject')
+    .then(function(r) { if (!r.ok) throw 0; return r.json(); })
+    .then(function(d) {
+      if (!d.docs || !d.docs.length) throw 0;
+      var b = d.docs[0];
+      var subj = b.subject ? b.subject.slice(0,3).join(', ') : '';
+      cb('"' + (b.title||'Unknown') + '" by ' + (b.author_name&&b.author_name[0]||'Unknown') + ', first published ' + (b.first_publish_year||'?') + (subj?'. Topics: '+subj:'') + '. (via Open Library)');
+    }).catch(function() { cb(null); });
+}
+
+function apiExchange(query, cb) {
+  var m1 = query.match(/(\d+\.?\d*)\s*([a-zA-Z]{3})\s+(?:to|in|into)\s+([a-zA-Z]{3})/i);
+  var m2 = query.match(/(?:exchange rate|convert|rate).+?([a-zA-Z]{3}).+?(?:to|in)\s+([a-zA-Z]{3})/i);
+  var amount = 1, fromC = 'USD', toC = 'EUR';
+  if (m1) { amount = parseFloat(m1[1]); fromC = m1[2].toUpperCase(); toC = m1[3].toUpperCase(); }
+  else if (m2) { fromC = m2[1].toUpperCase(); toC = m2[2].toUpperCase(); }
+  else { cb(null); return; }
+  fetch('https://open.er-api.com/v6/latest/' + fromC)
+    .then(function(r) { if (!r.ok) throw 0; return r.json(); })
+    .then(function(d) {
+      if (!d.rates || !d.rates[toC]) throw 0;
+      var rate = d.rates[toC];
+      cb(amount + ' ' + fromC + ' = ' + (amount * rate).toFixed(2) + ' ' + toC + '. Rate: 1 ' + fromC + ' = ' + rate.toFixed(4) + ' ' + toC + '. (via ExchangeRate-API)');
+    }).catch(function() { cb(null); });
+}
+
+function apiCrypto(query, cb) {
+  var COINS = {bitcoin:'bitcoin',btc:'bitcoin',ethereum:'ethereum',eth:'ethereum',solana:'solana',sol:'solana',cardano:'cardano',ada:'cardano',dogecoin:'dogecoin',doge:'dogecoin',ripple:'ripple',xrp:'ripple',litecoin:'litecoin',ltc:'litecoin',chainlink:'chainlink',polygon:'matic-network',matic:'matic-network'};
+  var found = null, ql = query.toLowerCase();
+  for (var cn in COINS) { if (ql.indexOf(cn) !== -1) { found = COINS[cn]; break; } }
+  if (!found) { cb(null); return; }
+  fetch('https://api.coingecko.com/api/v3/simple/price?ids=' + found + '&vs_currencies=usd&include_24hr_change=true&include_market_cap=true')
+    .then(function(r) { if (!r.ok) throw 0; return r.json(); })
+    .then(function(d) {
+      var data = d[found]; if (!data) throw 0;
+      var price = data.usd.toLocaleString('en-US',{style:'currency',currency:'USD'});
+      var chg   = data.usd_24h_change ? data.usd_24h_change.toFixed(2) : '0';
+      var mcap  = data.usd_market_cap ? '$' + (data.usd_market_cap/1e9).toFixed(2) + 'B' : '';
+      cb(found.charAt(0).toUpperCase()+found.slice(1).replace(/-/g,' ') + ': ' + price + ' USD ' + (parseFloat(chg)>=0?'▲':'▼') + Math.abs(chg) + '% (24h)' + (mcap?' · Market cap: '+mcap:'') + '. (via CoinGecko)');
+    }).catch(function() { cb(null); });
+}
+
+function apiFred(query, cb) {
+  var ql = query.toLowerCase();
+  var series = null;
+  if (/\b(inflation|cpi|consumer price)\b/.test(ql))      series = {id:'CPIAUCSL',name:'US Inflation (CPI)',unit:''};
+  else if (/\b(unemployment|jobless rate)\b/.test(ql))    series = {id:'UNRATE',name:'US Unemployment Rate',unit:'%'};
+  else if (/\b(gdp|gross domestic)\b/.test(ql))           series = {id:'GDP',name:'US GDP',unit:' billion USD'};
+  else if (/\b(federal funds|fed rate|interest rate)\b/.test(ql)) series = {id:'FEDFUNDS',name:'Federal Funds Rate',unit:'%'};
+  else if (/\b(mortgage|home loan rate)\b/.test(ql))      series = {id:'MORTGAGE30US',name:'30-Year Mortgage Rate',unit:'%'};
+  if (!series) { cb(null); return; }
+  fetch('https://api.stlouisfed.org/fred/series/observations?series_id=' + series.id + '&api_key=ceec00b87c7d5e0659e3e5faab4b3eb7&file_type=json&limit=1&sort_order=desc')
+    .then(function(r) { if (!r.ok) throw 0; return r.json(); })
+    .then(function(d) {
+      if (!d.observations || !d.observations.length) throw 0;
+      var obs = d.observations[0];
+      cb(series.name + ': ' + obs.value + series.unit + ' (as of ' + obs.date + '). (via Federal Reserve FRED)');
+    }).catch(function() { cb(null); });
+}
+
+function apiGeo(cb) {
+  fetch('https://ipapi.co/json/')
+    .then(function(r) { if (!r.ok) throw 0; return r.json(); })
+    .then(function(d) { if (!d.city) throw 0; cb('You appear to be in ' + d.city + ', ' + d.region + ', ' + d.country_name + '. (via IP Geolocation)'); })
+    .catch(function() { cb(null); });
+}
+
+function apiPlace(query, cb) {
+  var q = query.replace(/\b(where is|find|locate|address of|nearest|closest|directions to|how do i get to)\b/gi,'').trim();
+  if (!q || q.length < 2) { cb(null); return; }
+  var city = SG('aria_city') || 'Framingham MA';
+  fetch('https://nominatim.openstreetmap.org/search?q=' + encodeURIComponent(q + ' near ' + city) + '&format=json&limit=1', {headers:{'Accept-Language':'en','User-Agent':'RiRiWilliamsAI/1.0'}})
+    .then(function(r) { if (!r.ok) throw 0; return r.json(); })
+    .then(function(d) {
+      if (!d.length) throw 0;
+      cb('"' + q + '" found at: ' + d[0].display_name + '. (via OpenStreetMap)');
+    }).catch(function() { cb(null); });
+}
+
+function apiJoke(cb) {
+  fetch('https://v2.jokeapi.dev/joke/Any?safe-mode&type=single,twopart')
+    .then(function(r) { return r.json(); })
+    .then(function(d) {
+      if (d.error) throw 0;
+      cb(d.type === 'single' ? d.joke + ' (via JokeAPI)' : d.setup + ' ... ' + d.delivery + ' (via JokeAPI)');
+    }).catch(function() { cb(null); });
+}
+
+function apiImage(prompt) {
+  var url = 'https://image.pollinations.ai/prompt/' + encodeURIComponent(prompt) + '?width=512&height=512&nologo=true';
+  var img = document.createElement('img');
+  img.style.cssText = 'max-width:300px;max-height:300px;border-radius:8px;border:1px solid var(--ac);margin:10px auto;display:block;box-shadow:0 0 20px rgba(0,212,255,.3)';
+  img.onload = function() { var rs = EL('RS'); rs.innerHTML = ''; rs.appendChild(img); rs.style.maxHeight = '340px'; };
+  img.onerror = function() { setRS('Could not generate that image, Reni. Try a different description.'); };
+  img.src = url;
+  setRS('Generating: ' + prompt + '...');
+  doSpeak('Generating an image of ' + prompt + ' for you, Reni.');
+}
+
+// ── NEWS ─────────────────────────────────────────────
+var newsStories  = [];
+var activeFeedIdx = 0;
+var NEWS_FEEDS = [
+  {name:'BBC',     url:'https://feeds.bbci.co.uk/news/world/rss.xml'},
+  {name:'NPR',     url:'https://feeds.npr.org/1001/rss.xml'},
+  {name:'AP',      url:'https://feeds.apnews.com/rss/apf-topnews'},
+  {name:'Reuters', url:'https://feeds.reuters.com/reuters/topNews'},
+];
+function fetchNews() {
+  EL('NFEED').innerHTML = '<div style="color:rgba(0,212,255,.5);font-size:11px;letter-spacing:2px;padding:10px 0">Loading...</div>';
+  tryFeed(0);
+}
+function tryFeed(idx) {
+  if (idx >= NEWS_FEEDS.length) {
+    EL('NFEED').innerHTML = '<div style="color:rgba(255,100,100,.7);font-size:13px">Could not load feeds. <a href="https://news.google.com" target="_blank" style="color:var(--ac)">Open Google News ↗</a></div>';
+    return;
+  }
+  var feed = NEWS_FEEDS[idx];
+  fetch('https://api.rss2json.com/v1/api.json?rss_url=' + encodeURIComponent(feed.url))
+    .then(function(r) { return r.json(); })
+    .then(function(d) {
+      if (!d.items || !d.items.length) throw 0;
+      activeFeedIdx = idx;
+      renderNews(d.items.slice(0,8), feed.name);
+    }).catch(function() { tryFeed(idx + 1); });
+}
+function renderNews(items, sourceName) {
+  var f = EL('NFEED');
+  f.innerHTML = '<div style="font-size:8px;letter-spacing:3px;color:rgba(0,212,255,.4);margin-bottom:10px">SOURCE: ' + sourceName + '</div>';
+  newsStories = items;
+  items.forEach(function(item, idx) {
+    var el = document.createElement('div'); el.className = 'NI';
+    var desc = item.description ? '<div style="font-size:12px;color:rgba(255,255,255,.4);margin-top:4px;line-height:1.5">' + item.description.replace(/<[^>]+>/g,'').substring(0,130) + '...</div>' : '';
+    el.innerHTML = '<span style="position:absolute;top:14px;left:0;font-family:Orbitron,monospace;font-size:10px;color:var(--ac);opacity:.5">' + (idx+1) + '.</span><div style="padding-left:22px"><div class="ND">' + (item.pubDate||'').substring(0,10) + ' · <span style="color:rgba(0,212,255,.7)">▶ TAP</span></div><div class="NT">' + item.title + '</div>' + desc + '</div>';
+    el.onclick  = (function(it,ix) { return function() { readStory(it,ix); }; })(item, idx);
+    el.ondblclick = (function(lk) { return function() { window.open(lk,'_blank'); }; })(item.link);
+    f.appendChild(el);
+  });
+  var sw = document.createElement('div'); sw.style.cssText = 'display:flex;gap:8px;margin-top:14px;flex-wrap:wrap';
+  NEWS_FEEDS.forEach(function(fd, fi) {
+    var btn = document.createElement('button');
+    btn.textContent = fd.name;
+    btn.style.cssText = 'background:' + (fi===activeFeedIdx?'rgba(0,212,255,.15)':'none') + ';border:1px solid rgba(0,212,255,' + (fi===activeFeedIdx?'.8':'.3') + ');color:var(--ac);font-family:Share Tech Mono,monospace;font-size:9px;letter-spacing:2px;padding:4px 10px;cursor:pointer;border-radius:2px';
+    btn.onclick = (function(fii) { return function() { tryFeed(fii); }; })(fi);
+    sw.appendChild(btn);
+  });
+  f.appendChild(sw);
+}
+function readStory(item, idx) {
+  EL('NFEED').querySelectorAll('.NI').forEach(function(el,i) { el.style.background = i===idx?'rgba(0,212,255,.08)':''; el.style.borderLeft = i===idx?'2px solid var(--ac)':''; });
+  var desc = item.description ? item.description.replace(/<[^>]+>/g,'').substring(0,250) : '';
+  closeMo('NEWSMO'); setRS(item.title); doSpeak('Story ' + (idx+1) + '. ' + item.title + '. ' + desc);
+}
+
+// ── LOCAL INTELLIGENCE ────────────────────────────────
+var SITES = {
+  youtube:'https://www.youtube.com', google:'https://www.google.com',
+  facebook:'https://www.facebook.com', instagram:'https://www.instagram.com',
+  gmail:'https://mail.google.com', twitter:'https://www.twitter.com',
+  tiktok:'https://www.tiktok.com', netflix:'https://www.netflix.com',
+  amazon:'https://www.amazon.com', pinterest:'https://www.pinterest.com',
+  spotify:'https://www.spotify.com', linkedin:'https://www.linkedin.com',
+  twitch:'https://www.twitch.tv', reddit:'https://www.reddit.com',
+  etsy:'https://www.etsy.com', paypal:'https://www.paypal.com',
+  'fox 25':'https://www.fox25boston.com', fox25:'https://www.fox25boston.com',
+  comicbook:'https://www.comicbook.com',
+};
+
+function localReply(query) {
+  var q = query.toLowerCase().trim();
+
+  // Morning greeting → routine
+  if (/\b(good morning|morning ri ri|good morning ri ri)\b/i.test(q)) { setTimeout(mrStart, 100); return null; }
+  // Morning routine yes/no
+  if (MR.active && mrYesNo(query)) return null;
+
+  // General greetings
+  if (/^(hey|hi|hello|sup|what'?s up|good evening|good afternoon|yo)\b/.test(q)) {
+    var greets = ["Hey Reni! What can I do for you?","Hi Reni, I'm here.","Hey! Ready when you are, Reni.","Hello Reni! What's on your mind?"];
+    return greets[Math.floor(Math.random() * greets.length)];
+  }
+  // Time
+  if (/\b(what'?s? the time|current time|what time is it)\b/.test(q))
+    return 'It is ' + new Date().toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit',hour12:true}) + ', Reni.';
+  // Date
+  if (/\b(what'?s? (the |today'?s? )?(date|day)|what day is (it|today))\b/.test(q))
+    return 'Today is ' + new Date().toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric',year:'numeric'}) + ', Reni.';
+  // Status
+  if (/\bhow are you\b|\bare you okay\b|\bhow'?s? ri ri\b/.test(q)) {
+    var stats = ["All systems green, Reni.","Running perfectly. What can I help with?","I'm great, Reni — let's get things done."];
+    return stats[Math.floor(Math.random() * stats.length)];
+  }
+  // Identity
+  if (/\bwho are you\b|\bwhat'?s? your name\b|\bintroduce yourself\b/.test(q))
+    return "I'm Ri Ri Williams, your personal AI assistant, Reni. I handle news, music, calendar, web browsing, and much more.";
+  // Thanks
+  if (/\b(you'?re? (amazing|great|awesome|the best|brilliant)|thank(s| you)|good job|nice work)\b/.test(q)) {
+    var thanks = ["Anytime, Reni!","Happy to help, always.","That's what I'm here for, Reni.","You're welcome! What's next?"];
+    return thanks[Math.floor(Math.random() * thanks.length)];
+  }
+  // Websites
+  for (var site in SITES) {
+    if (new RegExp('\\b(open|go to|launch|take me to|show me)\\s+' + site.replace(/ /g,'\\s+') + '\\b','i').test(q)) {
+      window.open(SITES[site], '_blank'); notify('Opening ' + site + ', Reni.'); return 'Opening ' + site + ' now, Reni.';
+    }
+  }
+  // Calendar
+  if (/\b(open|show|my)\s+(calendar|appointments?|schedule)\b|\bwhat'?s? on my calendar\b/.test(q)) {
+    window.open('https://calendar.google.com','_blank'); return 'Opening your Google Calendar, Reni.';
+  }
+  // News
+  if (/\b(news|headlines?|what'?s? happening|latest|top stories)\b/.test(q)) {
+    setTimeout(function() { openMo('NEWSMO'); fetchNews(); }, 400); return 'Pulling up the latest headlines, Reni.';
+  }
+  // DJ
+  if (/\b(hey\s+jerome|open\s+dj|dj\s+mode|turntable|let'?s?\s+mix)\b/.test(q)) { openDJ(); return 'DJ suite activated, Reni. Jerome is on the ones and twos.'; }
+  // Math
+  var mm = q.match(/(-?\d+\.?\d*)\s*([\+\-\*\/x×÷])\s*(-?\d+\.?\d*)/);
+  if (mm) {
+    var mA = parseFloat(mm[1]), mOp = mm[2], mB = parseFloat(mm[3]), mRes = null;
+    if (mOp==='+') mRes=mA+mB; else if (mOp==='-') mRes=mA-mB;
+    else if (mOp==='*'||mOp==='x'||mOp==='×') mRes=mA*mB;
+    else if ((mOp==='/'||mOp==='÷') && mB!==0) mRes=mA/mB;
+    if (mRes !== null) return mA + ' ' + mOp + ' ' + mB + ' = ' + (mRes%1===0?mRes:mRes.toFixed(4)) + ', Reni.';
+  }
+  // Timer
+  var tm = /set a?\s*(timer|alarm|reminder)\s+for\s+(\d+)\s*(minute|min|second|sec|hour)/i.exec(q);
+  if (tm) {
+    var tNum = parseInt(tm[2]), tUnit = tm[3].toLowerCase();
+    var tMs  = tUnit.startsWith('sec') ? tNum*1000 : tUnit.startsWith('hour') ? tNum*3600000 : tNum*60000;
+    setTimeout(function() { var dm='Reni, your '+tNum+' '+tUnit+' timer is done!'; setRS(dm); doSpeak(dm); notify('⏰ Timer done!'); }, tMs);
+    return 'Timer set for ' + tNum + ' ' + tUnit + 's, Reni. I\'ll let you know.';
+  }
+  // Motivation
+  if (/\b(motivate me|i need motivation|inspire me|i'?m (tired|bored|stressed|overwhelmed))\b/.test(q)) {
+    var mvs = ["You've got this, Reni. One step at a time.","Your creativity is your superpower, Reni.","Progress, not perfection. You're doing great.","Rest if you need to, but don't quit. You're closer than you think.","Every expert was once a beginner. Keep going."];
+    return mvs[Math.floor(Math.random() * mvs.length)];
+  }
+  return null;
+}
+
+// ── MAIN QUERY ROUTER (19 layers) ────────────────────
+function ask(query) {
+  if (!query || !query.trim()) return;
+  if (MR.active) { _doAsk(query); return; } // morning routine bypasses gap
+  var elapsed = Date.now() - lastReqTime;
+  if (lastReqTime > 0 && elapsed < MIN_GAP) {
+    var localFast = localReply(query);
+    if (localFast) { respond(query, localFast); cacheSet(query, localFast); return; }
+    setSB('Ready in ' + Math.ceil((MIN_GAP - elapsed)/1000) + 's...');
+    setTimeout(function() { ask(query); }, MIN_GAP - elapsed);
+    return;
+  }
+  _doAsk(query);
+}
+
+function _doAsk(query) {
+  if (checkHeyAgent(query)) return;
+  learnFrom(query);
+  routeCheck(query);
+
+  var cached = cacheGet(query);
+  if (cached) { respond(query, cached); notify('⚡ Instant'); return; }
+
+  var local = localReply(query);
+  if (local) { respond(query, local); cacheSet(query, local); return; }
+
+  // Image generation
+  if (/\b(show me a picture|generate an? image|draw me|create an? image|paint me|picture of|image of)\b/i.test(query)) {
+    var imgQ = query.replace(/\b(show me a? ?picture of|generate an? image of|draw me a?|create an? image of|paint me a?|picture of|image of|a picture of|an image of)\b/gi,'').trim();
+    if (imgQ.length > 3) { apiImage(imgQ); return; }
+  }
+  // Crypto
+  if (/\b(bitcoin|btc|ethereum|eth|solana|sol|cardano|ada|dogecoin|doge|ripple|xrp|litecoin|ltc|chainlink|polygon|matic|crypto price|coin price)\b/i.test(query)) {
+    setSB('Checking crypto...'); apiCrypto(query, function(r) { r ? respond(query,r,true) : callGemini(query); }); return;
+  }
+  // Sunrise/Sunset
+  if (/\b(sunrise|sunset|dawn|dusk|golden hour|when does it get dark|when does sun rise|daylight hours)\b/i.test(query)) {
+    setSB('Checking sun times...'); apiSunrise(query, function(r) { r ? respond(query,r,true) : callGemini(query); }); return;
+  }
+  // Weather (today / tomorrow / week)
+  if (/\b(weather|temperature|forecast|how (hot|cold|warm)|will it rain|umbrella|uv index|humidity|this week|7.?day|seven day)\b/i.test(query) || /\btomorrow'?s? weather\b|\bweather tomorrow\b/i.test(query)) {
+    setSB('Checking weather...'); apiWeather(query, function(r) { r ? respond(query,r,true) : callGemini(query); }); return;
+  }
+  // Economic data
+  if (/\b(inflation|cpi|unemployment|jobless rate|gdp|gross domestic|federal funds rate|interest rate|mortgage rate)\b/i.test(query)) {
+    setSB('Checking Federal Reserve data...'); apiFred(query, function(r) { r ? respond(query,r,true) : callGemini(query); }); return;
+  }
+  // Exchange rates
+  if (/\b(exchange rate|convert|usd|eur|gbp|jpy|cad|aud).*(to|in|into)\b|\b(dollar|euro|pound|yen|currency|exchange rate)\b/i.test(query)) {
+    setSB('Checking rates...'); apiExchange(query, function(r) { r ? respond(query,r,true) : callGemini(query); }); return;
+  }
+  // Location
+  if (/\b(where am i|what city am i in|my location|detect my location)\b/i.test(query)) {
+    setSB('Detecting location...'); apiGeo(function(r) { respond(query, r || 'Could not detect your location, Reni.'); }); return;
+  }
+  // Place search
+  if (/\b(where is|nearest|closest|directions to|how do i get to)\b/i.test(query) && query.length > 12) {
+    setSB('Searching locations...'); apiPlace(query, function(r) { r ? respond(query,r,true) : callGemini(query); }); return;
+  }
+  // Dictionary
+  if (/\b(define|definition|what does .+ mean|meaning of|synonym)\b/i.test(query)) {
+    var wm = query.match(/(?:define|definition of|meaning of|synonyms? (?:for|of)|what (?:does|is) (?:the word )?)\s*["']?([a-zA-Z\-]+)["']?/i);
+    if (wm && wm[1]) { setSB('Looking up definition...'); apiDict(wm[1], function(r) { r ? respond(query,r,true) : callGemini(query); }); return; }
+  }
+  // Country
+  if (/\b(capital of|currency of|population of|languages? (?:in|of)|tell me about .+(?:country|nation))\b/i.test(query)) {
+    setSB('Looking up country...'); apiCountry(query, function(r) { r ? respond(query,r,true) : callGemini(query); }); return;
+  }
+  // Numbers/dates
+  if (/\b(fun fact|number fact|fact about|what happened on|this day in|born on)\b/i.test(query) || (/\bfact\b/i.test(query) && /\d/.test(query))) {
+    setSB('Fetching fact...'); apiNumbers(query, function(r) { r ? respond(query,r,true) : callGemini(query); }); return;
+  }
+  // Trivia
+  if (/\b(trivia|quiz|ask me a question|test me|random question|give me a trivia)\b/i.test(query)) {
+    setSB('Getting trivia...'); apiTrivia(function(r) { r ? respond(query,r,true) : callGemini(query); }); return;
+  }
+  // Jokes
+  if (/\b(tell me a joke|make me laugh|say something funny|joke)\b/i.test(query)) {
+    apiJoke(function(r) {
+      if (r) respond(query, r, true);
+      else respond(query, ["Why do programmers prefer dark mode? Because light attracts bugs!","What do you call a fake noodle? An impasta.","I told my AI to act natural. Now it just stands there looking awkward."][Math.floor(Math.random()*3)]);
+    }); return;
+  }
+  // NASA
+  if (/\b(nasa|astronomy|space|cosmos|planet|star|galaxy|nebula|apod|picture of the day|telescope|asteroid|universe)\b/i.test(query)) {
+    setSB('Contacting NASA...'); apiNasa(function(r) { r ? respond(query,r,true) : callGemini(query); }); return;
+  }
+  // Books
+  if (/\b(book|novel|author|written by|who wrote|find a book|open library|literature)\b/i.test(query)) {
+    setSB('Searching Open Library...'); apiBook(query, function(r) { r ? respond(query,r,true) : callGemini(query); }); return;
+  }
+  // Wikidata
+  if (/\b(when was .+ born|when did .+ die|what year was|who invented|what country is .+ in)\b/i.test(query)) {
+    setSB('Checking Wikidata...'); apiWikidata(query, function(r) { r ? respond(query,r,true) : callGemini(query); }); return;
+  }
+  // Wikipedia
+  if (/^(who (is|was|are)|what (is|are|was)|tell me about|explain)\b/i.test(query) && !/\b(my|your|reni|ri ri)\b/i.test(query)) {
+    setSB('Looking that up...'); apiWiki(query, function(r) { r ? respond(query,r,true) : callGemini(query); }); return;
+  }
+  // Gemini
+  callGemini(query);
+}
+
+function respond(query, reply, doCache) {
+  setRS(reply); pendingText = reply; doSpeak(reply); saveHistory(query, reply);
+  if (doCache) cacheSet(query, reply);
+}
+
+// ── GEMINI ────────────────────────────────────────────
+function callGemini(query) {
+  var kidx = getKey();
+  var key  = GEMINI_KEYS[kidx];
+  var city = SG('aria_city') || 'Framingham, MA';
+  var sys  = currentAgent.p + ' Location: ' + city + '.' + memCtx();
+  var msgs = aiHistory.map(function(h) { return {role:h.r==='a'?'model':'user', parts:[{text:h.t}]}; });
+  aiHistory.push({r:'u', t:query});
+  setSB('Processing... [key ' + (kidx+1) + '/3]');
+  lastReqTime = Date.now();
+  var t0 = Date.now();
+  fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=' + key, {
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({
+      system_instruction: {parts:[{text:sys}]},
+      contents: msgs.concat([{role:'user', parts:[{text:query}]}]),
+      generationConfig: {maxOutputTokens:400, temperature:0.85}
+    })
+  })
+  .then(function(res) {
+    _realLatency = (Date.now() - t0); EL('V3').textContent = _realLatency + 'ms';
+    if (!res.ok) {
+      aiHistory.pop();
+      if (res.status === 429) {
+        coolKey(kidx);
+        var ni = getKey();
+        var nowMs = Date.now();
+        if (nowMs >= gKeyCooldown[ni]) {
+          setSB('Retrying with key ' + (ni+1) + '...');
+          setTimeout(function() { callGemini(query); }, 1200);
+        } else {
+          var waitMs = Math.max(1000, Math.min.apply(null, gKeyCooldown) - nowMs + 500);
+          offlineReply();
+          setTimeout(function() { lastReqTime = 0; }, waitMs);
+        }
+        return null;
+      }
+      var em = res.status === 400 ? 'Invalid API key, Reni.' : res.status === 403 ? 'API access denied, Reni.' : 'Error ' + res.status + ', Reni.';
+      setRS(em); pendingText = em; return null;
+    }
+    return res.json();
+  })
+  .then(function(data) {
+    if (!data) return;
+    var reply = data.candidates && data.candidates[0] && data.candidates[0].content && data.candidates[0].content.parts && data.candidates[0].content.parts[0] && data.candidates[0].content.parts[0].text;
+    if (reply) { aiHistory.push({r:'a', t:reply}); if (aiHistory.length > 20) aiHistory = aiHistory.slice(-20); respond(query, reply, true); }
+    else { aiHistory.pop(); setRS('No response, Reni. Try again.'); }
+  })
+  .catch(function() { aiHistory.pop(); offlineReply(); });
+}
+
+// ── THREE.JS ORB ──────────────────────────────────────
+var orbState = 'idle';
+var orbRndr  = null, orbScene = null, orbCam = null, orbGrp = null;
+var orbMat   = null, orbGlow = null, orbRings = [], orbFrame = null;
+
+function initOrb() {
+  if (orbRndr) { try { orbRndr.dispose(); } catch(e) {} }
+  if (orbFrame) { cancelAnimationFrame(orbFrame); orbFrame = null; }
+  var canvas = EL('OC');
+  try { orbRndr = new THREE.WebGLRenderer({canvas:canvas, antialias:true, alpha:true}); }
+  catch(e) { return; }
+  orbRndr.setSize(340, 340);
+  orbRndr.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  orbRndr.setClearColor(0x000000, 0);
+  orbScene = new THREE.Scene();
+  orbCam = new THREE.PerspectiveCamera(50, 1, 0.1, 1000); orbCam.position.z = 3.2;
+  orbGrp = new THREE.Group(); orbScene.add(orbGrp);
+  var N = 1800, pos = [], col = [], phi = Math.PI * (3 - Math.sqrt(5));
+  for (var di = 0; di < N; di++) {
+    var dy = 1 - (di/(N-1))*2, dr = Math.sqrt(1 - dy*dy), dth = phi*di, j = 0.022;
+    pos.push(Math.cos(dth)*dr+(Math.random()-.5)*j, dy+(Math.random()-.5)*j, Math.sin(dth)*dr+(Math.random()-.5)*j);
+    var db = 0.55 + Math.random()*.45; col.push(db*.35, db*.80, db);
+  }
+  var geo = new THREE.BufferGeometry();
+  geo.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
+  geo.setAttribute('color',    new THREE.Float32BufferAttribute(col, 3));
+  orbMat = new THREE.PointsMaterial({size:.058, vertexColors:true, transparent:true, opacity:1.0, sizeAttenuation:true});
+  orbGrp.add(new THREE.Points(geo, orbMat));
+  orbGlow = new THREE.Mesh(new THREE.SphereGeometry(.85,32,32), new THREE.MeshBasicMaterial({color:0x0055ff,transparent:true,opacity:.30}));
+  orbGrp.add(orbGlow);
+  orbGrp.add(new THREE.Mesh(new THREE.SphereGeometry(1.06,32,32), new THREE.MeshBasicMaterial({color:0x0088ff,transparent:true,opacity:.08,side:THREE.BackSide})));
+  orbRings = [];
+  [{rx:1.5,ry:.52,tilt:.28,spd:.009},{rx:1.3,ry:.44,tilt:-1.1,spd:-.007},{rx:1.65,ry:.58,tilt:1.85,spd:.005}].forEach(function(cfg) {
+    var pts = [];
+    for (var ri = 0; ri <= 128; ri++) { var ra=(ri/128)*Math.PI*2; pts.push(new THREE.Vector3(Math.cos(ra)*cfg.rx, 0, Math.sin(ra)*cfg.ry)); }
+    var rMat = new THREE.LineBasicMaterial({color:0x00d4ff, transparent:true, opacity:.45});
+    var ring = new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts), rMat);
+    ring.rotation.x = cfg.tilt; ring.userData = {spd:cfg.spd, tilt:cfg.tilt, mat:rMat};
+    orbGrp.add(ring); orbRings.push(ring);
+  });
+  var subOrb = new THREE.Mesh(new THREE.SphereGeometry(.06,12,12), new THREE.MeshBasicMaterial({color:0x00d4ff,transparent:true,opacity:.85}));
+  orbGrp.add(subOrb);
+  (function loop() {
+    orbFrame = requestAnimationFrame(loop);
+    var t = Date.now() * .001;
+    var spd = orbState==='listening'?.01 : orbState==='speaking'?.007 : .004;
+    orbGrp.children[0].rotation.y += spd; orbGrp.children[0].rotation.x += spd*.28;
+    orbMat.size = .058*(1+Math.sin(t*2.4)*.05)*(orbState==='speaking'?1.12:1);
+    orbRings.forEach(function(rn) { rn.rotation.y += rn.userData.spd; rn.userData.mat.opacity = .35+Math.sin(t*1.4+rn.userData.tilt)*.12; });
+    subOrb.position.set(Math.cos(t*.75)*1.5, Math.sin(t*.42)*.4, Math.sin(t*.75)*.52);
+    orbGrp.rotation.z = Math.sin(t*.38)*.03;
+    if (orbState==='listening') { orbGlow.material.color.setHex(0x00cc55); orbGlow.material.opacity=.40; }
+    else if (orbState==='speaking') { orbGlow.material.color.setHex(0xff6600); orbGlow.material.opacity=.36; }
+    else { orbGlow.material.color.setHex(0x0055ff); orbGlow.material.opacity=.30; }
+    orbRndr.render(orbScene, orbCam);
+  })();
+}
+
+function setOrbState(s) {
+  orbState = s;
+  var shadows = {listening:'0 0 60px 14px rgba(0,255,136,.35),inset 0 0 50px rgba(0,40,20,.3)',speaking:'0 0 60px 14px rgba(255,120,0,.35),inset 0 0 50px rgba(50,20,0,.3)',idle:'0 0 60px 16px rgba(0,130,255,.45),0 0 100px 30px rgba(0,80,220,.2),inset 0 0 60px rgba(0,20,80,.4)'};
+  EL('OG').style.boxShadow = shadows[s] || shadows.idle;
+}
+
+// ── DJ ORB ────────────────────────────────────────────
+var djRndr = null, djScene = null, djCam = null, djGrp = null, djMat = null, djFrame = null;
+function initDJOrb() {
+  var canvas = EL('DJOC'); if (!canvas) return;
+  if (djRndr) { try { djRndr.dispose(); } catch(e) {} }
+  if (djFrame) { cancelAnimationFrame(djFrame); djFrame = null; }
+  try { djRndr = new THREE.WebGLRenderer({canvas:canvas, antialias:true, alpha:true}); } catch(e) { return; }
+  djRndr.setSize(100,100); djRndr.setPixelRatio(Math.min(window.devicePixelRatio,2)); djRndr.setClearColor(0x000000,0);
+  djScene = new THREE.Scene(); djCam = new THREE.PerspectiveCamera(50,1,.1,100); djCam.position.z = 3.2;
+  djGrp = new THREE.Group(); djScene.add(djGrp);
+  var N2=900,p2=[],c2=[],phi2=Math.PI*(3-Math.sqrt(5));
+  for (var dji=0;dji<N2;dji++){var djy=1-(dji/(N2-1))*2,djr=Math.sqrt(1-djy*djy),djth=phi2*dji;p2.push(Math.cos(djth)*djr+(Math.random()-.5)*.025,djy+(Math.random()-.5)*.025,Math.sin(djth)*djr+(Math.random()-.5)*.025);var djb=.55+Math.random()*.45;c2.push(djb*.65,djb*.33,djb);}
+  var g2=new THREE.BufferGeometry();g2.setAttribute('position',new THREE.Float32BufferAttribute(p2,3));g2.setAttribute('color',new THREE.Float32BufferAttribute(c2,3));
+  djMat=new THREE.PointsMaterial({size:.062,vertexColors:true,transparent:true,opacity:1.0,sizeAttenuation:true});
+  djGrp.add(new THREE.Points(g2,djMat));
+  djGrp.add(new THREE.Mesh(new THREE.SphereGeometry(.82,24,24),new THREE.MeshBasicMaterial({color:0x7722cc,transparent:true,opacity:.32})));
+  djGrp.add(new THREE.Mesh(new THREE.SphereGeometry(1.05,24,24),new THREE.MeshBasicMaterial({color:0xa855f7,transparent:true,opacity:.07,side:THREE.BackSide})));
+  var rp2=[];for(var ri2=0;ri2<=128;ri2++){var ra2=(ri2/128)*Math.PI*2;rp2.push(new THREE.Vector3(Math.cos(ra2)*1.4,0,Math.sin(ra2)*.5));}
+  var djRing=new THREE.Line(new THREE.BufferGeometry().setFromPoints(rp2),new THREE.LineBasicMaterial({color:0xc084fc,transparent:true,opacity:.50}));
+  djRing.rotation.x=0.4;djGrp.add(djRing);
+  (function djLoop(){
+    djFrame=requestAnimationFrame(djLoop);var dt=Date.now()*.001;
+    djGrp.children[0].rotation.y+=.006;djGrp.children[0].rotation.x+=.002;
+    djMat.size=.062*(1+Math.sin(dt*3)*.06);djGrp.rotation.z=Math.sin(dt*.4)*.04;djRing.rotation.y+=.008;
+    djRndr.render(djScene,djCam);
+  })();
+}
+
+// ── WAVEFORM ──────────────────────────────────────────
+var wvCtx = null, wvRunning = false, wvData = new Uint8Array(64).fill(128);
+function initWave() { wvCtx = EL('WV').getContext('2d'); }
+function drawWave() {
+  if (!wvCtx) return;
+  wvCtx.clearRect(0,0,200,32);
+  var bw=3,gap=2,tot=Math.floor(200/(bw+gap));
+  for (var wi=0;wi<tot;wi++){var widx=Math.floor((wi/tot)*wvData.length),wh=Math.max(2,Math.abs((wvData[widx]/255-.5)*32*1.9)),wal=.9-Math.abs((wi/tot)-.5)*2*.45;wvCtx.fillStyle='rgba(0,212,255,'+wal+')';wvCtx.fillRect(wi*(bw+gap),16-wh/2,bw,wh);}
+  if (wvRunning) requestAnimationFrame(drawWave);
+}
+function startWave() { wvRunning=true;EL('WV').classList.add('on');(function wt(){if(!wvRunning)return;for(var wai=0;wai<wvData.length;wai++)wvData[wai]=128+Math.sin(Date.now()*.004+wai*.45)*38*(Math.random()*.5+.5);requestAnimationFrame(wt);})();drawWave();}
+function stopWave()  { wvRunning=false;EL('WV').classList.remove('on');wvData.fill(128); }
+
+// ── VOICE SYNTHESIS ───────────────────────────────────
+var MALE_RX = /^(Daniel|Alex|Arthur|Fred|Tom|Bruce|Junior|Ralph|Albert)$/i;
+function loadVoices() {
+  var voices = speechSynthesis.getVoices();
+  var sel = EL('IVOICE'); if (!sel || !voices.length) return;
+  var saved = SG('aria_voice');
+  var fem = voices.filter(function(v){return v.lang.startsWith('en')&&!MALE_RX.test(v.name);});
+  var mal = voices.filter(function(v){return v.lang.startsWith('en')&&MALE_RX.test(v.name);});
+  sel.innerHTML = '';
+  fem.concat(mal).forEach(function(v) {
+    var o=document.createElement('option');o.value=v.name;o.textContent=v.name+' ('+v.lang+')';
+    if(v.name===saved)o.selected=true;sel.appendChild(o);
+  });
+  pickVoice();
+}
+function pickVoice() {
+  var voices = speechSynthesis.getVoices();
+  var saved  = SG('aria_voice');
+  voiceChoice = null;
+  if (saved) voiceChoice = voices.find(function(v){return v.name===saved;})||null;
+  if (!voiceChoice) voiceChoice = voices.find(function(v){return v.lang==='en-US'&&!MALE_RX.test(v.name);})||null;
+  if (!voiceChoice) voiceChoice = voices.find(function(v){return v.lang.startsWith('en')&&!MALE_RX.test(v.name);})||null;
+  if (!voiceChoice) voiceChoice = voices.find(function(v){return v.lang.startsWith('en');})||null;
+}
+// Chrome kills long utterances silently — chunk text into ≤220-char sentences and queue them
+var _speakQueue = [];
+var _speakKeepAlive = null;
+
+function _speakDone() {
+  clearInterval(_speakKeepAlive); _speakKeepAlive = null;
+  isSpeaking = false; setSL(false); setOrbState('idle'); stopWave(); setSB(''); pendingText = '';
+  if (autoListen && EL('DJPANEL').style.display !== 'flex') setTimeout(srStartListen, 600);
+}
+
+function _speakNext() {
+  if (!_speakQueue.length) { _speakDone(); return; }
+  var chunk = _speakQueue.shift();
+  pickVoice();
+  currentUtter = new SpeechSynthesisUtterance(chunk);
+  currentUtter.rate = 0.88; currentUtter.pitch = 1.05; currentUtter.volume = 1.0; currentUtter.lang = 'en-US';
+  if (voiceChoice) currentUtter.voice = voiceChoice;
+  currentUtter.onend = function() { _speakNext(); };
+  currentUtter.onerror = function(ev) {
+    if (ev.error === 'interrupted') { _speakNext(); return; }
+    clearInterval(_speakKeepAlive); _speakKeepAlive = null;
+    isSpeaking = false; setSL(false); setOrbState('idle'); stopWave(); setSB('');
+    pendingText = chunk; setSB('Tap ▶ SPEAK TEST to hear response.');
+  };
+  try { speechSynthesis.speak(currentUtter); } catch(e) {
+    isSpeaking = false; setSL(false); setOrbState('idle');
+    pendingText = chunk; setSB('Tap ▶ SPEAK TEST to hear response.');
+  }
+  // Chrome keep-alive: prevent silent pause on long sessions
+  clearInterval(_speakKeepAlive);
+  _speakKeepAlive = setInterval(function() { if (speechSynthesis.paused) speechSynthesis.resume(); }, 8000);
+}
+
+function doSpeak(text) {
+  if (!text || !text.trim()) return;
+  try { speechSynthesis.resume(); } catch(e) {}
+  speechSynthesis.cancel();
+  clearInterval(_speakKeepAlive); _speakKeepAlive = null;
+  _speakQueue = [];
+  setTimeout(function() {
+    // Split into sentence-boundary chunks ≤220 chars to prevent Chrome cutoff
+    var raw = text.match(/[^.!?\n]+[.!?]*/g) || [text];
+    var chunks = [], cur = '';
+    raw.forEach(function(s) {
+      if (cur.length + s.length > 220 && cur) { chunks.push(cur.trim()); cur = s; }
+      else cur += s;
+    });
+    if (cur.trim()) chunks.push(cur.trim());
+    _speakQueue = chunks.filter(function(c) { return c.length > 0; });
+    if (!_speakQueue.length) return;
+    isSpeaking = true; setSL(true); setOrbState('speaking'); startWave(); setSB(randSL());
+    _speakNext();
+  }, 80);
+}
+function onSpeakBtn() { var t=pendingText||EL('RS').textContent||'Ri Ri Williams online. Ready for you, Reni.'; pendingText=''; doSpeak(t); }
+function stopAll() {
+  try { speechSynthesis.resume(); } catch(e) {}
+  speechSynthesis.cancel();
+  _speakQueue = []; clearInterval(_speakKeepAlive); _speakKeepAlive = null;
+  isSpeaking = false; setSL(false); setOrbState('idle'); stopWave(); setSB(''); pendingText = '';
+  MR.active = false; MR.step = null;
+  srStop();
+  notify('Stopped.');
+}
+function sendTyped() { var inp=EL('TYPEIN'),text=inp.value.trim(); if(!text)return; inp.value=''; setTX(text); ask(text); }
+
+// ── SETTINGS ─────────────────────────────────────────
+function openCfg() {
+  loadVoices();
+  EL('IKEY').value = '3 keys active — automatic rotation enabled';
+  EL('ICITY').value = SG('aria_city') || 'Framingham, MA';
+  EL('ITIME').value = SG('aria_brief') || '08:00';
+  openMo('CFGMO');
+}
+function saveCfg() {
+  SS('aria_city', EL('ICITY').value.trim());
+  SS('aria_brief', EL('ITIME').value);
+  var vs=EL('IVOICE'); if(vs&&vs.value) SS('aria_voice',vs.value);
+  closeMo('CFGMO'); pickVoice(); setupBrief(); doSpeak('Configuration saved, Reni.');
+}
+function openMo(id)  { EL(id).classList.add('open'); }
+function closeMo(id) { EL(id).classList.remove('open'); }
+
+// ── AGENTS ───────────────────────────────────────────
+function openAgents() {
+  var g=EL('AGGRID'); g.innerHTML='';
+  AGENTS.forEach(function(ag) {
+    var c=document.createElement('div');c.className='AC'+(ag.id===currentAgent.id?' on':'');
+    if(ag.id===currentAgent.id)c.style.borderColor=ag.color;
+    c.innerHTML='<div class="AN" style="color:'+ag.color+'">'+ag.name+'</div><div class="AR">'+ag.role+'</div>';
+    c.onclick=function(){closeMo('AGMO');switchAgent(ag);};g.appendChild(c);
+  });
+  openMo('AGMO');
+}
+function switchAgent(ag) {
+  currentAgent=ag; aiHistory=[];
+  document.documentElement.style.setProperty('--ac',ag.color);
+  document.body.style.background=ag.bg;
+  EL('TTL').textContent=ag.name==='RI RI'?'Ri Ri Williams':ag.name+'  MODE';
+  EL('AGBTN').textContent='⬡ '+ag.name+' • RENI';
+  EL('SDR').textContent='// '+ag.role.toUpperCase();
+  EL('RS').style.color=ag.color;
+  setRS(''); setTX(''); notify(ag.name+' online.');
+  doSpeak(ag.name+' online. How can I help you today, Reni?');
+}
+function checkHeyAgent(text) {
+  var rx=/\b(?:hey|hi|hello|switch to|go to|open|activate|call)\s+(ri\s*ri|friday|hercules|socrates|oracle|veronica|athena|jerome|dj)\b/i;
+  var m=rx.exec(text); if(!m) return false;
+  var n=m[1].toLowerCase().replace(/\s+/g,'');
+  if(n==='riri')n='aria'; if(n==='dj')n='jerome';
+  var found=AGENTS.find(function(a){return a.id===n;});
+  if(found){previousAgent=currentAgent;switchAgent(found);showBackBtn();if(found.id==='jerome')openDJ();return true;}
+  return false;
+}
+function showBackBtn() {
+  if(document.getElementById('BACKBTN'))return;
+  var btn=document.createElement('button');btn.id='BACKBTN';btn.textContent='← BACK';
+  btn.style.cssText='position:fixed;top:18px;left:16px;background:rgba(0,0,0,.4);border:1px solid var(--ac);color:var(--ac);font-family:Share Tech Mono,monospace;font-size:10px;letter-spacing:2px;padding:6px 12px;cursor:pointer;z-index:600;border-radius:2px';
+  btn.onclick=function(){if(previousAgent){switchAgent(previousAgent);previousAgent=null;}btn.remove();};
+  document.body.appendChild(btn);
+}
+function routeCheck(text) {
+  for(var rid in ROUTE){
+    if(ROUTE[rid].test(text)){
+      var found=AGENTS.find(function(a){return a.id===rid;});
+      if(found&&found.id!==currentAgent.id){
+        currentAgent=found;aiHistory=[];
+        document.documentElement.style.setProperty('--ac',found.color);
+        EL('AGBTN').textContent='⬡ '+found.name+' • RENI';
+        EL('SDR').textContent='// '+found.role.toUpperCase();
+        notify('Routing to '+found.name+'...');
+      }break;
+    }
+  }
+}
+
+// ── HISTORY PANEL ─────────────────────────────────────
+function openHistory() {
+  var feed=EL('HISTFEED');
+  if(!convHist.length){feed.innerHTML='<div style="color:rgba(0,212,255,.4);font-size:11px;letter-spacing:2px;padding:20px 0;text-align:center">No history yet, Reni.</div>';}
+  else{feed.innerHTML='';convHist.slice().reverse().forEach(function(item){var d=document.createElement('div');d.className='HI';d.innerHTML='<div class="HIW">'+item.t+'</div><div class="HIQ">You: '+item.q+'</div><div class="HIAlbl">RI RI</div><div class="HIA">'+item.a+'</div>';feed.appendChild(d);});}
+  openMo('HISTMO');
+}
+function clearHistory() { convHist=[]; try{localStorage.removeItem('aria_history');}catch(e){} closeMo('HISTMO'); notify('History cleared.'); }
+
+// ── DAILY BRIEF ───────────────────────────────────────
+function setupBrief() {
+  clearInterval(briefTimer);
+  var bt=SG('aria_brief')||'08:00', bh=parseInt(bt.split(':')[0]), bm=parseInt(bt.split(':')[1]);
+  briefTimer=setInterval(function(){
+    var n=new Date(),today=n.toDateString();
+    if(n.getHours()===bh&&n.getMinutes()===bm&&SG('aria_lastBrief')!==today){
+      SS('aria_lastBrief',today);
+      pendingText='Good morning Reni. Your daily briefing is ready. Tap speak test to hear it.';
+      notify('Daily briefing ready, Reni!');
+    }
+  },60000);
+}
+
+// ── PROACTIVE ALERTS ──────────────────────────────────
+function startProactive() {
+  // Bitcoin alert (every 30 min)
+  setInterval(function() {
+    fetch('https://api.coingecko.com/api/v3/simple/price?ids=bitcoin&vs_currencies=usd&include_24hr_change=true')
+      .then(function(r){return r.json();})
+      .then(function(d){
+        var chg=d.bitcoin&&d.bitcoin.usd_24h_change;
+        if(chg&&Math.abs(chg)>=5){
+          var dir=chg>0?'up':'down';
+          notify('₿ BTC '+dir+' '+Math.abs(chg).toFixed(1)+'%');
+          if(!isSpeaking){var msg='Heads up Reni! Bitcoin is '+dir+' '+Math.abs(chg).toFixed(1)+'% today. Price: $'+d.bitcoin.usd.toLocaleString()+'.';setRS(msg);doSpeak(msg);}
+        }
+      }).catch(function(){});
+  },1800000);
+  // News headline check (hourly)
+  setInterval(function() {
+    fetch('https://api.rss2json.com/v1/api.json?rss_url='+encodeURIComponent('https://feeds.bbci.co.uk/news/world/rss.xml'))
+      .then(function(r){return r.json();})
+      .then(function(d){
+        if(d.items&&d.items.length){var top=d.items[0].title;if(top!==SG('aria_lastheadline')){SS('aria_lastheadline',top);notify('📰 '+top.substring(0,50)+'...');}}
+      }).catch(function(){});
+  },3600000);
+}
+
+// ── DJ SUITE ──────────────────────────────────────────
+var djCtx=null, djAIMode=true, djAIInt=null, djBPM=128;
+var djDecks=[
+  {buffer:null,source:null,gainNode:null,playing:false,reversed:false,startTime:0,pauseOffset:0,playbackRate:1.0,name:'No track loaded'},
+  {buffer:null,source:null,gainNode:null,playing:false,reversed:false,startTime:0,pauseOffset:0,playbackRate:1.0,name:'No track loaded'}
+];
+var djScratch=[false,false];
+var djHistory2=jparse(SG('aria_djhistory')||'{}',{bpm:[],trans:0});
+function getDJCtx(){if(!djCtx)djCtx=new(window.AudioContext||window.webkitAudioContext)();return djCtx;}
+function djLearn(bpm,act){djHistory2.bpm.push(bpm);if(djHistory2.bpm.length>20)djHistory2.bpm.shift();if(act==='t')djHistory2.trans++;try{SS('aria_djhistory',JSON.stringify(djHistory2));}catch(e){}}
+function djAvgBPM(){if(!djHistory2.bpm.length)return 128;return Math.round(djHistory2.bpm.reduce(function(a,b){return a+b;},0)/djHistory2.bpm.length);}
+function loadTrack(n,inp){var file=inp.files[0];if(!file)return;var ctx=getDJCtx(),reader=new FileReader();reader.onload=function(ev){ctx.decodeAudioData(ev.target.result,function(buf){var i=n-1;if(djDecks[i].source)try{djDecks[i].source.stop();}catch(e){}djDecks[i].buffer=buf;djDecks[i].playing=false;djDecks[i].pauseOffset=0;djDecks[i].name=file.name.replace(/\.[^.]+$/,'');EL('TRACK'+n+'NAME').textContent=djDecks[i].name;EL('PLAYBTN'+n).textContent='▶';EL('PROG'+n).style.width='0%';EL('DJSTATUS').textContent='Loaded on Deck '+(n===1?'A':'B')+': '+djDecks[i].name;});};reader.readAsArrayBuffer(file);}
+function makeSrc(i){var ctx=getDJCtx(),deck=djDecks[i];if(!deck.buffer)return null;if(!deck.gainNode){deck.gainNode=ctx.createGain();deck.gainNode.connect(ctx.destination);}var src=ctx.createBufferSource();if(deck.reversed){var rev=ctx.createBuffer(deck.buffer.numberOfChannels,deck.buffer.length,deck.buffer.sampleRate);for(var ch=0;ch<deck.buffer.numberOfChannels;ch++)rev.getChannelData(ch).set(deck.buffer.getChannelData(ch).slice().reverse());src.buffer=rev;}else{src.buffer=deck.buffer;}src.playbackRate.value=deck.playbackRate;src.connect(deck.gainNode);return src;}
+function toggleDeck(n){var deck=djDecks[n-1];if(!deck.buffer){EL('DJSTATUS').textContent='Load a track first, Reni.';return;}if(deck.playing)pauseDeck(n);else playDeck(n);}
+function playDeck(n){var i=n-1,deck=djDecks[i];if(!deck.buffer)return;var ctx=getDJCtx(),src=makeSrc(i);if(!src)return;src.start(0,deck.pauseOffset%deck.buffer.duration);src.onended=function(){if(deck.playing){deck.playing=false;EL('PLAYBTN'+n).textContent='▶';EL('PROG'+n).style.width='0%';}};deck.source=src;deck.playing=true;deck.startTime=ctx.currentTime-deck.pauseOffset;EL('PLAYBTN'+n).textContent='⏸';EL('PI'+n).style.animation='spin '+(60/djBPM*2)+'s linear infinite';EL('DJSTATUS').textContent='Playing: '+deck.name;djLearn(djBPM,'p');djProg(n);}
+function pauseDeck(n){var i=n-1,deck=djDecks[i];if(!deck.playing)return;deck.pauseOffset=getDJCtx().currentTime-deck.startTime;try{deck.source.stop();}catch(e){}deck.playing=false;EL('PLAYBTN'+n).textContent='▶';EL('PI'+n).style.animation='none';}
+function stopDeck(n){var i=n-1,deck=djDecks[i];try{if(deck.source)deck.source.stop();}catch(e){}deck.playing=false;deck.pauseOffset=0;EL('PLAYBTN'+n).textContent='▶';EL('PI'+n).style.animation='none';EL('PROG'+n).style.width='0%';}
+function toggleReverse(n){var i=n-1,deck=djDecks[i],was=deck.playing;if(was)pauseDeck(n);deck.reversed=!deck.reversed;deck.pauseOffset=0;EL('DJSTATUS').textContent='Deck '+(n===1?'A':'B')+' reverse '+(deck.reversed?'ON':'OFF');if(was)playDeck(n);}
+function djProg(n){var i=n-1,deck=djDecks[i];if(!deck.playing||!deck.buffer){EL('PROG'+n).style.width='0%';return;}var el=getDJCtx().currentTime-deck.startTime;EL('PROG'+n).style.width=Math.min(100,(el/deck.buffer.duration)*100)+'%';setTimeout(function(){djProg(n);},500);}
+function setCross(v){var c=v/100;if(djDecks[0].gainNode)djDecks[0].gainNode.gain.value=1-c;if(djDecks[1].gainNode)djDecks[1].gainNode.gain.value=c;}
+function syncDecks(){EL('DJSTATUS').textContent='Decks synced at '+djBPM+' BPM, Reni.';djLearn(djBPM,'s');}
+function changeBPM(d){djBPM=Math.max(60,Math.min(200,djBPM+d));EL('BPMVAL').textContent=djBPM;EL('DJSTATUS').textContent='BPM: '+djBPM;}
+function toggleAIMode(){djAIMode=!djAIMode;EL('AIMODETOGGLE').textContent='🤖 AI MODE: '+(djAIMode?'ON':'OFF');if(djAIMode)startAIDJ();else stopAIDJ();}
+function startAIDJ(){stopAIDJ();djAIInt=setInterval(function(){if(!djAIMode)return;var avg=djAvgBPM();if(djBPM!==avg){djBPM=avg;EL('BPMVAL').textContent=djBPM;}if(djDecks[0].buffer&&djDecks[1].buffer){var cf=EL('CROSSFADER'),cur=parseInt(cf.value),target=cur<50?100:0,step=cur<50?2:-2;var ani=setInterval(function(){cur+=step;cf.value=cur;setCross(cur);if((step>0&&cur>=target)||(step<0&&cur<=target)){clearInterval(ani);djLearn(djBPM,'t');EL('DJSTATUS').textContent='AI mix complete.';}},80);}},30000);}
+function stopAIDJ(){if(djAIInt){clearInterval(djAIInt);djAIInt=null;}}
+function aiMix(){if(!djDecks[0].buffer||!djDecks[1].buffer){EL('DJSTATUS').textContent='Load tracks on both decks first, Reni.';return;}EL('DJSTATUS').textContent='Neural mix initiated...';var cf=EL('CROSSFADER'),cur=parseInt(cf.value),target=cur<50?100:0,step=cur<50?3:-3;var ani=setInterval(function(){cur+=step;cf.value=cur;setCross(cur);if((step>0&&cur>=target)||(step<0&&cur<=target)){clearInterval(ani);djLearn(djBPM,'t');EL('DJSTATUS').textContent='Mix complete, Reni.';}},60);}
+function setupScratch(n){var box=EL('PLATTERBOX'+n),i=n-1,lastY=0;function onStart(ev){ev.preventDefault();djScratch[i]=true;lastY=ev.touches?ev.touches[0].clientY:ev.clientY;if(djDecks[i].playing)pauseDeck(n);}function onMove(ev){if(!djScratch[i])return;ev.preventDefault();var cy=ev.touches?ev.touches[0].clientY:ev.clientY,dy=cy-lastY;lastY=cy;playScratch(dy<0);djDecks[i].playbackRate=Math.max(.1,Math.min(2,djDecks[i].playbackRate+(dy>0?-.05:.05)));}function onEnd(){djScratch[i]=false;document.removeEventListener('mousemove',onMove);document.removeEventListener('mouseup',onEnd);document.removeEventListener('touchmove',onMove);document.removeEventListener('touchend',onEnd);if(djDecks[i].buffer)playDeck(n);}box.addEventListener('mousedown',function(ev){onStart(ev);document.addEventListener('mousemove',onMove);document.addEventListener('mouseup',onEnd);});box.addEventListener('touchstart',function(ev){onStart(ev);document.addEventListener('touchmove',onMove,{passive:false});document.addEventListener('touchend',onEnd);},{passive:false});box.addEventListener('dblclick',function(){toggleReverse(n);});}
+function playScratch(rev){var ctx=getDJCtx(),buf=ctx.createBuffer(1,ctx.sampleRate*.08,ctx.sampleRate),data=buf.getChannelData(0);for(var si=0;si<data.length;si++)data[si]=(Math.random()*2-1)*Math.pow(1-(si/data.length),2);if(rev){for(var si2=0;si2<data.length/2;si2++){var tmp=data[si2];data[si2]=data[data.length-1-si2];data[data.length-1-si2]=tmp;}}var src2=ctx.createBufferSource(),filt=ctx.createBiquadFilter(),gain2=ctx.createGain();filt.type='bandpass';filt.frequency.value=2000+Math.random()*2000;filt.Q.value=2;gain2.gain.value=.4;src2.buffer=buf;src2.connect(filt);filt.connect(gain2);gain2.connect(ctx.destination);src2.start();}
+function openDJ(){getDJCtx();EL('DJPANEL').style.display='flex';EL('INPUTBAR').style.display='none';setTimeout(initDJOrb,50);if(djAIMode)startAIDJ();}
+function closeDJ(){EL('DJPANEL').style.display='none';EL('INPUTBAR').style.display='flex';stopAIDJ();if(djFrame){cancelAnimationFrame(djFrame);djFrame=null;}if(djRndr){try{djRndr.dispose();}catch(e){}djRndr=null;}var bb=document.getElementById('BACKBTN');if(bb)bb.remove();if(previousAgent){switchAgent(previousAgent);previousAgent=null;}}
+
+// ── BOOT ─────────────────────────────────────────────
+window.addEventListener('load', function() {
+  // Wire all buttons
+  EL('AGBTN').onclick    = openAgents;
+  EL('CFGBTN').onclick   = openCfg;
+  EL('NEWSBTN').onclick  = function() { openMo('NEWSMO'); fetchNews(); };
+  EL('CALBTN').onclick   = function() { window.open('https://calendar.google.com','_blank'); notify('Opening Google Calendar, Reni.'); };
+  EL('HISTBTN').onclick  = openHistory;
+  EL('HELPBTN').onclick  = function() { openMo('HELPMO'); };
+  EL('AUTOBTN').onclick  = function() { autoListen=!autoListen; EL('AUTOBTN').textContent='👂'+(autoListen?'ON':'OFF'); notify(autoListen?'Auto-listen ON.':'Auto-listen OFF.'); };
+  EL('MIC').onclick      = toggleMic;
+  EL('STOPBTN').onclick  = stopAll;
+  EL('SPKBTN').onclick   = onSpeakBtn;
+  EL('SENDBTN').onclick  = sendTyped;
+  EL('SAVEBTN').onclick  = saveCfg;
+  EL('CANCELCFG').onclick= function() { closeMo('CFGMO'); };
+  EL('CLOSEAG').onclick  = function() { closeMo('AGMO'); };
+  EL('CLOSEHIST').onclick= function() { closeMo('HISTMO'); };
+  EL('CLRHIST').onclick  = clearHistory;
+  EL('CLOSEHELP').onclick= function() { closeMo('HELPMO'); };
+  EL('CLOSENEWS').onclick= function() { closeMo('NEWSMO'); };
+  EL('REFRESHNEWS').onclick = fetchNews;
+  EL('OPENFOX').onclick  = function() { window.open('https://www.fox25boston.com','_blank'); notify('Opening FOX 25 Boston, Reni.'); };
+  EL('TYPEIN').addEventListener('keydown', function(ev) { if(ev.key==='Enter') sendTyped(); });
+  document.addEventListener('keydown', function(ev) {
+    if(document.querySelector('.MO.open')) return;
+    if(ev.target.tagName==='INPUT'||ev.target.tagName==='SELECT'||ev.target.tagName==='TEXTAREA') return;
+    if(ev.key==='Escape') { stopAll(); return; }
+    if(ev.key.length===1||ev.key==='Backspace') EL('TYPEIN').focus();
+  });
+
+  // Init systems
+  initWave(); initOrb(); setOrbState('idle');
+  setupScratch(1); setupScratch(2);
+  setInterval(updStats, 2200); updStats();
+  setupBrief();
+  speechSynthesis.onvoiceschanged = function() { loadVoices(); pickVoice(); };
+  setTimeout(function() { loadVoices(); pickVoice(); }, 400);
+  setTimeout(function() { loadVoices(); pickVoice(); }, 1500);
+
+  // First gesture: unlock audio, start clap detection + proactive alerts
+  var gestured = false;
+  function onGesture() {
+    if (gestured) return; gestured = true;
+    try { var ac2=new(window.AudioContext||window.webkitAudioContext)();ac2.resume().then(function(){ac2.close();}); } catch(e) {}
+    startClap();
+    // srStartWake() intentionally removed — caused mic not-allowed errors on GitHub Pages
+    startProactive();
+    document.removeEventListener('click', onGesture);
+    document.removeEventListener('touchstart', onGesture);
+    document.removeEventListener('keydown', onGesture);
+  }
+  document.addEventListener('click', onGesture);
+  document.addEventListener('touchstart', onGesture);
+  document.addEventListener('keydown', onGesture);
+
+  // Boot message
+  setRS('Ri Ri Williams online. Welcome back, Reni. Tap ▶ SPEAK TEST to confirm voice, then use the mic or type below.');
+  pendingText = 'Ri Ri online. Welcome back Reni. Tap speak test to confirm voice, then press the microphone or type to talk to me.';
+  setSB('Tap ▶ SPEAK TEST to activate voice →');
+});
+
+})(); // end strict IIFE
+</script>
+</body>
+</html>
