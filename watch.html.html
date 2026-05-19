@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Ticwris Max Emulator — Ri Ri Williams</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap');
+
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --bg:#06080d;
+  --bg2:#0d1018;
+  --bg3:#141823;
+  --line:rgba(0,212,255,.18);
+  --ac:#00d4ff;
+  --gn:#00ff88;
+  --am:#ffb400;
+  --rd:#ff4455;
+  --txt:#e0f2ff;
+  --dim:#7a8a9e;
+}
+html,body{
+  width:100%;min-height:100vh;
+  background:var(--bg);
+  color:var(--txt);
+  font-family:'Inter',system-ui,sans-serif;
+  overflow:auto;
+}
+
+/* Subtle grid pattern background */
+body::before{
+  content:'';
+  position:fixed;
+  inset:0;
+  background-image:
+    linear-gradient(rgba(0,212,255,.025) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(0,212,255,.025) 1px,transparent 1px);
+  background-size:40px 40px;
+  pointer-events:none;
+  z-index:0;
+}
+
+/* ── TOP BAR ─────────────────────────────────────── */
+.topBar{
+  position:relative;z-index:5;
+  background:linear-gradient(180deg,var(--bg2) 0%,rgba(13,16,24,.95) 100%);
+  border-bottom:1px solid var(--line);
+  padding:14px 22px;
+  display:flex;align-items:center;justify-content:space-between;
+  flex-wrap:wrap;gap:14px;
+  backdrop-filter:blur(10px);
+}
+.topBar h1{
+  font-family:'JetBrains Mono',monospace;
+  font-size:14px;font-weight:600;
+  letter-spacing:2px;
+  color:var(--ac);
+  text-shadow:0 0 10px rgba(0,212,255,.3);
+  display:flex;align-items:center;gap:10px;
+}
+.topBar h1::before{
+  content:'●';color:var(--gn);font-size:10px;
+  animation:pulse 2s ease-in-out infinite;
+  text-shadow:0 0 8px var(--gn);
+}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+
+.specs{
+  display:flex;gap:18px;flex-wrap:wrap;
+  font-family:'JetBrains Mono',monospace;
+  font-size:10px;letter-spacing:1.5px;
+  color:var(--dim);text-transform:uppercase;
+}
+.specs span strong{color:var(--txt);font-weight:600}
+
+.toolbar{display:flex;gap:8px}
+.toolBtn{
+  background:rgba(0,212,255,.08);
+  border:1px solid var(--line);
+  color:var(--ac);
+  padding:8px 14px;
+  font-family:'JetBrains Mono',monospace;
+  font-size:10px;font-weight:600;letter-spacing:1.5px;
+  border-radius:4px;cursor:pointer;
+  display:flex;align-items:center;gap:6px;
+  transition:all .15s;
+}
+.toolBtn:hover{
+  background:rgba(0,212,255,.18);
+  border-color:var(--ac);
+  box-shadow:0 0 14px rgba(0,212,255,.25);
+}
+.toolBtn.warn{color:var(--am);border-color:rgba(255,180,0,.3)}
+.toolBtn.warn:hover{background:rgba(255,180,0,.15);border-color:var(--am)}
+
+/* ── STAGE ───────────────────────────────────────── */
+.stage{
+  position:relative;z-index:1;
+  min-height:calc(100vh - 130px);
+  display:flex;align-items:center;justify-content:center;
+  padding:40px 20px;
+}
+
+/* ── DEVICE FRAME ────────────────────────────────── */
+.device{
+  position:relative;
+  transition:transform .35s cubic-bezier(.5,0,.2,1);
+}
+.device.landscape{transform:rotate(0deg)}
+.device.portrait{transform:rotate(0deg)}
+
+.deviceFrame{
+  position:relative;
+  background:linear-gradient(145deg,#1c2230 0%,#0d1119 60%,#070a10 100%);
+  border-radius:24px;
+  padding:16px;
+  box-shadow:
+    0 30px 80px rgba(0,0,0,.7),
+    0 0 0 1px rgba(0,212,255,.12),
+    inset 0 1px 0 rgba(255,255,255,.04);
+}
+.deviceFrame::before{
+  content:'';
+  position:absolute;inset:-1px;
+  border-radius:25px;
+  background:linear-gradient(145deg,rgba(0,212,255,.3),transparent 30%,transparent 70%,rgba(0,212,255,.15));
+  z-index:-1;
+  filter:blur(1px);
+}
+
+/* Device label strip */
+.deviceLabel{
+  display:flex;justify-content:space-between;align-items:center;
+  margin-bottom:12px;padding:0 4px;
+  font-family:'JetBrains Mono',monospace;
+  font-size:9px;letter-spacing:2px;
+  color:var(--dim);
+}
+.deviceLabel .ledRow{display:flex;align-items:center;gap:5px}
+.deviceLabel .led{
+  width:6px;height:6px;border-radius:50%;
+  background:var(--gn);
+  box-shadow:0 0 6px var(--gn);
+  animation:pulse 2s ease-in-out infinite;
+}
+
+/* The actual screen — sized to Ticwris Max 640×480 */
+.screen{
+  position:relative;
+  width:640px;height:480px;
+  background:#000;
+  border-radius:12px;
+  overflow:hidden;
+  box-shadow:
+    inset 0 0 0 1px rgba(0,212,255,.2),
+    inset 0 0 30px rgba(0,0,0,.6),
+    0 0 50px rgba(0,212,255,.08);
+}
+.screen iframe{
+  width:100%;height:100%;
+  border:0;
+  background:#000;
+  display:block;
+}
+
+/* Portrait orientation: 480w × 640h */
+.device.portrait .screen{width:480px;height:640px}
+
+/* Bottom info strip */
+.deviceInfo{
+  margin-top:12px;padding:0 4px;
+  display:flex;justify-content:space-between;align-items:center;
+  font-family:'JetBrains Mono',monospace;
+  font-size:9px;letter-spacing:1.5px;
+  color:var(--dim);
+}
+.deviceInfo .live{color:var(--gn)}
+
+/* ── FOOTER ──────────────────────────────────────── */
+.footer{
+  position:relative;z-index:5;
+  border-top:1px solid var(--line);
+  padding:10px 22px;
+  background:rgba(13,16,24,.6);
+  font-family:'JetBrains Mono',monospace;
+  font-size:9px;letter-spacing:1.5px;
+  color:var(--dim);text-align:center;
+}
+.footer span{color:var(--ac)}
+
+/* True-size mode — scales down to ~2.86" physical display */
+.device.trueSize{transform:scale(.42);transform-origin:center}
+
+/* Responsive: scale down on narrow viewports */
+@media (max-width:760px){
+  .device{transform:scale(.7);transform-origin:center}
+  .device.trueSize{transform:scale(.42)}
+  .stage{padding:20px 10px;min-height:calc(100vh - 180px)}
+}
+@media (max-width:560px){
+  .device{transform:scale(.55)}
+  .device.trueSize{transform:scale(.42)}
+}
+@media (max-width:420px){
+  .device{transform:scale(.42)}
+  .device.trueSize{transform:scale(.42)}
+}
+</style>
+</head>
+<body>
+
+<div class="topBar">
+  <h1>TICWRIS MAX · EMULATOR</h1>
+  <div class="specs">
+    <span><strong>2.86"</strong> Display</span>
+    <span><strong>640×480</strong> IPS</span>
+    <span><strong>Android 7.1</strong></span>
+    <span><strong>MT6739</strong> · 3GB RAM</span>
+  </div>
+  <div class="toolbar">
+    <button class="toolBtn" id="rotateBtn">⟲ ROTATE</button>
+    <button class="toolBtn" id="scaleBtn">⛶ TRUE 2.86"</button>
+    <button class="toolBtn" id="reloadBtn">↻ RELOAD</button>
+    <button class="toolBtn warn" id="popBtn">⤢ OPEN STANDALONE</button>
+  </div>
+</div>
+
+<div class="stage">
+  <div class="device landscape" id="dev">
+    <div class="deviceFrame">
+      <div class="deviceLabel">
+        <span>TICWRIS · MAX</span>
+        <div class="ledRow">
+          <span class="led"></span>
+          <span>POWERED</span>
+        </div>
+      </div>
+      <div class="screen">
+        <iframe
+          id="screenFrame"
+          src="https://drawingconclusionsrfi-cyber.github.io/jarvis/mobile.html"
+          allow="microphone; camera; autoplay; accelerometer; gyroscope; clipboard-write"
+          referrerpolicy="no-referrer">
+        </iframe>
+      </div>
+      <div class="deviceInfo">
+        <span id="resInfo">640 × 480 · LANDSCAPE</span>
+        <span class="live">● LIVE · github.io/jarvis</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="footer">
+  Emulator viewing <span>mobile.html</span> at native Ticwris Max resolution · Watch-mode CSS auto-applies inside the iframe
+</div>
+
+<script>
+var dev = document.getElementById('dev');
+var resInfo = document.getElementById('resInfo');
+var iframe = document.getElementById('screenFrame');
+
+// Rotate between landscape (640×480) and portrait (480×640)
+var isPortrait = false;
+document.getElementById('rotateBtn').onclick = function() {
+  isPortrait = !isPortrait;
+  dev.classList.toggle('portrait', isPortrait);
+  dev.classList.toggle('landscape', !isPortrait);
+  resInfo.textContent = isPortrait ? '480 × 640 · PORTRAIT' : '640 × 480 · LANDSCAPE';
+};
+
+// True size: scale down to mimic actual 2.86" physical screen
+var isTrueSize = false;
+document.getElementById('scaleBtn').onclick = function() {
+  isTrueSize = !isTrueSize;
+  dev.classList.toggle('trueSize', isTrueSize);
+  this.textContent = isTrueSize ? '⛶ FULL SIZE' : '⛶ TRUE 2.86"';
+};
+
+// Reload the Ri Ri app inside the screen
+document.getElementById('reloadBtn').onclick = function() {
+  iframe.src = iframe.src;
+};
+
+// Open the standalone mobile.html in a new tab
+document.getElementById('popBtn').onclick = function() {
+  window.open(iframe.src, '_blank');
+};
+</script>
+
+</body>
+</html>
