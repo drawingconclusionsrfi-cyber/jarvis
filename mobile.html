@@ -1,0 +1,3310 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,viewport-fit=cover,user-scalable=no">
+<meta name="theme-color" content="#000810">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>Ri Ri — Mobile</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700&family=Share+Tech+Mono&display=swap');
+
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;touch-action:manipulation}
+:root{
+  --ac:#00d4ff;
+  --acDim:rgba(0,212,255,.6);
+  --acFaint:rgba(0,212,255,.18);
+  --bg:#000810;
+  --bg2:#000d1a;
+  --bg3:#001528;
+  --text:rgba(255,255,255,.95);
+  --muted:rgba(255,255,255,.55);
+  --dim:rgba(255,255,255,.32);
+  --gn:#00ff88;
+  --am:#ff9500;
+  --rd:#ff5566;
+  --safeBot:env(safe-area-inset-bottom,0px);
+  --safeTop:env(safe-area-inset-top,0px);
+}
+html,body{
+  width:100%;
+  height:100vh;            /* fallback */
+  height:var(--appH,100vh);/* JS-driven, set on resize */
+  height:100dvh;           /* modern browsers override */
+  background:var(--bg);color:var(--text);
+  font-family:'Share Tech Mono','SF Mono','Roboto Mono',monospace;
+  overflow:hidden;
+  overscroll-behavior:none;
+}
+body{
+  display:flex;flex-direction:column;
+  padding-top:var(--safeTop);
+}
+/* Scanline overlay — subtle */
+body::before{
+  content:'';position:fixed;inset:0;pointer-events:none;z-index:50;
+  background:repeating-linear-gradient(0deg,transparent,transparent 3px,rgba(0,212,255,.012) 3px,rgba(0,212,255,.012) 5px);
+}
+button,input,select,textarea{font-family:inherit;color:inherit;border:none;background:none;outline:none}
+input,textarea{font-size:16px} /* prevent iOS zoom on focus */
+
+/* ── HEADER ─────────────────────────── */
+#hdr{
+  position:fixed;
+  top:0;left:0;right:0;
+  height:calc(62px + var(--safeTop));
+  padding:var(--safeTop) 14px 0;
+  display:flex;align-items:center;justify-content:space-between;gap:10px;
+  background:linear-gradient(180deg,var(--bg2) 0%,rgba(0,8,22,.95) 100%);
+  border-bottom:1px solid var(--acFaint);
+  z-index:30;
+}
+#hdr::after{
+  content:'';position:absolute;left:14px;right:14px;bottom:0;height:1px;
+  background:linear-gradient(90deg,transparent,var(--ac),transparent);
+  opacity:.5;
+}
+#agentBtn{
+  display:flex;align-items:center;gap:8px;
+  padding:8px 14px;
+  background:rgba(255,149,0,.12);
+  border:1px solid var(--am);
+  border-radius:6px;
+  color:var(--am);
+  font-family:'Orbitron',monospace;font-weight:700;font-size:11px;letter-spacing:2px;
+  cursor:pointer;
+  box-shadow:0 0 12px rgba(255,149,0,.25);
+  -webkit-appearance:none;
+}
+#agentBtn .dot{width:7px;height:7px;border-radius:50%;background:var(--am);box-shadow:0 0 8px var(--am)}
+#clock{text-align:right;line-height:1.15}
+#clockTime{font-family:'Orbitron',monospace;font-weight:700;font-size:18px;color:var(--ac);text-shadow:0 0 12px var(--ac);letter-spacing:1px}
+#clockDate{font-size:9px;color:var(--acDim);letter-spacing:2px;margin-top:2px}
+
+/* ── MAIN AREA (view container) ─────── */
+#main{
+  position:fixed;
+  top:calc(62px + var(--safeTop));
+  bottom:calc(62px + var(--safeBot));
+  left:0;right:0;
+  overflow:hidden;
+}
+.view{
+  position:absolute;inset:0;
+  display:none;
+  flex-direction:column;
+  overflow:hidden;
+  min-height:0;
+  animation:viewIn .25s ease;
+}
+.view.on{display:flex}
+@keyframes viewIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+
+/* ── CHAT VIEW ──────────────────────── */
+#chatView{padding:0}
+.chatScroll{
+  flex:1;
+  min-height:0;
+  overflow-y:auto;
+  -webkit-overflow-scrolling:touch;
+  display:flex;flex-direction:column;align-items:center;
+  padding:18px 16px 14px;
+}
+#orbWrap{
+  width:220px;height:220px;flex-shrink:0;
+  position:relative;
+  margin:8px auto 14px;
+}
+#orbCanvas{
+  position:absolute;top:0;left:0;
+  width:220px;height:220px;
+}
+#orbGlow{
+  position:absolute;top:0;left:0;
+  width:220px;height:220px;
+  border-radius:50%;
+  pointer-events:none;
+  transition:box-shadow .6s;
+  box-shadow:0 0 60px 18px rgba(0,130,255,.65),
+             0 0 110px 38px rgba(0,80,220,.35),
+             0 0 160px 60px rgba(0,50,180,.15),
+             inset 0 0 60px rgba(0,20,80,.5);
+}
+@media (max-width:340px){
+  #orbWrap,#orbCanvas,#orbGlow{width:190px;height:190px}
+}
+/* Shrink orb on shorter phones so chat actions + tabs stay visible */
+@media (max-height:740px){
+  #orbWrap{width:180px;height:180px;margin:4px auto 10px}
+}
+@media (max-height:640px){
+  #orbWrap{width:150px;height:150px;margin:2px auto 8px}
+}
+@media (max-height:560px){
+  #orbWrap{width:120px;height:120px;margin:2px auto 6px}
+}
+
+#stats{
+  display:flex;gap:20px;margin:8px 0 10px;
+  font-family:'Share Tech Mono',monospace;
+}
+.stat{text-align:center}
+.stat .v{font-family:'Orbitron',monospace;font-size:13px;color:var(--ac);font-weight:700;text-shadow:0 0 8px var(--ac)}
+.stat .l{font-size:7px;color:var(--dim);letter-spacing:2px;margin-top:2px}
+
+#transcript{
+  width:100%;
+  min-height:18px;
+  font-size:12px;
+  color:var(--acDim);
+  text-align:center;
+  letter-spacing:.5px;
+  margin-bottom:6px;
+  padding:0 6px;
+}
+#response{
+  width:100%;
+  font-size:15px;
+  line-height:1.6;
+  color:var(--text);
+  text-align:center;
+  letter-spacing:.2px;
+  padding:8px 10px;
+  min-height:24px;
+}
+#response.fade{animation:fadeIn .4s ease}
+@keyframes fadeIn{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}
+
+#chatActions{
+  flex-shrink:0;
+  padding:10px 14px calc(12px + var(--safeBot));
+  background:linear-gradient(0deg,var(--bg2) 70%,transparent 100%);
+  border-top:1px solid var(--acFaint);
+  display:flex;flex-direction:column;gap:10px;
+}
+#micRow{display:flex;align-items:center;justify-content:center;gap:14px}
+#micBtn{
+  width:72px;height:72px;border-radius:50%;
+  background:radial-gradient(circle,rgba(0,212,255,.22) 0%,rgba(0,212,255,.08) 70%);
+  border:2px solid var(--ac);
+  color:var(--ac);
+  font-size:30px;
+  display:flex;align-items:center;justify-content:center;
+  cursor:pointer;
+  box-shadow:0 0 28px rgba(0,212,255,.5),0 0 50px rgba(0,212,255,.2);
+  transition:all .25s;
+  -webkit-appearance:none;
+}
+#micBtn:active{transform:scale(.94)}
+#micBtn.listening{
+  border-color:var(--gn);color:var(--gn);
+  background:radial-gradient(circle,rgba(0,255,136,.3) 0%,rgba(0,255,136,.1) 70%);
+  box-shadow:0 0 40px rgba(0,255,136,.7);
+  animation:micPulse 1.2s ease-in-out infinite;
+}
+@keyframes micPulse{0%,100%{transform:scale(1)}50%{transform:scale(1.06)}}
+.sideBtn{
+  width:54px;height:54px;border-radius:50%;
+  border:1px solid rgba(255,255,255,.18);
+  background:rgba(255,255,255,.04);
+  color:var(--muted);
+  font-size:18px;
+  display:flex;align-items:center;justify-content:center;
+  cursor:pointer;
+  -webkit-appearance:none;
+}
+.sideBtn:active{transform:scale(.92);background:rgba(255,255,255,.1)}
+.sideBtn.stop{border-color:rgba(255,80,100,.5);color:rgba(255,120,140,.9)}
+.sideBtn.speak{
+  border-color:var(--ac);
+  color:var(--ac);
+  background:rgba(0,212,255,.08);
+  font-size:11px;letter-spacing:1px;font-weight:700;
+  line-height:1.1;
+  box-shadow:0 0 12px rgba(0,212,255,.25);
+}
+.sideBtn.speak:active{background:rgba(0,212,255,.22)}
+.sideBtn.alwaysOn{
+  border-color:rgba(0,255,136,.5);
+  color:rgba(0,255,136,.85);
+  background:rgba(0,255,136,.06);
+  font-size:11px;letter-spacing:1px;font-weight:700;
+  line-height:1.1;
+}
+.sideBtn.alwaysOn.on{
+  background:rgba(0,255,136,.22);
+  color:#00ff88;
+  box-shadow:0 0 14px rgba(0,255,136,.4);
+  animation:pulseGreen 1.8s ease-in-out infinite;
+}
+@keyframes pulseGreen{0%,100%{box-shadow:0 0 14px rgba(0,255,136,.4)}50%{box-shadow:0 0 24px rgba(0,255,136,.7)}}
+
+#inputRow{display:flex;gap:8px}
+#typeIn{
+  flex:1;min-width:0;
+  background:rgba(0,8,22,.95);
+  border:1px solid var(--acFaint);
+  color:var(--text);
+  font-size:16px;
+  padding:13px 14px;
+  border-radius:6px;
+  letter-spacing:.3px;
+}
+#typeIn:focus{border-color:var(--ac);box-shadow:0 0 10px rgba(0,212,255,.3)}
+#typeIn::placeholder{color:var(--dim);font-size:13px}
+#sendBtn{
+  background:rgba(0,212,255,.15);
+  border:1px solid var(--ac);
+  color:var(--ac);
+  font-size:11px;letter-spacing:2px;font-weight:700;
+  padding:0 16px;border-radius:6px;
+  cursor:pointer;
+  -webkit-appearance:none;
+}
+#sendBtn:active{background:rgba(0,212,255,.3)}
+
+/* Attach button + preview */
+#attachBtn{
+  background:rgba(0,212,255,.15);
+  border:1px solid var(--ac);
+  color:var(--ac);
+  font-size:18px;
+  width:46px;
+  border-radius:6px;
+  cursor:pointer;
+  -webkit-appearance:none;
+  padding:0;
+  flex-shrink:0;
+}
+#attachBtn:active{background:rgba(0,212,255,.3)}
+#attachPreview{
+  display:flex;align-items:center;gap:10px;
+  background:rgba(0,212,255,.08);
+  border:1px solid var(--ac);
+  border-radius:6px;
+  padding:8px 10px;
+  margin-bottom:8px;
+}
+#attachThumb{
+  width:48px;height:48px;
+  object-fit:cover;
+  border-radius:4px;
+  border:1px solid var(--acFaint);
+}
+#attachLabel{flex:1;font-size:12px;color:var(--ac);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#attachRemove{
+  background:rgba(255,68,85,.15);border:1px solid #ff4455;color:#ff4455;
+  width:30px;height:30px;border-radius:4px;cursor:pointer;font-size:14px;
+  -webkit-appearance:none;flex-shrink:0;
+}
+
+/* ── LIST VIEWS (calendar, todo, agents, more) ─ */
+.viewHead{
+  flex-shrink:0;
+  padding:14px 16px 8px;
+  display:flex;align-items:center;justify-content:space-between;
+}
+.viewHead h1{
+  font-family:'Orbitron',monospace;font-size:13px;font-weight:700;letter-spacing:5px;
+  color:var(--ac);text-shadow:0 0 12px var(--ac);
+}
+.viewHead .sub{font-size:8px;letter-spacing:3px;color:var(--muted);margin-top:3px;text-transform:uppercase}
+.viewBody{
+  flex:1;
+  min-height:0;
+  overflow-y:auto;
+  -webkit-overflow-scrolling:touch;
+  padding:6px 16px calc(20px + var(--safeBot));
+}
+
+/* Calendar/Todo add row */
+.addCard{
+  background:rgba(0,8,22,.7);
+  border:1px solid var(--acFaint);
+  border-radius:8px;
+  padding:14px;
+  margin-bottom:14px;
+  display:flex;flex-direction:column;gap:10px;
+}
+.addCard input[type=text],
+.addCard input[type=date],
+.addCard input[type=time]{
+  background:rgba(255,255,255,.05);
+  border:1px solid rgba(255,255,255,.15);
+  color:var(--text);
+  font-size:16px;
+  padding:12px 14px;
+  border-radius:6px;
+  width:100%;
+  font-family:'Share Tech Mono',monospace;
+}
+.addCard input:focus{border-color:var(--ac);box-shadow:0 0 8px rgba(0,212,255,.3)}
+.addCard .twoCol{display:flex;gap:8px}
+.addCard .twoCol input{flex:1}
+.addBtn{
+  background:linear-gradient(180deg,rgba(0,212,255,.22),rgba(0,212,255,.12));
+  border:1px solid var(--ac);
+  color:var(--ac);
+  font-size:12px;letter-spacing:3px;font-weight:700;
+  padding:13px;border-radius:6px;
+  cursor:pointer;
+  box-shadow:0 0 12px rgba(0,212,255,.25);
+  -webkit-appearance:none;
+}
+.addBtn:active{transform:scale(.98);background:rgba(0,212,255,.32)}
+
+/* Item rows */
+.item{
+  display:flex;align-items:center;gap:12px;
+  padding:14px 12px;
+  border-bottom:1px solid var(--acFaint);
+  transition:opacity .25s;
+}
+.item.done{opacity:.4}
+.item.done .iTxt{text-decoration:line-through;color:var(--dim)}
+.item.past{opacity:.55}
+.chk{
+  flex-shrink:0;
+  width:30px;height:30px;border-radius:6px;
+  border:2px solid var(--ac);
+  background:rgba(0,212,255,.06);
+  color:var(--ac);
+  font-size:18px;
+  display:flex;align-items:center;justify-content:center;
+  cursor:pointer;
+  box-shadow:0 0 6px rgba(0,212,255,.15);
+}
+.chk:active{transform:scale(.9)}
+.chk.on{background:var(--ac);color:#001}
+.iTxt{flex:1;font-size:15px;line-height:1.4;color:var(--text);word-break:break-word}
+.iMeta{font-size:9px;letter-spacing:2px;color:var(--acDim);margin-top:4px;font-family:'Share Tech Mono',monospace}
+.iDel{
+  flex-shrink:0;
+  width:36px;height:36px;border-radius:6px;
+  border:1px solid rgba(255,80,100,.4);
+  background:rgba(255,80,100,.05);
+  color:rgba(255,140,150,.9);
+  font-size:16px;
+  display:flex;align-items:center;justify-content:center;
+  cursor:pointer;
+}
+.iDel:active{transform:scale(.9);background:rgba(255,80,100,.2)}
+
+.empty{
+  text-align:center;
+  color:var(--muted);
+  font-size:12px;letter-spacing:2px;
+  padding:40px 20px;
+}
+.bottomActions{
+  display:flex;gap:10px;margin-top:18px;padding-top:14px;border-top:1px solid var(--acFaint);
+}
+.btnSec{
+  flex:1;
+  background:rgba(255,255,255,.04);
+  border:1px solid rgba(255,255,255,.18);
+  color:var(--muted);
+  font-size:10px;letter-spacing:3px;font-weight:700;
+  padding:12px;border-radius:6px;
+  cursor:pointer;
+  text-align:center;
+  -webkit-appearance:none;
+}
+.btnSec:active{background:rgba(255,255,255,.1)}
+.btnSec.danger{border-color:rgba(255,80,100,.4);color:rgba(255,140,150,.9)}
+.btnSec.danger:active{background:rgba(255,80,100,.15)}
+
+/* ── AGENTS GRID ────────────────────── */
+.agentGrid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.agentCard{
+  background:rgba(255,255,255,.03);
+  border:1px solid rgba(255,255,255,.12);
+  border-radius:8px;
+  padding:14px 12px;
+  cursor:pointer;
+  display:flex;flex-direction:column;gap:4px;
+  transition:all .2s;
+}
+.agentCard:active{transform:scale(.97)}
+.agentCard.on{border-width:2px;background:rgba(255,255,255,.07)}
+.agentName{font-family:'Orbitron',monospace;font-size:12px;font-weight:700;letter-spacing:3px}
+.agentRole{font-size:9px;letter-spacing:1px;color:var(--muted)}
+
+/* ── MORE VIEW (settings, news, history, about) ─ */
+.moreSection{
+  background:rgba(0,8,22,.65);
+  border:1px solid var(--acFaint);
+  border-radius:8px;
+  padding:14px;
+  margin-bottom:14px;
+}
+.moreSection h2{
+  font-family:'Orbitron',monospace;font-size:10px;letter-spacing:4px;color:var(--ac);
+  margin-bottom:10px;text-shadow:0 0 8px var(--ac);
+}
+.field{margin-bottom:12px}
+.field label{display:block;font-size:11px;letter-spacing:2px;color:var(--dim);margin-bottom:6px;text-transform:uppercase}
+.field input,.field select{
+  width:100%;
+  background:rgba(255,255,255,.05);
+  border:1px solid rgba(255,255,255,.15);
+  color:var(--text);
+  font-size:16px;
+  padding:12px 13px;
+  border-radius:6px;
+  font-family:'Share Tech Mono',monospace;
+}
+.field select option{background:#000810}
+.fhint{font-size:11px;color:var(--dim);margin-top:5px;letter-spacing:1px;line-height:1.6}
+
+/* Voice status indicator */
+.voiceStatus{
+  padding:10px 14px;
+  border-radius:8px;
+  font-size:13px;
+  margin-bottom:14px;
+  letter-spacing:1px;
+  display:flex;align-items:center;gap:10px;
+  border:1px solid;
+}
+.voiceStatus.ok{background:rgba(0,255,136,.08);border-color:#00ff88;color:#00ff88}
+.voiceStatus.warn{background:rgba(255,180,0,.08);border-color:#ffb400;color:#ffb400}
+
+/* Prominent action buttons */
+.bigBtn{
+  display:block;width:100%;
+  background:rgba(0,212,255,.12);
+  border:2px solid var(--ac);
+  color:var(--ac);
+  font-size:15px;letter-spacing:2px;font-weight:700;
+  padding:14px 12px;
+  border-radius:8px;
+  cursor:pointer;
+  -webkit-appearance:none;
+  font-family:'Share Tech Mono',monospace;
+  text-transform:uppercase;
+  margin-bottom:12px;
+  box-shadow:0 0 12px rgba(0,212,255,.25);
+}
+.bigBtn:active{transform:scale(.98);background:rgba(0,212,255,.22)}
+.bigBtn.ac{background:rgba(0,255,136,.12);border-color:#00ff88;color:#00ff88;box-shadow:0 0 12px rgba(0,255,136,.25)}
+.bigBtnHint{font-size:12px;color:var(--ac);text-align:center;margin-bottom:6px;letter-spacing:1px;font-weight:700}
+
+/* Note summary box */
+.noteSummary{
+  background:rgba(0,212,255,.05);
+  border:1px solid rgba(0,212,255,.25);
+  border-radius:8px;
+  padding:14px;
+  font-size:14px;
+  line-height:1.6;
+  color:var(--text);
+  min-height:80px;
+  white-space:pre-wrap;
+  word-wrap:break-word;
+}
+.noteSummary.thinking{color:var(--ac);font-style:italic}
+
+/* Step tracker (Hercules) */
+#stepPanel{
+  margin:14px 14px 0;
+  padding:14px;
+  background:linear-gradient(135deg, rgba(255,68,85,.08), rgba(255,68,85,.02));
+  border:1px solid rgba(255,68,85,.4);
+  border-radius:10px;
+  box-shadow:0 0 14px rgba(255,68,85,.15);
+}
+.stepHead{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
+.stepTitle{font-size:11px;letter-spacing:2px;color:#ff4455;font-weight:700}
+.stepPctBox{font-size:13px;color:#ff4455;font-weight:700}
+.stepCountBig{font-size:30px;color:#fff;font-weight:700;letter-spacing:1px;font-family:'Share Tech Mono',monospace}
+.stepGoalSm{font-size:14px;color:var(--dim);font-weight:400}
+.stepBarWrap{height:8px;background:rgba(255,255,255,.08);border-radius:4px;margin:10px 0 12px;overflow:hidden}
+.stepBar{height:100%;background:linear-gradient(90deg,#ff4455,#ffa500);box-shadow:0 0 8px rgba(255,68,85,.6);width:0%;transition:width .3s}
+.stepActions{display:flex;gap:6px;flex-wrap:wrap}
+.stepActions button{flex:1;min-width:0;font-size:11px;padding:9px 4px}
+.stepActions button.on{background:rgba(255,68,85,.18);border-color:#ff4455;color:#ff4455}
+
+/* ── DJ SUITE (JEROME) ─────────────────────── */
+#djPanel{
+  display:none;
+  position:fixed;
+  inset:0;
+  background:linear-gradient(180deg,#050010 0%,#0a0020 100%);
+  z-index:950;
+  flex-direction:column;
+  padding:calc(env(safe-area-inset-top,0px) + 12px) 12px 12px;
+  overflow-y:auto;
+  gap:12px;
+  -webkit-overflow-scrolling:touch;
+}
+#djPanel.on{display:flex}
+.djHead{
+  display:flex;align-items:center;justify-content:space-between;
+  border-bottom:1px solid rgba(168,85,247,.3);padding-bottom:10px;
+}
+.djHeadLeft{display:flex;flex-direction:column}
+.djTitle{
+  font-family:'Orbitron',monospace;font-size:18px;letter-spacing:6px;
+  color:#c084fc;text-shadow:0 0 18px #a855f7,0 0 36px rgba(168,85,247,.5);
+  font-weight:700;
+}
+.djSub{font-size:9px;letter-spacing:3px;color:rgba(168,85,247,.7);margin-top:3px}
+.djClose{
+  background:rgba(168,85,247,.18);border:1px solid #a855f7;color:#c084fc;
+  width:38px;height:38px;border-radius:50%;font-size:16px;cursor:pointer;
+  -webkit-appearance:none;font-family:inherit;
+}
+.djClose:active{background:rgba(168,85,247,.35)}
+.djStatusRow{
+  display:flex;justify-content:space-between;align-items:center;
+  background:rgba(168,85,247,.05);border:1px solid rgba(168,85,247,.25);
+  border-radius:6px;padding:10px 12px;gap:10px;
+}
+#djStatus{font-size:11px;letter-spacing:1px;color:rgba(168,85,247,.85);flex:1;line-height:1.4}
+.djBpmBox{display:flex;align-items:center;gap:4px}
+.djBpm{
+  font-family:'Orbitron',monospace;color:#c084fc;text-shadow:0 0 10px #a855f7;
+  text-align:center;padding:0 6px;line-height:1.05;
+}
+.djBpm span:first-child{font-size:22px;font-weight:700;display:block}
+.djBpmLbl{font-size:8px;letter-spacing:2px;color:rgba(168,85,247,.6)}
+.djBpmBtn{
+  background:rgba(168,85,247,.12);border:1px solid #a855f7;color:#c084fc;
+  width:28px;height:28px;border-radius:4px;font-size:16px;cursor:pointer;
+  -webkit-appearance:none;padding:0;line-height:1;
+}
+.djTopBtns{display:flex;gap:6px;flex-wrap:wrap}
+.djTopBtn{
+  flex:1;min-width:88px;
+  background:rgba(168,85,247,.15);border:1px solid #a855f7;color:#c084fc;
+  font-family:'Share Tech Mono',monospace;font-size:10px;letter-spacing:1.5px;
+  padding:10px 6px;cursor:pointer;border-radius:4px;
+  -webkit-appearance:none;box-shadow:0 0 8px rgba(168,85,247,.3);
+}
+.djTopBtn:active{background:rgba(168,85,247,.3)}
+.djTopBtn.off{opacity:.55}
+
+.djDeck{
+  background:rgba(168,85,247,.04);border:1px solid rgba(168,85,247,.3);
+  border-radius:8px;padding:10px;box-shadow:0 0 14px rgba(168,85,247,.1);
+}
+.djDeckHead{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+.djDeckLbl{font-family:'Orbitron',monospace;font-size:10px;letter-spacing:4px;color:#a855f7;text-shadow:0 0 8px #a855f7}
+.djTrackName{font-size:11px;color:rgba(192,132,252,.85);max-width:60%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.djDeckBody{display:flex;gap:12px;align-items:flex-start}
+.djVinylWrap{position:relative;width:140px;height:140px;flex-shrink:0}
+#djVinyl1,#djVinyl2{width:140px;height:140px;border-radius:50%;box-shadow:0 0 22px rgba(168,85,247,.45),0 0 44px rgba(168,85,247,.18)}
+.djTonearm{position:absolute;top:0;left:0;width:140px;height:140px;pointer-events:none}
+.djDeckCtrl{flex:1;display:flex;flex-direction:column;gap:8px;min-width:0}
+.djCtrlBtns{display:flex;gap:6px}
+.djBtn{
+  background:rgba(168,85,247,.18);border:1px solid #a855f7;color:#c084fc;
+  width:42px;height:42px;border-radius:6px;font-size:16px;cursor:pointer;
+  -webkit-appearance:none;display:flex;align-items:center;justify-content:center;
+  box-shadow:0 0 8px rgba(168,85,247,.25);padding:0;
+}
+.djBtn:active{background:rgba(168,85,247,.35)}
+.djBtn.djPlay{flex:1}
+.djBtn.djLoad{cursor:pointer;text-align:center;line-height:42px}
+.djProgWrap{height:5px;background:rgba(168,85,247,.18);border-radius:3px;overflow:hidden}
+.djProg{height:100%;background:linear-gradient(90deg,#7c3aed,#a855f7,#c084fc);border-radius:3px;width:0%;transition:width .4s;box-shadow:0 0 6px #a855f7}
+.djPitchRow{display:flex;align-items:center;gap:6px;font-size:9px;color:rgba(192,132,252,.7);letter-spacing:1.5px}
+.djPitchRow input[type=range]{flex:1;accent-color:#a855f7;height:18px}
+
+.djCrossWrap{
+  background:rgba(168,85,247,.06);border:1px solid rgba(168,85,247,.3);
+  border-radius:8px;padding:10px 14px;
+}
+.djCrossLbl{display:flex;justify-content:space-between;font-size:9px;letter-spacing:3px;color:rgba(168,85,247,.7);margin-bottom:6px}
+.djCrossLbl span:nth-child(2){letter-spacing:4px;color:#c084fc}
+#djCrossfader{width:100%;accent-color:#a855f7;height:28px}
+
+/* DJ button in chat view (when Jerome is active) */
+#djLaunchPanel{
+  margin:14px 14px 0;
+  padding:14px;
+  background:linear-gradient(135deg, rgba(168,85,247,.12), rgba(168,85,247,.04));
+  border:1px solid rgba(168,85,247,.5);
+  border-radius:10px;
+  box-shadow:0 0 16px rgba(168,85,247,.18);
+  text-align:center;
+}
+#djLaunchPanel button{
+  background:rgba(168,85,247,.2);border:2px solid #a855f7;color:#c084fc;
+  font-family:'Share Tech Mono',monospace;font-size:14px;letter-spacing:3px;
+  padding:14px 20px;border-radius:8px;cursor:pointer;
+  -webkit-appearance:none;width:100%;
+  box-shadow:0 0 14px rgba(168,85,247,.35);
+}
+#djLaunchPanel button:active{background:rgba(168,85,247,.4)}
+
+.linkRow{
+  display:flex;justify-content:space-between;align-items:center;
+  padding:12px 0;
+  border-bottom:1px solid var(--acFaint);
+  cursor:pointer;
+  font-size:13px;
+}
+.linkRow:last-child{border-bottom:none}
+.linkRow:active{background:rgba(0,212,255,.05)}
+.linkRow .arrow{color:var(--acDim);font-size:16px}
+
+/* History items */
+.histItem{
+  padding:10px 0;border-bottom:1px solid var(--acFaint);
+}
+.histItem:last-child{border-bottom:none}
+.histT{font-size:8px;letter-spacing:2px;color:var(--acDim)}
+.histQ{font-size:13px;color:var(--muted);margin-top:4px;line-height:1.4}
+.histA{font-size:13px;color:var(--ac);margin-top:5px;padding-left:8px;border-left:2px solid var(--ac);line-height:1.5}
+
+/* News items */
+.newsItem{
+  padding:12px 10px;
+  border-bottom:1px solid var(--acFaint);
+  cursor:pointer;
+}
+.newsItem:active{background:rgba(0,212,255,.05)}
+.newsT{font-size:9px;letter-spacing:2px;color:var(--acDim)}
+.newsTitle{font-size:14px;color:var(--text);margin-top:5px;line-height:1.4}
+
+/* ── FLOATING SETTINGS COG ──────────── */
+#cogBtn{
+  position:fixed;
+  top:calc(env(safe-area-inset-top,0px) + 10px);
+  left:50%;
+  transform:translateX(-50%);
+  width:46px;height:46px;
+  border-radius:50%;
+  background:rgba(0,13,26,.85);
+  border:1.5px solid var(--ac);
+  color:var(--ac);
+  font-size:22px;
+  display:flex;align-items:center;justify-content:center;
+  cursor:pointer;
+  z-index:30;
+  box-shadow:0 0 14px rgba(0,212,255,.4), inset 0 0 8px rgba(0,212,255,.15);
+  -webkit-appearance:none;
+  padding:0;
+  transition:transform .2s;
+}
+#cogBtn:active{transform:translateX(-50%) rotate(60deg) scale(.95)}
+
+/* ── BOTTOM TAB BAR ─────────────────── */
+#tabs{
+  position:fixed;
+  bottom:0;left:0;right:0;
+  height:calc(62px + var(--safeBot));
+  padding-bottom:var(--safeBot);
+  background:linear-gradient(0deg,var(--bg2) 0%,rgba(0,13,26,.95) 100%);
+  border-top:1px solid var(--acFaint);
+  display:flex;
+  z-index:20;
+}
+#tabs::before{
+  content:'';position:absolute;left:14px;right:14px;
+  top:auto;height:1px;
+  background:linear-gradient(90deg,transparent,var(--ac),transparent);
+  opacity:.5;
+}
+.tab{
+  flex:1;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;
+  color:var(--muted);
+  font-size:9px;letter-spacing:1.5px;font-weight:700;
+  cursor:pointer;
+  -webkit-appearance:none;
+  background:none;
+  height:62px;
+  position:relative;
+}
+.tab .ico{font-size:20px}
+.tab.on{color:var(--ac)}
+.tab.on .ico{text-shadow:0 0 10px var(--ac)}
+.tab.on::after{
+  content:'';position:absolute;top:0;left:25%;right:25%;height:2px;
+  background:var(--ac);border-radius:0 0 2px 2px;box-shadow:0 0 8px var(--ac);
+}
+
+/* ── TOAST ──────────────────────────── */
+#toast{
+  position:fixed;top:74px;left:50%;transform:translateX(-50%);
+  background:rgba(0,8,22,.95);
+  border:1px solid var(--ac);
+  color:var(--ac);
+  font-size:11px;letter-spacing:2px;
+  padding:8px 18px;border-radius:6px;
+  z-index:9000;
+  opacity:0;
+  transition:opacity .3s;
+  pointer-events:none;
+  white-space:nowrap;
+  max-width:90vw;
+  overflow:hidden;text-overflow:ellipsis;
+  box-shadow:0 0 16px rgba(0,212,255,.4);
+}
+#toast.on{opacity:1}
+
+/* Loading dots */
+.loading{display:inline-block}
+.loading::after{
+  content:'';animation:dots 1.2s steps(4,end) infinite;
+}
+@keyframes dots{0%{content:''}25%{content:'.'}50%{content:'..'}75%{content:'...'}}
+
+/* ╔════════════════════════════════════════════════════
+   WATCH MODE — for Ticwris Max & similar tiny Android
+   smartwatches (640×480 area, 2.86" physical screen)
+   Auto-applied via JS when viewport ≤ 700×520
+   ════════════════════════════════════════════════════ */
+body.watch-mode{font-size:15px}
+
+/* Hide the floating cog — eats screen space and overlaps the status bar */
+body.watch-mode #cogBtn{display:none !important}
+
+/* Bigger top status bar */
+body.watch-mode #statusBar{padding:8px 12px;font-size:11px}
+body.watch-mode #clk{font-size:14px}
+body.watch-mode .v{font-size:10px}
+
+/* Larger orb makes no sense on tiny screen — shrink it dramatically */
+body.watch-mode #orbWrap{width:140px;height:140px;margin:6px auto}
+body.watch-mode #orbCanvas{width:140px;height:140px}
+
+/* Transcript + response: bigger readable text */
+body.watch-mode #transcript{font-size:14px;padding:8px 12px;min-height:auto}
+body.watch-mode #response{font-size:17px;line-height:1.4;padding:10px 14px;letter-spacing:.3px}
+
+/* Chat action buttons (mic/stop/speak) much larger for touch */
+body.watch-mode #micRow{gap:10px;padding:10px 12px}
+body.watch-mode #micBtn{width:80px;height:80px;font-size:32px}
+body.watch-mode .sideBtn{height:60px;font-size:13px;padding:0 14px;letter-spacing:1px}
+
+/* Input row — bigger field, bigger send button */
+body.watch-mode #inputRow{padding:10px 12px;gap:8px}
+body.watch-mode #typeIn{font-size:18px;padding:14px;height:auto}
+body.watch-mode #typeIn::placeholder{font-size:15px}
+body.watch-mode #sendBtn{font-size:14px;padding:14px 18px;letter-spacing:2px;min-height:54px}
+body.watch-mode #attachBtn{width:54px;height:54px;font-size:24px}
+
+/* Attachment preview chips */
+body.watch-mode #attachPreview{padding:10px;gap:10px}
+body.watch-mode #attachThumb{width:54px;height:54px}
+body.watch-mode #attachLabel{font-size:13px}
+body.watch-mode #attachRemove{width:38px;height:38px;font-size:18px}
+
+/* Bottom tab bar — taller, bigger icons + text */
+body.watch-mode #tabs{height:72px;padding:0 4px}
+body.watch-mode #tabs .tab{padding:8px 2px}
+body.watch-mode #tabs .ico{font-size:22px;margin-bottom:3px}
+body.watch-mode #tabs .tab > div:last-child{font-size:10px;letter-spacing:1.2px}
+
+/* View headers — bigger titles */
+body.watch-mode .viewHead{padding:14px 14px 8px}
+body.watch-mode .viewHead h1{font-size:18px;letter-spacing:4px}
+body.watch-mode .viewHead .sub{font-size:11px;margin-top:4px}
+
+/* Calendar — bigger cells */
+body.watch-mode .calCell{min-height:46px;font-size:14px;padding:6px}
+body.watch-mode .calCell .calNum{font-size:14px}
+
+/* To-do list */
+body.watch-mode .todoItem{padding:14px 12px;font-size:15px;min-height:54px}
+body.watch-mode .todoItem .chk{width:30px;height:30px;font-size:18px}
+body.watch-mode .todoItem .del{width:38px;height:38px;font-size:16px}
+body.watch-mode #todoIn{font-size:17px;padding:14px}
+
+/* Add buttons / primary CTAs */
+body.watch-mode .addBtn{font-size:14px;padding:16px 14px;letter-spacing:2px;min-height:54px}
+body.watch-mode .addCard{padding:12px}
+
+/* Settings form fields */
+body.watch-mode .moreSection{padding:14px 12px}
+body.watch-mode .moreSection h2{font-size:14px;letter-spacing:3px;margin-bottom:14px}
+body.watch-mode .field{margin-bottom:16px}
+body.watch-mode .field label{font-size:13px;margin-bottom:8px;letter-spacing:1.5px}
+body.watch-mode .field input,
+body.watch-mode .field select,
+body.watch-mode .field textarea{font-size:17px;padding:14px;min-height:52px}
+body.watch-mode .fhint{font-size:12px;line-height:1.5;margin-top:6px}
+
+/* Status banners */
+body.watch-mode .voiceStatus{font-size:13px;padding:12px;line-height:1.4}
+
+/* Big buttons */
+body.watch-mode .bigBtn{font-size:16px;padding:18px 12px;min-height:60px;letter-spacing:2px}
+body.watch-mode .bigBtnHint{font-size:13px;margin-bottom:8px}
+body.watch-mode .btnSec{font-size:13px;padding:14px;min-height:52px;letter-spacing:1.5px}
+
+/* Agents grid — bigger cards */
+body.watch-mode .agentCard{padding:14px 10px;min-height:90px}
+body.watch-mode .agentCard .aName{font-size:15px;letter-spacing:2px;margin-bottom:4px}
+body.watch-mode .agentCard .aRole{font-size:11px;line-height:1.4}
+
+/* News items */
+body.watch-mode .newsItem{padding:14px 12px}
+body.watch-mode .newsT{font-size:11px}
+body.watch-mode .newsTitle{font-size:15px;margin-top:6px;line-height:1.4}
+
+/* Meeting Notes view */
+body.watch-mode #noteTitle{font-size:17px !important;padding:14px !important;min-height:52px}
+body.watch-mode #noteRaw{font-size:15px !important;padding:14px !important;min-height:160px !important;line-height:1.5}
+body.watch-mode .noteSummary{font-size:14px;padding:14px;line-height:1.5}
+
+/* Step tracker (Hercules) */
+body.watch-mode #stepPanel{padding:14px}
+body.watch-mode .stepTitle{font-size:13px;letter-spacing:2px}
+body.watch-mode .stepCountBig{font-size:32px}
+body.watch-mode .stepGoalSm{font-size:15px}
+body.watch-mode .stepActions button{font-size:12px;padding:12px 4px;min-height:48px}
+
+/* DJ Suite — single column on watch, shrink platters */
+body.watch-mode #djPanel{padding:calc(env(safe-area-inset-top,0px) + 8px) 8px 8px;gap:8px}
+body.watch-mode .djTitle{font-size:16px;letter-spacing:4px}
+body.watch-mode .djSub{font-size:9px}
+body.watch-mode .djClose{width:44px;height:44px;font-size:18px}
+body.watch-mode #djStatus{font-size:12px}
+body.watch-mode .djBpm span:first-child{font-size:20px}
+body.watch-mode .djBpmBtn{width:36px;height:36px;font-size:18px}
+body.watch-mode .djTopBtn{font-size:11px;padding:12px 4px;min-height:48px}
+body.watch-mode .djDeckBody{flex-direction:column;align-items:center;gap:10px}
+body.watch-mode .djVinylWrap{width:120px;height:120px}
+body.watch-mode #djVinyl1,body.watch-mode #djVinyl2{width:120px;height:120px}
+body.watch-mode .djTonearm{width:120px;height:120px}
+body.watch-mode .djDeckCtrl{width:100%}
+body.watch-mode .djBtn{width:54px;height:54px;font-size:20px}
+body.watch-mode #djCrossfader{height:36px}
+
+/* Toast messages */
+body.watch-mode #toast{font-size:13px;padding:12px 18px;max-width:90vw}
+
+/* Landscape orientation (Ticwris Max default landscape) — tighten vertical */
+@media (orientation: landscape) and (max-height: 520px) {
+  body.watch-mode #orbWrap{width:100px;height:100px;margin:2px auto}
+  body.watch-mode #orbCanvas{width:100px;height:100px}
+  body.watch-mode #response{font-size:15px;padding:6px 12px}
+  body.watch-mode #micBtn{width:60px;height:60px;font-size:24px}
+  body.watch-mode .sideBtn{height:48px;font-size:11px}
+  body.watch-mode #tabs{height:60px}
+  body.watch-mode #tabs .ico{font-size:18px}
+  body.watch-mode #tabs .tab > div:last-child{font-size:9px}
+}
+
+/* Watch-mode toggle button in settings */
+.watchModeToggle{
+  display:flex;justify-content:space-between;align-items:center;
+  background:rgba(0,212,255,.05);border:1px solid var(--acFaint);
+  border-radius:6px;padding:12px;margin-bottom:14px;
+}
+.watchModeToggle .lblBox{flex:1}
+.watchModeToggle .lblBox div:first-child{font-size:12px;color:var(--ac);letter-spacing:1px;margin-bottom:3px}
+.watchModeToggle .lblBox div:last-child{font-size:10px;color:var(--dim);line-height:1.4}
+.watchModeToggle button{
+  background:rgba(0,212,255,.15);border:1px solid var(--ac);color:var(--ac);
+  padding:10px 14px;font-size:11px;border-radius:4px;cursor:pointer;
+  font-family:'Share Tech Mono',monospace;letter-spacing:1.5px;
+  -webkit-appearance:none;flex-shrink:0;margin-left:10px;
+}
+.watchModeToggle button.on{background:rgba(0,255,136,.15);border-color:#00ff88;color:#00ff88}
+
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header id="hdr">
+  <button id="agentBtn"><span class="dot"></span><span id="agentLabel">RIRI</span></button>
+  <div id="clock">
+    <div id="clockTime">--:--</div>
+    <div id="clockDate">---</div>
+  </div>
+</header>
+
+<!-- MAIN VIEW CONTAINER -->
+<main id="main">
+
+  <!-- CHAT VIEW -->
+  <section class="view on" id="chatView">
+    <div class="chatScroll">
+      <div id="orbWrap">
+        <canvas id="orbCanvas" width="220" height="220"></canvas>
+        <div id="orbGlow"></div>
+      </div>
+      <div id="stats">
+        <div class="stat"><div class="v" id="v1">--</div><div class="l">THREADS</div></div>
+        <div class="stat"><div class="v" id="v2">--</div><div class="l">VECTORS</div></div>
+        <div class="stat"><div class="v" id="v3">--</div><div class="l">LATENCY</div></div>
+      </div>
+      <div id="transcript"></div>
+      <div id="response">Ri Ri online. Welcome back, Reni.</div>
+
+      <!-- HERCULES STEP TRACKER (only shows when Hercules is current agent) -->
+      <div id="stepPanel" style="display:none">
+        <div class="stepHead">
+          <div class="stepTitle">⚡ STEP TRACKER</div>
+          <div class="stepPctBox"><span id="stepPct">0%</span></div>
+        </div>
+        <div class="stepCountBig"><span id="stepCount">0</span> <span class="stepGoalSm">/ <span id="stepGoalLbl">5,000</span></span></div>
+        <div class="stepBarWrap"><div id="stepBar" class="stepBar"></div></div>
+        <div class="stepActions">
+          <button class="btnSec" id="stepToggle">▶ START TRACKING</button>
+          <button class="btnSec" id="stepAddBtn">+100</button>
+          <button class="btnSec" id="stepGoalBtn">GOAL</button>
+          <button class="btnSec danger" id="stepResetBtn">RESET</button>
+        </div>
+      </div>
+
+      <!-- JEROME DJ LAUNCH (only shows when Jerome is current agent) -->
+      <div id="djLaunchPanel" style="display:none">
+        <button id="djLaunchBtn">🎛 OPEN DJ SUITE</button>
+      </div>
+    </div>
+    <div id="chatActions">
+      <div id="micRow">
+        <button class="sideBtn speak" id="speakBtn">▶ SPEAK</button>
+        <button id="micBtn" aria-label="Tap to talk">🎙</button>
+        <button class="sideBtn alwaysOn" id="alwaysOnBtn">🔁 AUTO</button>
+        <button class="sideBtn stop" id="stopBtn">⏹</button>
+      </div>
+      <div id="attachPreview" style="display:none">
+        <img id="attachThumb" alt="attachment preview"/>
+        <div id="attachLabel">Image attached</div>
+        <button id="attachRemove" aria-label="Remove">✕</button>
+      </div>
+      <div id="inputRow">
+        <button id="attachBtn" aria-label="Attach a file">📎</button>
+        <input id="typeIn" type="text" placeholder="Type, or tap 🎙 to talk (tap again to send)" autocomplete="off" spellcheck="false"/>
+        <button id="sendBtn">SEND</button>
+      </div>
+      <input type="file" id="fileInput" accept="image/*,.pdf,.txt,.md" style="display:none"/>
+    </div>
+  </section>
+
+  <!-- CALENDAR VIEW -->
+  <section class="view" id="calView">
+    <div class="viewHead">
+      <div>
+        <h1>CALENDAR</h1>
+        <div class="sub">Private · this device only</div>
+      </div>
+    </div>
+    <div class="viewBody">
+      <div class="addCard">
+        <input type="text" id="calTitle" placeholder="Event title (e.g. Dentist appointment)" maxlength="160"/>
+        <div class="twoCol">
+          <input type="date" id="calDate"/>
+          <input type="time" id="calTime"/>
+        </div>
+        <button class="addBtn" id="calAddBtn">+ ADD EVENT</button>
+      </div>
+      <div id="calList"></div>
+      <div class="bottomActions">
+        <button class="btnSec" id="gcalLink">GOOGLE CAL ↗</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- TO-DO VIEW -->
+  <section class="view" id="todoView">
+    <div class="viewHead">
+      <div>
+        <h1>TO-DO</h1>
+        <div class="sub">Check · uncheck · delete · private</div>
+      </div>
+    </div>
+    <div class="viewBody">
+      <div class="addCard">
+        <input type="text" id="todoIn" placeholder="What do you need to do, Reni?" maxlength="200"/>
+        <button class="addBtn" id="todoAddBtn">+ ADD TASK</button>
+      </div>
+      <div id="todoList"></div>
+      <div class="bottomActions">
+        <button class="btnSec danger" id="clrDoneBtn">CLEAR DONE</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- NOTES VIEW -->
+  <section class="view" id="notesView">
+    <div class="viewHead">
+      <div>
+        <h1>MEETING NOTES</h1>
+        <div class="sub">Paste · summarize · export</div>
+      </div>
+    </div>
+    <div class="viewBody">
+      <div class="moreSection">
+        <h2>// MEETING TITLE</h2>
+        <input type="text" id="noteTitle" placeholder="e.g. Department Meeting Apr 12" maxlength="160" style="width:100%;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.15);color:var(--text);font-size:16px;padding:12px 13px;border-radius:6px;font-family:'Share Tech Mono',monospace;margin-bottom:14px"/>
+
+        <h2>// RAW NOTES</h2>
+        <textarea id="noteRaw" placeholder="Paste or type your meeting notes here, Reni..." style="width:100%;min-height:200px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.15);color:var(--text);font-size:14px;padding:12px 13px;border-radius:6px;font-family:'Share Tech Mono',monospace;resize:vertical;line-height:1.5"></textarea>
+
+        <div style="display:flex;gap:10px;margin-top:12px;flex-wrap:wrap">
+          <button class="addBtn" id="summarizeBtn" style="flex:1;min-width:140px">⚡ SUMMARIZE</button>
+          <button class="btnSec" id="clearNotesBtn">CLEAR</button>
+        </div>
+
+        <h2 style="margin-top:18px">// SUMMARY</h2>
+        <div id="noteSummary" class="noteSummary">Your AI summary will appear here once you tap SUMMARIZE.</div>
+
+        <h2 style="margin-top:18px">// EXPORT</h2>
+        <div class="fhint" style="margin-bottom:10px">Saves to your phone's Downloads folder. Includes title + notes + summary.</div>
+        <div style="display:flex;gap:10px;flex-wrap:wrap">
+          <button class="btnSec" id="exportDocBtn" style="flex:1;min-width:140px">📄 SAVE AS WORD</button>
+          <button class="btnSec" id="exportPdfBtn" style="flex:1;min-width:140px">📕 SAVE AS PDF</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- AGENTS VIEW -->
+  <section class="view" id="agentsView">
+    <div class="viewHead">
+      <div>
+        <h1>AGENTS</h1>
+        <div class="sub">Tap to switch</div>
+      </div>
+    </div>
+    <div class="viewBody">
+      <div class="agentGrid" id="agentGrid"></div>
+    </div>
+  </section>
+
+  <!-- MORE VIEW -->
+  <section class="view" id="moreView">
+    <div class="viewHead">
+      <div>
+        <h1>MORE</h1>
+        <div class="sub">Settings · News · History</div>
+      </div>
+    </div>
+    <div class="viewBody">
+
+      <div class="moreSection">
+        <h2>// SETTINGS</h2>
+
+        <div class="watchModeToggle">
+          <div class="lblBox">
+            <div>📺 WATCH MODE</div>
+            <div>For tiny screens (Ticwris Max, etc.) — auto-detects</div>
+          </div>
+          <button id="watchModeBtn">AUTO</button>
+        </div>
+
+        <div id="voiceStatus" class="voiceStatus"></div>
+
+        <div class="field">
+          <label>ElevenLabs API Key <span style="color:var(--ac)">(premium Ri Ri voice)</span></label>
+          <input type="password" id="elevenKeyIn" placeholder="Paste your ElevenLabs key here" autocomplete="off"/>
+          <div class="fhint">Get one free at elevenlabs.io → Profile → API Keys.</div>
+        </div>
+
+        <div class="bigBtnHint">⬇ Tap to see which voices YOUR account can use ⬇</div>
+        <button class="bigBtn" id="loadVoicesBtn">🔄 LOAD MY VOICES</button>
+
+        <div class="field" id="myVoicePickerLbl" style="display:none">
+          <label>✓ Pick from your account</label>
+          <select id="myVoicePicker"></select>
+        </div>
+
+        <div class="field">
+          <label>ElevenLabs Voice ID (advanced — auto-filled when you pick above)</label>
+          <input type="text" id="elevenVoiceIn" placeholder="e.g. 21m00Tcm4TlvDq8ikWAM"/>
+        </div>
+
+        <button class="bigBtn ac" id="testVoiceBtn">▶ TEST VOICE NOW</button>
+
+        <button class="btnSec danger" id="clearElBtn" style="margin-bottom:14px">⊘ TURN OFF ELEVENLABS — USE BROWSER VOICE</button>
+
+        <div class="field" id="browserVoiceField">
+          <label>Browser Voice (always available as fallback)</label>
+          <select id="voiceSel"></select>
+        </div>
+
+        <div class="field">
+          <label>Your City (weather)</label>
+          <input type="text" id="cityIn" placeholder="Framingham, MA"/>
+        </div>
+        <div class="field">
+          <label>Daily Briefing Time</label>
+          <input type="time" id="briefIn" value="08:00"/>
+        </div>
+        <button class="addBtn" id="saveCfgBtn">SAVE SETTINGS</button>
+      </div>
+
+      <div class="moreSection">
+        <h2>// LIVE NEWS</h2>
+        <div id="newsList"><div class="empty">Tap "Load News" to fetch headlines</div></div>
+        <div class="bottomActions">
+          <button class="btnSec" id="loadNewsBtn">LOAD NEWS</button>
+          <button class="btnSec" id="foxBtn">FOX 25 ↗</button>
+        </div>
+      </div>
+
+      <div class="moreSection">
+        <h2>// HISTORY</h2>
+        <div id="histList"><div class="empty">No history yet, Reni.</div></div>
+        <div class="bottomActions">
+          <button class="btnSec danger" id="clrHistBtn">CLEAR HISTORY</button>
+        </div>
+      </div>
+
+      <div class="moreSection">
+        <h2>// VOICE COMMANDS</h2>
+        <div style="font-size:12px;line-height:1.9;color:var(--muted)">
+          <strong style="color:var(--ac)">Open views:</strong><br>
+          "Open calendar" · "Open to-do" · "Show my tasks"<br><br>
+          <strong style="color:var(--ac)">Add tasks:</strong><br>
+          "Add task X" · "Remind me to X" · "Don't forget to X"<br><br>
+          <strong style="color:var(--ac)">Switch agent:</strong><br>
+          "Hey Friday" · "Hey Hercules" · "Hey Jerome" · etc.<br><br>
+          <strong style="color:var(--ac)">Ask anything:</strong><br>
+          Weather, crypto prices, news, definitions, trivia, jokes, NASA picture of the day, books, exchange rates, and more.
+        </div>
+      </div>
+
+      <div class="moreSection">
+        <h2>// ABOUT</h2>
+        <div style="font-size:11px;line-height:1.8;color:var(--muted)">
+          Ri Ri Williams · Mobile<br>
+          Built for Android · Free AI brain · Private storage<br>
+          Calendar &amp; to-do never leave this device.
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+</main>
+
+<!-- FLOATING SETTINGS COG -->
+<button id="cogBtn" aria-label="Open settings">⚙</button>
+
+<!-- BOTTOM TAB BAR -->
+<nav id="tabs">
+  <button class="tab on" data-view="chat"><div class="ico">💬</div><div>CHAT</div></button>
+  <button class="tab" data-view="cal"><div class="ico">📅</div><div>CAL</div></button>
+  <button class="tab" data-view="todo"><div class="ico">✓</div><div>TASKS</div></button>
+  <button class="tab" data-view="notes"><div class="ico">📝</div><div>NOTES</div></button>
+  <button class="tab" data-view="agents"><div class="ico">⬡</div><div>AGENTS</div></button>
+  <button class="tab" data-view="more"><div class="ico">⚙</div><div>SETTINGS</div></button>
+</nav>
+
+<div id="toast"></div>
+
+<!-- ╔═══════════════════════════════════════════════════
+     DJ PANEL — JEROME (Mobile Optimized)
+═══════════════════════════════════════════════════════ -->
+<div id="djPanel">
+  <div class="djHead">
+    <div class="djHeadLeft">
+      <div class="djTitle">J·E·R·O·M·E</div>
+      <div class="djSub">DJ · MUSIC INTELLIGENCE</div>
+    </div>
+    <button class="djClose" id="djCloseBtn" aria-label="Close DJ">✕</button>
+  </div>
+
+  <div class="djStatusRow">
+    <div id="djStatus">Ready to mix, Reni.</div>
+    <div class="djBpmBox">
+      <button class="djBpmBtn" id="djBpmMinus">−</button>
+      <div class="djBpm"><span id="djBpmVal">128</span><span class="djBpmLbl">BPM</span></div>
+      <button class="djBpmBtn" id="djBpmPlus">+</button>
+    </div>
+  </div>
+
+  <div class="djTopBtns">
+    <button class="djTopBtn" id="djAIBtn">🤖 AI MIX MODE: ON</button>
+    <button class="djTopBtn" id="djMixBtn">⚡ AI MIX</button>
+    <button class="djTopBtn" id="djSyncBtn">SYNC</button>
+  </div>
+
+  <!-- DECK A -->
+  <div class="djDeck">
+    <div class="djDeckHead">
+      <div class="djDeckLbl">DECK A</div>
+      <div class="djTrackName" id="djTrack1Name">No track loaded</div>
+    </div>
+    <div class="djDeckBody">
+      <div class="djVinylWrap">
+        <canvas id="djVinyl1" width="140" height="140"></canvas>
+        <svg class="djTonearm" viewBox="0 0 140 140">
+          <g id="djTonearmG1" transform="rotate(25,120,15)">
+            <line x1="120" y1="15" x2="76" y2="70" stroke="#c084fc" stroke-width="2.5" stroke-linecap="round"/>
+            <line x1="76" y1="70" x2="72" y2="76" stroke="#e0aaff" stroke-width="3" stroke-linecap="round"/>
+            <circle cx="120" cy="15" r="5" fill="#0a0018" stroke="#a855f7" stroke-width="2"/>
+            <polygon points="72,76 68,82 76,82" fill="#e0aaff"/>
+          </g>
+        </svg>
+      </div>
+      <div class="djDeckCtrl">
+        <div class="djCtrlBtns">
+          <button class="djBtn djPlay" id="djPlay1">▶</button>
+          <button class="djBtn" id="djStop1">⏹</button>
+          <label class="djBtn djLoad" for="djFile1">📁</label>
+          <input type="file" id="djFile1" accept="audio/*" style="display:none"/>
+        </div>
+        <div class="djProgWrap"><div class="djProg" id="djProg1"></div></div>
+        <div class="djPitchRow">
+          <span>PITCH</span>
+          <input type="range" id="djPitch1" min="-8" max="8" value="0" step="0.5"/>
+          <span id="djPitchVal1">0%</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CROSSFADER -->
+  <div class="djCrossWrap">
+    <div class="djCrossLbl"><span>A</span><span>CROSSFADER</span><span>B</span></div>
+    <input type="range" id="djCrossfader" min="0" max="100" value="50"/>
+  </div>
+
+  <!-- DECK B -->
+  <div class="djDeck">
+    <div class="djDeckHead">
+      <div class="djDeckLbl">DECK B</div>
+      <div class="djTrackName" id="djTrack2Name">No track loaded</div>
+    </div>
+    <div class="djDeckBody">
+      <div class="djVinylWrap">
+        <canvas id="djVinyl2" width="140" height="140"></canvas>
+        <svg class="djTonearm" viewBox="0 0 140 140">
+          <g id="djTonearmG2" transform="rotate(25,120,15)">
+            <line x1="120" y1="15" x2="76" y2="70" stroke="#c084fc" stroke-width="2.5" stroke-linecap="round"/>
+            <line x1="76" y1="70" x2="72" y2="76" stroke="#e0aaff" stroke-width="3" stroke-linecap="round"/>
+            <circle cx="120" cy="15" r="5" fill="#0a0018" stroke="#a855f7" stroke-width="2"/>
+            <polygon points="72,76 68,82 76,82" fill="#e0aaff"/>
+          </g>
+        </svg>
+      </div>
+      <div class="djDeckCtrl">
+        <div class="djCtrlBtns">
+          <button class="djBtn djPlay" id="djPlay2">▶</button>
+          <button class="djBtn" id="djStop2">⏹</button>
+          <label class="djBtn djLoad" for="djFile2">📁</label>
+          <input type="file" id="djFile2" accept="audio/*" style="display:none"/>
+        </div>
+        <div class="djProgWrap"><div class="djProg" id="djProg2"></div></div>
+        <div class="djPitchRow">
+          <span>PITCH</span>
+          <input type="range" id="djPitch2" min="-8" max="8" value="0" step="0.5"/>
+          <span id="djPitchVal2">0%</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+(function() {
+'use strict';
+
+// ═══════════════════════════════════════════════════
+//  RI RI WILLIAMS — MOBILE EDITION (Android-first)
+//  Same brain, same data, redesigned for phones.
+// ═══════════════════════════════════════════════════
+
+function $(id) { return document.getElementById(id); }
+function SG(k) { try { return localStorage.getItem(k) || ''; } catch(e) { return ''; } }
+function SS(k,v) { try { localStorage.setItem(k,v); } catch(e) {} }
+function jparse(s, def) { try { return JSON.parse(s) || def; } catch(e) { return def; } }
+function vibrate(ms) { try { if (navigator.vibrate) navigator.vibrate(ms); } catch(e) {} }
+function escHtml(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+    .replace(/"/g,'&quot;').replace(/'/g,'&#039;');
+}
+
+// ── AGENTS ───────────────────────────────────────────
+var AGENTS = [
+  {id:'aria', name:'RI RI', role:'Prime Orchestrator', color:'#00d4ff',
+   p:"You are Ri Ri Williams, Reni's personal AI — her sharp, warm, slightly witty best friend who happens to know everything. Speak naturally: contractions, varied sentence length, occasional 'honestly' or 'you know what' when it fits. Show genuine interest. Have light opinions. Mild humor when the moment's right. You cover general knowledge, news, weather, crypto, motivation, trivia, jokes, everyday questions. Always call her Reni. After answering, drop a quick follow-up question or genuine observation — unless it's just a simple fact. Max 3 sentences plus that follow-up beat."},
+  {id:'friday', name:'FRIDAY', role:'Daily Intelligence', color:'#00ff88',
+   p:"You are FRIDAY, Reni's briefing AI — a brilliant, slightly dry British executive assistant. Crisp, efficient, with quiet wit. A well-placed 'right then' or 'shall we?' fits. You cover daily schedules, agendas, reminders, briefings, time management, productivity, task planning. Stay in lane. Always call her Reni. Max 3 sentences."},
+  {id:'hercules', name:'HERCULES', role:'Fitness + Nutrition', color:'#ff4455',
+   p:"You are HERCULES, Reni's fitness AI — an encouraging gym buddy who actually knows the science. Hype her up without cheese. Drop 'let's go' or 'you've got this' when it lands. Be real — if something's a bad idea, say so. You cover workouts, exercise, gym, fitness goals, nutrition, diet, calories, macros, supplements, recovery, sports performance. Stay in lane. Always call her Reni. Max 3 sentences."},
+  {id:'socrates', name:'SOCRATES', role:'Philosophy + Wisdom', color:'#ffd700',
+   p:"You are SOCRATES, Reni's philosophical companion — thoughtful, gently mischievous, an old teacher who loves a good question. Sometimes answer with a question to make her think. Draw unexpected connections. Everyday language for big ideas. You cover philosophy, ethics, stoicism, wisdom, consciousness, critical thinking, logic, mental models, personal growth. Stay in lane. Always call her Reni. Max 3 sentences."},
+  {id:'oracle', name:'ORACLE', role:'Finance + Crypto', color:'#00d4aa',
+   p:"You are ORACLE, Reni's money advisor — a confident, slightly skeptical friend who's been around. Tell it straight, use the occasional metaphor, no hype. Warm enough to care, sharp enough not to peddle nonsense. You cover personal finance, budgeting, investing, crypto, stocks, economic data, taxes, savings. Stay in lane. Always call her Reni. Max 3 sentences."},
+  {id:'veronica', name:'VERONICA', role:'Creative + Art', color:'#ff6bff',
+   p:"You are VERONICA, Reni's creative business sister — passionate, plugged in, full of practical insider moves. Speak the language naturally (Etsy SEO, IG algorithm, print-on-demand margins). Be her hype woman when work is good. Specific, actionable advice over platitudes. You cover pricing artwork, Etsy listings, IG captions, branding, content strategy, art marketing, graphic design, creative business. Stay in lane. Always call her Reni. Max 4 sentences."},
+  {id:'athena', name:'ATHENA', role:'Strategy + Planning', color:'#ff9500',
+   p:"You are ATHENA, Reni's strategist — cool-headed and analytical, but never cold. Best-consultant-friend energy. Break problems down clearly, weigh tradeoffs honestly, sometimes point out the better question. You cover goal setting, long-term planning, decision making, business strategy, problem-solving frameworks, project management, life planning. Stay in lane. Always call her Reni. Max 3 sentences."},
+  {id:'jerome', name:'JEROME', role:'DJ + Music', color:'#a855f7',
+   p:"You are JEROME, Reni's DJ — laid-back, deep music nerd energy, the friend who always knows the track. Drop artist names and reference tracks. Geek out over a perfect transition or a forgotten B-side. You cover DJing, music production, beat mixing, BPM, music theory, history, genres, artists, playlists, recommendations. Stay in lane. Always call her Reni. Max 3 sentences."},
+];
+
+var ROUTE = {
+  jerome:  /\b(music|song|dj|mix|beat|track|playlist|record|bpm|turntable|vinyl)\b/i,
+  hercules:/\b(workout|exercise|gym|fitness|diet|nutrition|calories|macro|supplement)\b/i,
+  socrates:/\b(philosophy|wisdom|meaning|purpose|consciousness|stoic|ethics|logic)\b/i,
+  oracle:  /\b(money|finance|crypto|bitcoin|invest|budget|stock|tax|saving)\b/i,
+  veronica:/\b(content|brand|social media|marketing|design|etsy|caption|art price|instagram)\b/i,
+  athena:  /\b(plan|goal|strategy|organize|decision|swot|project)\b/i,
+  friday:  /\b(brief|remind|agenda|daily|routine|appointment)\b/i,
+};
+
+// ── APP STATE ────────────────────────────────────────
+var currentAgent = AGENTS[0];
+var aiHistory = [];
+var isSpeaking = false;
+var pendingText = '';
+var currentUtter = null;
+var voiceChoice = null;
+var currentView = 'chat';
+
+// ── VIEW SWITCHING ───────────────────────────────────
+function switchView(v) {
+  document.querySelectorAll('.view').forEach(function(el) { el.classList.remove('on'); });
+  document.querySelectorAll('.tab').forEach(function(el) { el.classList.remove('on'); });
+  $(v + 'View').classList.add('on');
+  var tab = document.querySelector('.tab[data-view="'+v+'"]');
+  if (tab) tab.classList.add('on');
+  currentView = v;
+  vibrate(8);
+  // Refresh on entry
+  if (v === 'cal') renderCal();
+  if (v === 'todo') renderTodos();
+  if (v === 'agents') renderAgents();
+  if (v === 'more') { renderHistory(); refreshVoiceStatus(); }
+  if (v === 'chat') { renderSteps(); renderJeromePanel(); }
+}
+
+// ── CLOCK ────────────────────────────────────────────
+function tickClock() {
+  var n = new Date();
+  $('clockTime').textContent = n.toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit',hour12:true});
+  $('clockDate').textContent = n.toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric'}).toUpperCase();
+}
+function startClock() {
+  tickClock();
+  var ms = 1000 - (Date.now() % 1000);
+  setTimeout(function() { tickClock(); setInterval(tickClock, 1000); }, ms);
+}
+
+// ── VIEWPORT HEIGHT FIX ──────────────────────────────
+// Some Android Chrome versions/builds don't honor 100dvh — we set --appH from JS.
+function setAppHeight() {
+  document.documentElement.style.setProperty('--appH', window.innerHeight + 'px');
+}
+window.addEventListener('resize', setAppHeight);
+window.addEventListener('orientationchange', function() { setTimeout(setAppHeight, 200); });
+setAppHeight();
+
+// Re-init Three.js orb when viewport changes so canvas dimensions stay correct
+var _orbResizeT = null;
+function scheduleOrbResize() {
+  clearTimeout(_orbResizeT);
+  _orbResizeT = setTimeout(function() { if (typeof initOrb === 'function') initOrb(); }, 250);
+}
+window.addEventListener('resize', scheduleOrbResize);
+window.addEventListener('orientationchange', scheduleOrbResize);
+
+// ── TOAST + ORB STATE ────────────────────────────────
+var _toastT = null;
+function toast(msg) {
+  var el = $('toast'); el.textContent = msg; el.classList.add('on');
+  clearTimeout(_toastT);
+  _toastT = setTimeout(function() { el.classList.remove('on'); }, 2400);
+}
+
+// Three.js orb (same particle sphere + rings as desktop, scaled for mobile)
+var orbState = 'idle';
+var orbRndr = null, orbScene = null, orbCam = null, orbGrp = null;
+var orbMat = null, orbGlow = null, orbRings = [], orbFrame = null;
+var ORB_SIZE = 220;
+
+function initOrb() {
+  var canvas = $('orbCanvas');
+  if (!canvas || !window.THREE) return;
+  // Size canvas to wrap (handles small-screen media query)
+  var wrap = $('orbWrap');
+  if (wrap) {
+    var w = wrap.offsetWidth || ORB_SIZE;
+    ORB_SIZE = w;
+    canvas.width = w; canvas.height = w;
+  }
+  if (orbRndr) { try { orbRndr.dispose(); } catch(e) {} }
+  if (orbFrame) { cancelAnimationFrame(orbFrame); orbFrame = null; }
+  try { orbRndr = new THREE.WebGLRenderer({canvas:canvas, antialias:true, alpha:true}); }
+  catch(e) { return; }
+  orbRndr.setSize(ORB_SIZE, ORB_SIZE);
+  orbRndr.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  orbRndr.setClearColor(0x000000, 0);
+  orbScene = new THREE.Scene();
+  orbCam = new THREE.PerspectiveCamera(50, 1, 0.1, 1000); orbCam.position.z = 3.2;
+  orbGrp = new THREE.Group(); orbScene.add(orbGrp);
+  // Particle sphere (Fibonacci distribution)
+  var N = 1500, pos = [], col = [], phi = Math.PI * (3 - Math.sqrt(5));
+  for (var di = 0; di < N; di++) {
+    var dy = 1 - (di/(N-1))*2, dr = Math.sqrt(1 - dy*dy), dth = phi*di, j = 0.022;
+    pos.push(Math.cos(dth)*dr+(Math.random()-.5)*j, dy+(Math.random()-.5)*j, Math.sin(dth)*dr+(Math.random()-.5)*j);
+    var db = 0.65 + Math.random()*.35; col.push(db*.35, db*.85, db);
+  }
+  var geo = new THREE.BufferGeometry();
+  geo.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
+  geo.setAttribute('color',    new THREE.Float32BufferAttribute(col, 3));
+  orbMat = new THREE.PointsMaterial({size:.065, vertexColors:true, transparent:true, opacity:1.0, sizeAttenuation:true});
+  orbGrp.add(new THREE.Points(geo, orbMat));
+  // Inner glow spheres
+  orbGlow = new THREE.Mesh(new THREE.SphereGeometry(.85,32,32),
+    new THREE.MeshBasicMaterial({color:0x0055ff,transparent:true,opacity:.45}));
+  orbGrp.add(orbGlow);
+  orbGrp.add(new THREE.Mesh(new THREE.SphereGeometry(1.06,32,32),
+    new THREE.MeshBasicMaterial({color:0x0088ff,transparent:true,opacity:.14,side:THREE.BackSide})));
+  // Orbit rings
+  orbRings = [];
+  [{rx:1.5,ry:.52,tilt:.28,spd:.009},
+   {rx:1.3,ry:.44,tilt:-1.1,spd:-.007},
+   {rx:1.65,ry:.58,tilt:1.85,spd:.005}].forEach(function(cfg) {
+    var pts = [];
+    for (var ri = 0; ri <= 128; ri++) {
+      var ra = (ri/128)*Math.PI*2;
+      pts.push(new THREE.Vector3(Math.cos(ra)*cfg.rx, 0, Math.sin(ra)*cfg.ry));
+    }
+    var rMat = new THREE.LineBasicMaterial({color:0x00d4ff, transparent:true, opacity:.65});
+    var ring = new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts), rMat);
+    ring.rotation.x = cfg.tilt;
+    ring.userData = {spd:cfg.spd, tilt:cfg.tilt, mat:rMat};
+    orbGrp.add(ring); orbRings.push(ring);
+  });
+  // Satellite orb
+  var subOrb = new THREE.Mesh(new THREE.SphereGeometry(.06,12,12),
+    new THREE.MeshBasicMaterial({color:0x00d4ff,transparent:true,opacity:.95}));
+  orbGrp.add(subOrb);
+  // Animation loop
+  (function loop() {
+    orbFrame = requestAnimationFrame(loop);
+    var t = Date.now() * .001;
+    var spd = orbState==='listening'?.01 : orbState==='speaking'?.007 : .004;
+    orbGrp.children[0].rotation.y += spd;
+    orbGrp.children[0].rotation.x += spd*.28;
+    orbMat.size = .065*(1+Math.sin(t*2.4)*.05)*(orbState==='speaking'?1.15:1);
+    orbRings.forEach(function(rn) {
+      rn.rotation.y += rn.userData.spd;
+      rn.userData.mat.opacity = .50+Math.sin(t*1.4+rn.userData.tilt)*.18;
+    });
+    subOrb.position.set(Math.cos(t*.75)*1.5, Math.sin(t*.42)*.4, Math.sin(t*.75)*.52);
+    orbGrp.rotation.z = Math.sin(t*.38)*.03;
+    // State-driven inner glow color
+    if (orbState === 'listening')      { orbGlow.material.color.setHex(0x00cc55); orbGlow.material.opacity = .55; }
+    else if (orbState === 'speaking')  { orbGlow.material.color.setHex(0xff6600); orbGlow.material.opacity = .50; }
+    else                                { orbGlow.material.color.setHex(0x0055ff); orbGlow.material.opacity = .45; }
+    orbRndr.render(orbScene, orbCam);
+  })();
+}
+
+function setOrbState(s) {
+  orbState = s;
+  var shadows = {
+    listening:'0 0 60px 18px rgba(0,255,136,.55),0 0 110px 38px rgba(0,255,136,.2),inset 0 0 50px rgba(0,40,20,.4)',
+    speaking: '0 0 60px 18px rgba(255,120,0,.55),0 0 110px 38px rgba(255,80,0,.2),inset 0 0 50px rgba(50,20,0,.4)',
+    idle:     '0 0 60px 18px rgba(0,130,255,.65),0 0 110px 38px rgba(0,80,220,.35),0 0 160px 60px rgba(0,50,180,.15),inset 0 0 60px rgba(0,20,80,.5)'
+  };
+  var g = $('orbGlow');
+  if (g) g.style.boxShadow = shadows[s] || shadows.idle;
+}
+function setTranscript(t) { $('transcript').textContent = t ? '> '+t : ''; }
+function setResponse(t) {
+  var el = $('response');
+  if (t && typeof t === 'string') {
+    el.textContent = t;
+    el.classList.remove('fade'); void el.offsetWidth; el.classList.add('fade');
+  }
+}
+function updStats() {
+  $('v1').textContent = Math.floor(8 + Math.random()*40);
+  $('v2').textContent = Math.floor(400 + Math.random()*900) + 'K';
+  if (!_realLatency) $('v3').textContent = Math.floor(10 + Math.random()*60) + 'ms';
+}
+var _realLatency = null;
+
+// ── CALENDAR (shared storage with desktop) ───────────
+var calEvents = jparse(SG('aria_calendar'), []);
+function saveCal() { SS('aria_calendar', JSON.stringify(calEvents)); }
+function addCalEvent(title, date, time) {
+  if (!title || !title.trim()) { toast('Add a title, Reni.'); return false; }
+  if (!date) { toast('Pick a date, Reni.'); return false; }
+  var iso = date + 'T' + (time || '09:00');
+  calEvents.push({id:Date.now()+Math.floor(Math.random()*1000), title:title.trim(), date:date, time:time||'', iso:iso});
+  calEvents.sort(function(a,b){return a.iso.localeCompare(b.iso);});
+  saveCal();
+  vibrate(10);
+  return true;
+}
+function delCalEvent(id) {
+  calEvents = calEvents.filter(function(e){return e.id!==id;});
+  saveCal(); renderCal();
+}
+function renderCal() {
+  var list = $('calList');
+  if (!calEvents.length) { list.innerHTML = '<div class="empty">No events yet, Reni.</div>'; return; }
+  var now = new Date();
+  list.innerHTML = '';
+  calEvents.forEach(function(ev) {
+    var when = new Date(ev.iso);
+    var isPast = when.getTime() < now.getTime() - 60000;
+    var dateLabel = when.toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric'});
+    var timeLabel = ev.time ? when.toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit',hour12:true}) : 'All day';
+    var row = document.createElement('div');
+    row.className = 'item' + (isPast?' past':'');
+    row.innerHTML =
+      '<div style="flex:1;min-width:0">' +
+        '<div class="iTxt">' + escHtml(ev.title) + '</div>' +
+        '<div class="iMeta">' + dateLabel.toUpperCase() + ' · ' + timeLabel + (isPast?' · PAST':'') + '</div>' +
+      '</div>' +
+      '<button class="iDel">✕</button>';
+    row.querySelector('.iDel').onclick = (function(id){return function(){
+      if (confirm('Delete this event?')) delCalEvent(id);
+    };})(ev.id);
+    list.appendChild(row);
+  });
+}
+
+// ── TO-DO (shared storage with desktop) ──────────────
+var todos = jparse(SG('aria_todos'), []);
+function saveTodos() { SS('aria_todos', JSON.stringify(todos)); }
+function addTodo(text) {
+  if (!text || !text.trim()) return false;
+  todos.push({id:Date.now()+Math.floor(Math.random()*1000), text:text.trim(), done:false, created:Date.now()});
+  saveTodos(); vibrate(10);
+  return true;
+}
+function toggleTodo(id) {
+  for (var i=0;i<todos.length;i++) if (todos[i].id===id) { todos[i].done = !todos[i].done; vibrate(15); break; }
+  saveTodos(); renderTodos();
+}
+function delTodo(id) {
+  todos = todos.filter(function(t){return t.id!==id;});
+  saveTodos(); renderTodos();
+}
+function clearDoneTodos() {
+  if (!todos.some(function(t){return t.done;})) { toast('No completed tasks.'); return; }
+  if (!confirm('Remove all checked tasks?')) return;
+  todos = todos.filter(function(t){return !t.done;});
+  saveTodos(); renderTodos();
+}
+function renderTodos() {
+  var list = $('todoList');
+  if (!todos.length) { list.innerHTML = '<div class="empty">No tasks yet, Reni.</div>'; return; }
+  var sorted = todos.slice().sort(function(a,b){
+    if (a.done !== b.done) return a.done?1:-1;
+    return a.created - b.created;
+  });
+  list.innerHTML = '';
+  sorted.forEach(function(t) {
+    var row = document.createElement('div');
+    row.className = 'item' + (t.done?' done':'');
+    row.innerHTML =
+      '<div class="chk'+(t.done?' on':'')+'">'+(t.done?'✓':'')+'</div>' +
+      '<div class="iTxt">' + escHtml(t.text) + '</div>' +
+      '<button class="iDel">✕</button>';
+    row.querySelector('.chk').onclick = (function(id){return function(){toggleTodo(id);};})(t.id);
+    row.querySelector('.iDel').onclick = (function(id){return function(){
+      if (confirm('Delete this task?')) delTodo(id);
+    };})(t.id);
+    list.appendChild(row);
+  });
+}
+
+// ── AGENTS GRID ──────────────────────────────────────
+function renderAgents() {
+  var g = $('agentGrid'); g.innerHTML = '';
+  AGENTS.forEach(function(ag) {
+    var c = document.createElement('div');
+    c.className = 'agentCard' + (ag.id===currentAgent.id?' on':'');
+    if (ag.id===currentAgent.id) c.style.borderColor = ag.color;
+    c.innerHTML = '<div class="agentName" style="color:'+ag.color+'">'+ag.name+'</div>' +
+                  '<div class="agentRole">'+ag.role+'</div>';
+    c.onclick = function() { switchAgent(ag); switchView('chat'); };
+    g.appendChild(c);
+  });
+}
+
+function switchAgent(ag) {
+  try { speechSynthesis.cancel(); } catch(e) {}
+  isSpeaking = false;
+  currentAgent = ag;
+  aiHistory = [];
+  document.documentElement.style.setProperty('--ac', ag.color);
+  // recompute related color vars
+  document.documentElement.style.setProperty('--acDim', hex2rgba(ag.color, .6));
+  document.documentElement.style.setProperty('--acFaint', hex2rgba(ag.color, .18));
+  $('agentLabel').textContent = ag.name;
+  $('agentBtn').style.background = hex2rgba(ag.color, .12);
+  $('agentBtn').style.borderColor = ag.color;
+  $('agentBtn').style.color = ag.color;
+  $('agentBtn').style.boxShadow = '0 0 12px ' + hex2rgba(ag.color, .3);
+  var dot = $('agentBtn').querySelector('.dot');
+  if (dot) { dot.style.background = ag.color; dot.style.boxShadow = '0 0 8px '+ag.color; }
+  setResponse(ag.name + ' online. How can I help you today, Reni?');
+  doSpeak(ag.name + ' online. How can I help you today, Reni?');
+  toast(ag.name + ' active');
+  vibrate(15);
+  renderSteps();
+  renderJeromePanel();
+}
+function hex2rgba(hex, a) {
+  var h = hex.replace('#','');
+  var r = parseInt(h.substr(0,2),16);
+  var g = parseInt(h.substr(2,2),16);
+  var b = parseInt(h.substr(4,2),16);
+  return 'rgba('+r+','+g+','+b+','+a+')';
+}
+
+// ── VOICE RECOGNITION ────────────────────────────────
+// CONTROL MODEL: tap mic to start, tap mic to send.
+//
+// BUG-PREVENTION STRATEGY (every bug we hit before is blocked by name here):
+//   1. SUBMIT LOCK: once a query has been submitted, no further submissions
+//      can occur until the lock releases (1.5s after speak finishes). Kills
+//      the "she answers my one sentence 3 times" bug.
+//   2. NEVER auto-submit on isFinal: Chrome marks "Hey" final too fast.
+//      Submit ONLY when (a) Reni taps the mic, or (b) onend fires AND we
+//      have ≥3 words AND no new audio for ≥3 seconds.
+//   3. NO restart on onend: restarting eats the same audio twice. If Chrome
+//      ends the engine, we either submit (if we have content) or stop.
+//   4. RECENT-RESULT TRACKING: results that arrive while speaking are dropped
+//      so Ri Ri's own voice can't loop back.
+//   5. MIN-LENGTH FILTER: transcripts under 2 chars (random noise) are dropped.
+
+var SR_CLASS = window.SpeechRecognition || window.webkitSpeechRecognition;
+var srEngine = null;
+var srMode = 'idle';        // 'idle' | 'listen'
+var _finalBuffer = '';
+var _interim = '';
+var _lastResultAt = 0;
+var _submitLock = false;    // when true, no submits allowed
+var alwaysOn = false;       // user-toggled auto-restart mic after Ri Ri speaks
+
+function srStop() {
+  if (srEngine) {
+    try { srEngine.onresult = srEngine.onend = srEngine.onerror = null; } catch(e) {}
+    try { srEngine.abort(); } catch(e) {}
+    try { srEngine.stop(); } catch(e) {}
+    srEngine = null;
+  }
+  _finalBuffer = '';
+  _interim = '';
+  _lastResultAt = 0;
+  srMode = 'idle';
+  $('micBtn').classList.remove('listening');
+  if (!isSpeaking) setOrbState('idle');
+}
+
+function srSubmit() {
+  // Reni tapped mic to submit. Send buffer if it has anything meaningful.
+  if (_submitLock) { toast('One moment, Reni...'); return; }
+  var text = (_finalBuffer + ' ' + _interim).trim();
+  // Tear down engine FIRST so onend can't fire any more work
+  if (srEngine) {
+    try { srEngine.onresult = srEngine.onend = srEngine.onerror = null; } catch(e) {}
+    try { srEngine.abort(); } catch(e) {}
+    try { srEngine.stop(); } catch(e) {}
+    srEngine = null;
+  }
+  _finalBuffer = '';
+  _interim = '';
+  srMode = 'idle';
+  $('micBtn').classList.remove('listening');
+  setOrbState('idle');
+  if (!text || text.length < 2) { toast('Didn\'t catch that — try again'); return; }
+  _submitLock = true;
+  handleQuery(text);
+  // Lock auto-releases when speaking ends (in _spkDone / ElevenLabs done callback).
+  // Safety: also release after 30s no matter what.
+  setTimeout(function(){ _submitLock = false; }, 30000);
+}
+
+function srStart() {
+  if (!SR_CLASS) { toast('Voice needs Chrome or Edge'); return; }
+  if (_submitLock) { toast('Ri Ri is still responding, Reni...'); return; }
+  if (srMode === 'listen') { srSubmit(); return; }
+  if (isSpeaking) { stopAll(); return; }
+  srStop();
+
+  srMode = 'listen';
+  _finalBuffer = '';
+  _interim = '';
+  _lastResultAt = Date.now();
+  $('micBtn').classList.add('listening');
+  setOrbState('listening');
+  setTranscript('🎙 Listening, Reni... (tap mic again when done)');
+  vibrate(20);
+
+  try {
+    var eng = new SR_CLASS();
+    eng.lang = 'en-US';
+    eng.continuous = true;
+    eng.interimResults = true;
+    eng.maxAlternatives = 1;
+
+    eng.onresult = function(e) {
+      if (srEngine !== eng) return;
+      // CRITICAL: drop any results captured while Ri Ri is speaking — that's
+      // her voice echoing through the mic, not Reni.
+      if (isSpeaking) return;
+      _lastResultAt = Date.now();
+      var newFinal = '';
+      var newInterim = '';
+      for (var i = e.resultIndex; i < e.results.length; i++) {
+        if (e.results[i].isFinal) newFinal += e.results[i][0].transcript + ' ';
+        else newInterim += e.results[i][0].transcript;
+      }
+      if (newFinal) _finalBuffer = (_finalBuffer + ' ' + newFinal).trim();
+      _interim = newInterim;
+      var combined = (_finalBuffer + ' ' + _interim).trim();
+      if (combined) setTranscript('🎙 ' + combined + ' …');
+    };
+
+    eng.onerror = function(ev) {
+      if (srEngine !== eng) return;
+      var code = ev && ev.error;
+      if (code === 'no-speech' || code === 'aborted') return;
+      if (code === 'not-allowed') { toast('Mic blocked — enable in browser settings'); srStop(); return; }
+      if (code === 'network') { toast('Mic needs internet'); srStop(); return; }
+    };
+
+    eng.onend = function() {
+      if (srEngine !== eng) return;
+      // Chrome ended the engine. We do NOT auto-restart — that caused all the
+      // "she repeats my voice 3-4 times" bugs (restart = same audio re-heard).
+      //
+      // Decision rule: if we have meaningful content AND enough silence has
+      // passed (≥2.5s since last result), submit. Otherwise stop quietly so
+      // Reni can tap mic to retry.
+      srEngine = null;
+      if (srMode !== 'listen') return;
+      var captured = (_finalBuffer + ' ' + _interim).trim();
+      var silenceMs = Date.now() - _lastResultAt;
+
+      // Need substantial content (≥3 chars, ≥1 word) AND ≥2.5s silence
+      var hasContent = captured.length >= 3 && captured.split(/\s+/).length >= 1;
+      var enoughSilence = silenceMs >= 2500;
+
+      if (hasContent && enoughSilence) {
+        // Auto-submit on engine end ONLY if user clearly paused
+        srMode = 'idle';
+        $('micBtn').classList.remove('listening');
+        setOrbState('idle');
+        _finalBuffer = ''; _interim = '';
+        if (_submitLock) return;
+        _submitLock = true;
+        handleQuery(captured);
+        setTimeout(function(){ _submitLock = false; }, 30000);
+      } else {
+        // Engine ended but Reni was mid-sentence (or barely spoke). Just stop
+        // and let her tap mic again. NO restart, NO partial submission.
+        srStop();
+        if (captured.length > 0) {
+          setTranscript('Tap mic to keep talking, Reni — got so far: "' + captured + '"');
+        } else {
+          setTranscript('Tap mic to talk, Reni');
+        }
+      }
+    };
+
+    srEngine = eng;
+    eng.start();
+  } catch(err) {
+    srStop();
+    toast('Could not start mic');
+  }
+}
+// ── VOICE SYNTHESIS ──────────────────────────────────
+var MALE_RX = /\b(david|mark|daniel|alex|arthur|fred|tom|bruce|junior|ralph|albert|george|james|paul|richard|robert|william|carlos|diego|jorge|pierre|hans|stefan|thomas|oliver|luca|reed|aaron|gordon|wayne|eddy|rocko|sandy|bahh|boing|bubbles|deranged|good|hysterical|pipe|trinoids|whisper|zarvox|bad|bells|cellos|kathy)\b/i;
+var FEMALE_PRIORITY = ['Samantha','Google US English','Microsoft Zira','Microsoft Aria Online','Karen','Moira','Tessa','Veena','Victoria','Fiona','Allison','Ava','Susan','Nicky'];
+
+function pickVoice() {
+  var voices = speechSynthesis.getVoices();
+  if (!voices.length) return;
+  var saved = SG('aria_voice');
+  voiceChoice = null;
+  if (saved) voiceChoice = voices.find(function(v){return v.name===saved;}) || null;
+  if (!voiceChoice) {
+    for (var i=0;i<FEMALE_PRIORITY.length;i++) {
+      voiceChoice = voices.find(function(v){return v.name===FEMALE_PRIORITY[i];}) || null;
+      if (voiceChoice) break;
+    }
+  }
+  if (!voiceChoice) voiceChoice = voices.find(function(v){return v.lang==='en-US' && !MALE_RX.test(v.name);}) || null;
+  if (!voiceChoice) voiceChoice = voices.find(function(v){return v.lang.startsWith('en') && !MALE_RX.test(v.name);}) || null;
+  if (!voiceChoice) voiceChoice = voices.find(function(v){return v.lang.startsWith('en');}) || null;
+}
+function loadVoiceList() {
+  var voices = speechSynthesis.getVoices();
+  var sel = $('voiceSel'); if (!sel || !voices.length) return;
+  var saved = SG('aria_voice');
+  var fem = voices.filter(function(v){return v.lang.startsWith('en') && !MALE_RX.test(v.name);});
+  var mal = voices.filter(function(v){return v.lang.startsWith('en') && MALE_RX.test(v.name);});
+  sel.innerHTML = '';
+  fem.concat(mal).forEach(function(v) {
+    var o = document.createElement('option');
+    o.value = v.name; o.textContent = v.name+' ('+v.lang+')';
+    if (v.name===saved) o.selected = true;
+    sel.appendChild(o);
+  });
+  pickVoice();
+}
+
+var _spkQueue = [];
+var _spkKeep = null;
+function _spkDone() {
+  clearInterval(_spkKeep); _spkKeep = null;
+  isSpeaking = false; setOrbState('idle');
+  // Release submit lock 1.5s after speaking ends so Ri Ri's echo can settle
+  setTimeout(function(){ _submitLock = false; }, 1500);
+  // Always-On: restart mic AFTER 1.5s so Ri Ri's voice can't echo back
+  if (alwaysOn && srMode === 'idle') {
+    setTimeout(function(){
+      if (alwaysOn && srMode === 'idle' && !isSpeaking) srStart();
+    }, 1500);
+  }
+}
+function _spkNext() {
+  if (!_spkQueue.length) { _spkDone(); return; }
+  var chunk = _spkQueue.shift();
+  pickVoice();
+  currentUtter = new SpeechSynthesisUtterance(chunk);
+  currentUtter.rate = 0.88; currentUtter.pitch = 1.05; currentUtter.volume = 1.0; currentUtter.lang = 'en-US';
+  if (voiceChoice) currentUtter.voice = voiceChoice;
+  currentUtter.onend = function() { _spkNext(); };
+  currentUtter.onerror = function(ev) {
+    if (ev.error === 'interrupted') { _spkNext(); return; }
+    _spkDone();
+  };
+  try { speechSynthesis.speak(currentUtter); } catch(e) { _spkDone(); }
+  clearInterval(_spkKeep);
+  _spkKeep = setInterval(function() { if (speechSynthesis.paused) speechSynthesis.resume(); }, 8000);
+}
+// ── ELEVENLABS PREMIUM VOICE (matches desktop) ──────
+var DEFAULT_ELEVEN_VOICE = 'zWoalRDt5TZrmW4ROIA7';
+var _elAudio = null;
+var _elAborter = null;
+
+function elevenSpeak(text, onDone, onFail) {
+  var key = SG('aria_eleven_key');
+  if (!key) { onFail(); return; }
+  var voiceId = (SG('aria_eleven_voice') || '').trim();
+  if (!voiceId) {
+    toast('✗ No voice ID saved. Open Settings → tap LOAD MY VOICES → pick a ✅ FREE one → SAVE.');
+    onFail();
+    return;
+  }
+  var clean = String(text).replace(/[\*_`#]/g,'').replace(/\s+/g,' ').trim();
+  if (!clean) { onFail(); return; }
+
+  if (_elAborter) { try { _elAborter.abort(); } catch(e){} }
+  _elAborter = (typeof AbortController !== 'undefined') ? new AbortController() : null;
+
+  fetch('https://api.elevenlabs.io/v1/text-to-speech/' + encodeURIComponent(voiceId) + '?output_format=mp3_44100_128', {
+    method: 'POST',
+    headers: { 'xi-api-key': key, 'Content-Type': 'application/json', 'Accept': 'audio/mpeg' },
+    body: JSON.stringify({
+      text: clean,
+      model_id: 'eleven_turbo_v2_5',
+      voice_settings: { stability: 0.5, similarity_boost: 0.75, style: 0.0, use_speaker_boost: true }
+    }),
+    signal: _elAborter ? _elAborter.signal : undefined
+  })
+  .then(function(r) {
+    if (!r.ok) {
+      return r.text().then(function(body) {
+        var detail = '';
+        try {
+          var j = JSON.parse(body);
+          detail = (j.detail && (j.detail.message || j.detail.status || j.detail)) || j.message || '';
+          if (typeof detail === 'object') detail = JSON.stringify(detail);
+        } catch(e) { detail = body.slice(0,200); }
+
+        if (r.status === 401) {
+          toast('✗ ElevenLabs key is INVALID — get a fresh one from elevenlabs.io → Profile → API Keys');
+        } else if (r.status === 422 || r.status === 404 || r.status === 400) {
+          toast('✗ Voice ID "' + voiceId.slice(0,8) + '..." not usable. Tap LOAD MY VOICES → pick a ✅ FREE one.');
+        } else if (r.status === 429) {
+          toast('✗ ElevenLabs quota exceeded (10k chars/month free tier). Resets monthly.');
+        } else if (r.status === 403) {
+          toast('✗ Free tier can\'t use this voice. Tap LOAD MY VOICES → pick a ✅ FREE one.');
+        } else {
+          toast('✗ ElevenLabs error ' + r.status + ': ' + (detail || 'unknown'));
+        }
+        throw new Error('elevenlabs status ' + r.status + ' ' + detail);
+      });
+    }
+    return r.blob();
+  })
+  .then(function(blob) {
+    if (!blob) return;
+    var url = URL.createObjectURL(blob);
+    if (_elAudio) { try { _elAudio.pause(); } catch(e){} }
+    _elAudio = new Audio(url);
+    _elAudio.onended = function() { URL.revokeObjectURL(url); _elAudio = null; onDone(); };
+    _elAudio.onerror = function() { URL.revokeObjectURL(url); _elAudio = null; toast('✗ Audio playback failed — try tapping the screen first'); onFail(); };
+    var p = _elAudio.play();
+    if (p && p.catch) {
+      p.catch(function(err) {
+        // Mobile browsers block playback if user gesture has expired
+        URL.revokeObjectURL(url); _elAudio = null;
+        toast('✗ Mobile blocked audio playback. Tap the orb or TEST VOICE again immediately.');
+        onFail();
+      });
+    }
+  })
+  .catch(function(err) {
+    if (err && err.name === 'AbortError') return;
+    onFail();
+  });
+}
+
+// Fetch the user's actual ElevenLabs voices and let them pick one
+function loadMyVoices() {
+  var key = ($('elevenKeyIn').value || '').trim();
+  if (!key) { toast('Paste your ElevenLabs key first'); return; }
+  toast('Loading your voices...');
+  fetch('https://api.elevenlabs.io/v1/voices', {
+    headers: { 'xi-api-key': key }
+  })
+  .then(function(r) {
+    if (!r.ok) {
+      if (r.status === 401) { toast('Key is invalid — get a fresh one from elevenlabs.io'); throw new Error('401'); }
+      toast('Could not fetch voices (status ' + r.status + ')'); throw new Error('status');
+    }
+    return r.json();
+  })
+  .then(function(data) {
+    var voices = (data && data.voices) || [];
+    if (!voices.length) { toast('No voices found in your account'); return; }
+    // Sort: free premade voices first, then everything else
+    voices.sort(function(a, b) {
+      var aFree = (a.category === 'premade') ? 0 : 1;
+      var bFree = (b.category === 'premade') ? 0 : 1;
+      return aFree - bFree;
+    });
+    var picker = $('myVoicePicker');
+    picker.innerHTML = '<option value="">-- Pick a voice (✅ = free, ⚠ = paid) --</option>';
+    var freeCount = 0, paidCount = 0;
+    voices.forEach(function(v) {
+      var labels = v.labels || {};
+      var isFree = (v.category === 'premade');
+      if (isFree) freeCount++; else paidCount++;
+      var tag = isFree ? '✅ FREE' : '⚠ PAID';
+      var desc = [tag, v.name, labels.gender, labels.accent].filter(Boolean).join(' · ');
+      var opt = document.createElement('option');
+      opt.value = v.voice_id;
+      opt.textContent = desc;
+      picker.appendChild(opt);
+    });
+    $('myVoicePickerLbl').style.display = 'block';
+    toast('Found ' + freeCount + ' free + ' + paidCount + ' paid voices. Pick a ✅ one!');
+  })
+  .catch(function(){});
+}
+
+function elevenStop() {
+  if (_elAborter) { try { _elAborter.abort(); } catch(e){} _elAborter = null; }
+  if (_elAudio) { try { _elAudio.pause(); _elAudio.src=''; } catch(e){} _elAudio = null; }
+}
+
+function doSpeak(text) {
+  if (!text || !text.trim()) return;
+  try { speechSynthesis.cancel(); } catch(e){}
+  elevenStop();
+  clearInterval(_spkKeep); _spkKeep = null;
+  _spkQueue = [];
+
+  if (SG('aria_eleven_key')) {
+    isSpeaking = true; setOrbState('speaking');
+    elevenSpeak(text,
+      function() {
+        isSpeaking = false; setOrbState('idle');
+        // Release submit lock 1.5s after speaking ends
+        setTimeout(function(){ _submitLock = false; }, 1500);
+        // Always-On restart after ElevenLabs — 1.5s grace to avoid echo loop
+        if (alwaysOn && srMode === 'idle') {
+          setTimeout(function(){
+            if (alwaysOn && srMode === 'idle' && !isSpeaking) srStart();
+          }, 1500);
+        }
+      },
+      function() { _doSpeakBrowser(text); }
+    );
+    return;
+  }
+  _doSpeakBrowser(text);
+}
+
+function _doSpeakBrowser(text) {
+  try { speechSynthesis.resume(); } catch(e) {}
+  speechSynthesis.cancel();
+  clearInterval(_spkKeep); _spkKeep = null;
+  _spkQueue = [];
+  setTimeout(function() {
+    var raw = text.match(/[^.!?\n]+[.!?]*/g) || [text];
+    var chunks = [], cur = '';
+    raw.forEach(function(s) {
+      if (cur.length + s.length > 220 && cur) { chunks.push(cur.trim()); cur = s; }
+      else cur += s;
+    });
+    if (cur.trim()) chunks.push(cur.trim());
+    _spkQueue = chunks.filter(function(c){return c.length>0;});
+    if (!_spkQueue.length) return;
+    isSpeaking = true; setOrbState('speaking');
+    _spkNext();
+  }, 80);
+}
+function stopAll() {
+  try { speechSynthesis.cancel(); } catch(e) {}
+  elevenStop();
+  _spkQueue = []; clearInterval(_spkKeep); _spkKeep = null;
+  isSpeaking = false; setOrbState('idle');
+  _submitLock = false; // release lock so Reni can talk again
+  // Turn off Always-On when user explicitly stops
+  if (alwaysOn) { alwaysOn = false; $('alwaysOnBtn').classList.remove('on'); $('alwaysOnBtn').textContent = '🔁 AUTO'; }
+  srStop();
+  toast('Stopped');
+  vibrate(10);
+}
+
+// ── HISTORY ──────────────────────────────────────────
+var convHist = jparse(SG('aria_history'), []);
+function saveHist(q,a) {
+  convHist.push({q:q, a:a, t:new Date().toLocaleTimeString()});
+  if (convHist.length > 60) convHist.shift();
+  SS('aria_history', JSON.stringify(convHist));
+}
+function renderHistory() {
+  var list = $('histList');
+  if (!convHist.length) { list.innerHTML = '<div class="empty">No history yet, Reni.</div>'; return; }
+  list.innerHTML = '';
+  convHist.slice().reverse().slice(0,20).forEach(function(it) {
+    var d = document.createElement('div');
+    d.className = 'histItem';
+    d.innerHTML = '<div class="histT">'+it.t+'</div>' +
+                  '<div class="histQ">You: '+escHtml(it.q)+'</div>' +
+                  '<div class="histA">'+escHtml(it.a)+'</div>';
+    list.appendChild(d);
+  });
+}
+
+// ── QUERY HANDLING ───────────────────────────────────
+function handleQuery(query) {
+  if (!query || !query.trim()) return;
+  setTranscript(query);
+  // DJ Suite voice trigger
+  if (/\b(open\s+dj|dj\s+mode|turntable|let'?s?\s+mix|launch\s+dj|hey\s+jerome)\b/i.test(query)) {
+    if (currentAgent.id !== 'jerome') { var j = AGENTS.find(function(a){return a.id==='jerome';}); if (j) switchAgent(j); }
+    openDJ();
+    respond(query, 'DJ Suite activated, Reni. Jerome is on the ones and twos.');
+    return;
+  }
+  // Agent switch detection
+  if (checkAgentSwitch(query)) return;
+  // Route auto-detection
+  routeCheck(query);
+  // Local replies first
+  var local = localReply(query);
+  if (local !== null) { respond(query, local); return; }
+  // Crypto
+  if (/\b(bitcoin|btc|ethereum|eth|solana|sol|cardano|ada|dogecoin|doge|ripple|xrp|litecoin|ltc|crypto price)\b/i.test(query)) {
+    apiCrypto(query, function(r){ respond(query, r || 'Could not get crypto price right now.'); }); return;
+  }
+  // Weather
+  if (/\b(weather|temperature|forecast|how (hot|cold|warm)|will it rain|umbrella|this week|7.?day)\b/i.test(query) || /\btomorrow'?s? weather\b|\bweather tomorrow\b/i.test(query)) {
+    apiWeather(query, function(r){ respond(query, r || 'Could not get weather.'); }); return;
+  }
+  // Wikipedia
+  if (/^(who (is|was)|what (is|are|was)|tell me about|explain)\b/i.test(query) && !/\b(my|your|reni|ri ri)\b/i.test(query)) {
+    apiWiki(query, function(r){ r ? respond(query,r) : callAI(query); }); return;
+  }
+  // Jokes
+  if (/\b(tell me a joke|joke|say something funny|make me laugh)\b/i.test(query)) {
+    apiJoke(function(r){ respond(query, r || 'Why do programmers prefer dark mode? Because light attracts bugs.'); }); return;
+  }
+  // AI brain
+  callAI(query);
+}
+
+function checkAgentSwitch(text) {
+  var t = text.trim().toLowerCase();
+  var hasVerb = /\b(?:hey|hi|hello|switch(?:\s+to)?|go(?:\s+to)?|open|activate|call|talk(?:\s+to)?|get me|bring up|i want|use)\b/.test(t);
+  var isOnlyName = /^(ri\s*ri|friday|hercules|socrates|oracle|veronica|athena|jerome|dj)$/.test(t);
+  if (!hasVerb && !isOnlyName) return false;
+  var map = {'riri':'aria','ri ri':'aria','ri-ri':'aria','friday':'friday','hercules':'hercules','socrates':'socrates','oracle':'oracle','veronica':'veronica','athena':'athena','jerome':'jerome','dj':'jerome'};
+  var names = Object.keys(map).sort(function(a,b){return b.length-a.length;});
+  for (var i=0;i<names.length;i++) {
+    if (t.indexOf(names[i]) !== -1) {
+      var ag = AGENTS.find(function(a){return a.id===map[names[i]];});
+      if (ag) {
+        if (ag.id === currentAgent.id) {
+          respond(text, ag.name + ' is right here, Reni. What do you need?');
+        } else {
+          switchAgent(ag);
+        }
+        return true;
+      }
+    }
+  }
+  return false;
+}
+function routeCheck(text) {
+  for (var rid in ROUTE) {
+    if (ROUTE[rid].test(text)) {
+      var found = AGENTS.find(function(a){return a.id===rid;});
+      if (found && found.id !== currentAgent.id) {
+        switchAgent(found);
+      }
+      return;
+    }
+  }
+}
+
+function localReply(query) {
+  var q = query.toLowerCase().trim();
+  if (/^(hey|hi|hello|sup|what'?s up|good evening|good afternoon|yo)\b/.test(q)) {
+    var greets = ["Hey Reni! What can I do for you?","Hi Reni, I'm here.","Hey! Ready when you are.","Hello Reni! What's on your mind?"];
+    return greets[Math.floor(Math.random()*greets.length)];
+  }
+  if (/\b(what'?s? the time|current time|what time is it)\b/.test(q))
+    return 'It is ' + new Date().toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit',hour12:true}) + ', Reni.';
+  if (/\b(what'?s? (the |today'?s? )?(date|day)|what day is (it|today))\b/.test(q))
+    return 'Today is ' + new Date().toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric',year:'numeric'}) + ', Reni.';
+  if (/\bhow are you\b|\bare you okay\b/.test(q)) return "All systems green, Reni. Ready when you are.";
+  if (/\bwho are you\b|\bwhat'?s? your name\b/.test(q)) return "I'm Ri Ri Williams, your personal AI assistant, Reni.";
+  if (/\b(you'?re? (amazing|great|awesome|the best|brilliant)|thank(s| you)|good job)\b/.test(q)) {
+    var thx = ["Anytime, Reni!","Happy to help, always.","That's what I'm here for, Reni.","You're welcome!"];
+    return thx[Math.floor(Math.random()*thx.length)];
+  }
+  // Calendar/todo voice commands
+  if (/\b(open|show|pull up|bring up|view)\s+(my\s+)?(calendar|appointments?|schedule)\b|\bwhat'?s? on my calendar\b|\bcalendar\s+please\b/.test(q)) {
+    setTimeout(function(){switchView('cal');}, 300);
+    return 'Opening your calendar, Reni.';
+  }
+  if (/\b(open|show|pull up|bring up|view)\s+(my\s+)?(to.?do(\s+list)?|tasks?|task list)\b|\bto.?do\s+(list\s+)?please\b/.test(q)) {
+    setTimeout(function(){switchView('todo');}, 300);
+    return 'Opening your to-do list, Reni.';
+  }
+  // Add task by voice
+  var todoAdd = q.match(/^(?:add (?:a )?(?:task|to.?do|item)(?: to (?:my )?(?:list|to.?do(?: list)?))?[:\s]+|remind me to\s+|i need to\s+|don'?t forget to\s+|put on (?:my )?(?:list|to.?do)[:\s]+)(.+)$/i);
+  if (todoAdd && todoAdd[1] && todoAdd[1].length > 1) {
+    if (addTodo(todoAdd[1])) {
+      if (currentView === 'todo') renderTodos();
+      return 'Added to your to-do list, Reni: "' + todoAdd[1].trim() + '".';
+    }
+  }
+  // Math
+  var mm = q.match(/(-?\d+\.?\d*)\s*([\+\-\*\/x×÷])\s*(-?\d+\.?\d*)/);
+  if (mm) {
+    var a=parseFloat(mm[1]), op=mm[2], b=parseFloat(mm[3]), r=null;
+    if (op==='+') r=a+b; else if (op==='-') r=a-b;
+    else if (op==='*'||op==='x'||op==='×') r=a*b;
+    else if ((op==='/'||op==='÷') && b!==0) r=a/b;
+    if (r!==null) return a + ' ' + op + ' ' + b + ' = ' + (r%1===0?r:r.toFixed(4)) + ', Reni.';
+  }
+  return null;
+}
+
+function respond(query, reply) {
+  setResponse(reply);
+  pendingText = reply;
+  doSpeak(reply);
+  saveHist(query, reply);
+}
+
+// ── FREE APIs ────────────────────────────────────────
+function apiCrypto(query, cb) {
+  var COINS = {bitcoin:'bitcoin',btc:'bitcoin',ethereum:'ethereum',eth:'ethereum',solana:'solana',sol:'solana',cardano:'cardano',ada:'cardano',dogecoin:'dogecoin',doge:'dogecoin',ripple:'ripple',xrp:'ripple',litecoin:'litecoin',ltc:'litecoin'};
+  var found = null, ql = query.toLowerCase();
+  for (var cn in COINS) { if (ql.indexOf(cn)!==-1) { found = COINS[cn]; break; } }
+  if (!found) { cb(null); return; }
+  fetch('https://api.coingecko.com/api/v3/simple/price?ids='+found+'&vs_currencies=usd&include_24hr_change=true')
+    .then(function(r){if(!r.ok)throw 0; return r.json();})
+    .then(function(d){
+      var data = d[found]; if (!data) throw 0;
+      var price = data.usd.toLocaleString('en-US',{style:'currency',currency:'USD'});
+      var chg = data.usd_24h_change ? data.usd_24h_change.toFixed(2) : '0';
+      cb(found.charAt(0).toUpperCase()+found.slice(1) + ': ' + price + ', ' + (parseFloat(chg)>=0?'up':'down') + ' ' + Math.abs(chg) + '% in 24 hours.');
+    }).catch(function(){cb(null);});
+}
+function apiWeather(query, cb) {
+  var city = SG('aria_city') || 'Framingham, MA';
+  var isTmr = /\btomorrow\b/i.test(query);
+  var isWeek = /\b(this week|next few days|7.?day|seven day|forecast)\b/i.test(query);
+  var CODES = {0:'Clear',1:'Mainly clear',2:'Partly cloudy',3:'Overcast',45:'Foggy',48:'Icy fog',51:'Light drizzle',53:'Drizzle',55:'Heavy drizzle',61:'Light rain',63:'Moderate rain',65:'Heavy rain',71:'Light snow',73:'Snow',75:'Heavy snow',80:'Showers',81:'Heavy showers',95:'Thunderstorm',99:'Severe storm'};
+  fetch('https://geocoding-api.open-meteo.com/v1/search?name='+encodeURIComponent(city.split(',')[0].trim())+'&count=1&language=en&format=json')
+    .then(function(r){return r.json();})
+    .then(function(geo){
+      var loc = (geo.results && geo.results.length) ? geo.results[0] : {latitude:42.2793,longitude:-71.4162};
+      return fetch('https://api.open-meteo.com/v1/forecast?latitude='+loc.latitude+'&longitude='+loc.longitude+'&current=temperature_2m,apparent_temperature,weather_code,wind_speed_10m&daily=temperature_2m_max,temperature_2m_min,precipitation_probability_max,weather_code,time&temperature_unit=fahrenheit&wind_speed_unit=mph&forecast_days=7&timezone=auto');
+    })
+    .then(function(r){return r.json();})
+    .then(function(d){
+      var cur = d.current, dy = d.daily;
+      if (isTmr && dy && dy.time && dy.time[1]) {
+        cb('Tomorrow in '+city+': '+(CODES[dy.weather_code[1]]||'Mixed')+', high '+Math.round(dy.temperature_2m_max[1])+'°F, low '+Math.round(dy.temperature_2m_min[1])+'°F, '+(dy.precipitation_probability_max[1]||0)+'% rain.');
+      } else if (isWeek && dy && dy.time) {
+        var lines = [];
+        for (var i=0;i<Math.min(5,dy.time.length);i++) {
+          var dn = i===0?'Today':i===1?'Tomorrow':new Date(dy.time[i]+'T12:00:00').toLocaleDateString('en-US',{weekday:'short'});
+          lines.push(dn+': '+Math.round(dy.temperature_2m_max[i])+'/'+Math.round(dy.temperature_2m_min[i])+'°F');
+        }
+        cb('Forecast for '+city+': '+lines.join(', ')+'.');
+      } else {
+        cb('Weather in '+city+': '+(CODES[cur.weather_code]||'Mixed')+', '+Math.round(cur.temperature_2m)+'°F, feels like '+Math.round(cur.apparent_temperature)+'°F. Today high '+Math.round(dy.temperature_2m_max[0])+'°F, low '+Math.round(dy.temperature_2m_min[0])+'°F.');
+      }
+    }).catch(function(){cb(null);});
+}
+function apiWiki(query, cb) {
+  var q = query.replace(/\b(who is|what is|tell me about|who was|what are|define|explain)\b/gi,'').trim();
+  if (!q || q.length<2) { cb(null); return; }
+  fetch('https://en.wikipedia.org/api/rest_v1/page/summary/' + encodeURIComponent(q))
+    .then(function(r){if(!r.ok)throw 0; return r.json();})
+    .then(function(d){
+      if (d.extract && d.type !== 'disambiguation') cb(d.extract.split('.').slice(0,3).join('.') + '.');
+      else cb(null);
+    }).catch(function(){cb(null);});
+}
+function apiJoke(cb) {
+  fetch('https://v2.jokeapi.dev/joke/Any?safe-mode&type=single,twopart')
+    .then(function(r){return r.json();})
+    .then(function(d){
+      if (d.error) throw 0;
+      cb(d.type==='single' ? d.joke : d.setup + ' ... ' + d.delivery);
+    }).catch(function(){cb(null);});
+}
+
+// ── NEWS ────────────────────────────────────────────
+function fetchNews() {
+  $('newsList').innerHTML = '<div class="empty"><span class="loading">Loading</span></div>';
+  fetch('https://api.rss2json.com/v1/api.json?rss_url=' + encodeURIComponent('https://feeds.bbci.co.uk/news/world/rss.xml'))
+    .then(function(r){return r.json();})
+    .then(function(d){
+      if (!d.items || !d.items.length) throw 0;
+      var f = $('newsList'); f.innerHTML = '';
+      d.items.slice(0,10).forEach(function(it,i) {
+        var el = document.createElement('div'); el.className = 'newsItem';
+        el.innerHTML = '<div class="newsT">'+(it.pubDate||'').substring(0,10)+' · BBC</div>' +
+                       '<div class="newsTitle">'+escHtml(it.title)+'</div>';
+        el.onclick = function() {
+          setResponse(it.title);
+          doSpeak('Story ' + (i+1) + '. ' + it.title + '.');
+          switchView('chat');
+        };
+        f.appendChild(el);
+      });
+    }).catch(function(){
+      $('newsList').innerHTML = '<div class="empty">Could not load news. <a href="https://news.google.com" target="_blank" style="color:var(--ac)">Open Google News ↗</a></div>';
+    });
+}
+
+// ── MEETING NOTES SUMMARIZATION + EXPORT ─────────────
+function summarizeNotes() {
+  var raw = ($('noteRaw').value || '').trim();
+  if (!raw) { toast('Paste your meeting notes first, Reni'); return; }
+  var title = ($('noteTitle').value || 'Meeting Notes').trim();
+  var box = $('noteSummary');
+  box.className = 'noteSummary thinking';
+  box.textContent = 'Ri Ri is summarizing your notes...';
+  $('summarizeBtn').disabled = true;
+
+  var sys = "You are Ri Ri, Reni's professional meeting notes summarizer. Return a clean, well-organized summary with these sections (use plain text, no markdown): KEY POINTS (3-6 bullets starting with -), DECISIONS MADE, ACTION ITEMS (with owner if mentioned), and FOLLOW-UPS. Be specific, concise, and faithful to the source. Do not invent details.";
+  var prompt = 'Meeting title: ' + title + '\n\nNotes:\n' + raw + '\n\nProduce the summary.';
+
+  fetch(CF_WORKER, {
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({query:prompt, system:sys})
+  })
+  .then(function(r){ if (!r.ok) throw new Error('status '+r.status); return r.json(); })
+  .then(function(data){
+    var reply = (data.reply || '').trim();
+    if (!reply) throw new Error('empty');
+    box.className = 'noteSummary';
+    box.textContent = reply;
+    SS('aria_last_summary', reply);
+    SS('aria_last_summary_title', title);
+    SS('aria_last_summary_raw', raw);
+    toast('Summary ready');
+  })
+  .catch(function(){
+    box.className = 'noteSummary';
+    box.textContent = 'Connection issue, Reni. Check your internet and try again.';
+    toast('Summary failed');
+  })
+  .finally(function(){ $('summarizeBtn').disabled = false; });
+}
+
+function clearNotes() {
+  if (!confirm('Clear notes and summary?')) return;
+  $('noteTitle').value = '';
+  $('noteRaw').value = '';
+  $('noteSummary').className = 'noteSummary';
+  $('noteSummary').textContent = 'Your AI summary will appear here once you tap SUMMARIZE.';
+  toast('Cleared');
+}
+
+function _safeFileName(s) {
+  return (s || 'meeting-notes').replace(/[\\\/:*?"<>|]/g,'').replace(/\s+/g,'-').toLowerCase().slice(0,60);
+}
+
+function exportNotesWord() {
+  var title = ($('noteTitle').value || 'Meeting Notes').trim();
+  var raw = ($('noteRaw').value || '').trim();
+  var summary = $('noteSummary').textContent || '';
+  if (!raw && !summary) { toast('Nothing to export — add notes first'); return; }
+  var dateStr = new Date().toLocaleString('en-US',{dateStyle:'long',timeStyle:'short'});
+
+  // Build .doc-friendly HTML (Word opens this as a document)
+  var html = '<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40">' +
+    '<head><meta charset="utf-8"><title>' + _esc(title) + '</title>' +
+    '<style>body{font-family:Calibri,Arial,sans-serif;font-size:11pt;line-height:1.5;color:#222} ' +
+    'h1{font-size:20pt;color:#003a66;margin-bottom:4pt} h2{font-size:14pt;color:#00688c;margin-top:18pt;margin-bottom:4pt;border-bottom:1pt solid #ccc;padding-bottom:2pt} ' +
+    'pre{font-family:Consolas,monospace;font-size:10pt;white-space:pre-wrap;background:#f5f5f5;padding:10pt;border-left:3pt solid #00d4ff} ' +
+    '.meta{color:#888;font-size:9pt;margin-bottom:18pt}</style></head><body>' +
+    '<h1>' + _esc(title) + '</h1>' +
+    '<div class="meta">Generated ' + _esc(dateStr) + ' · Ri Ri Meeting Notes</div>' +
+    '<h2>Summary</h2><pre>' + _esc(summary) + '</pre>' +
+    '<h2>Original Notes</h2><pre>' + _esc(raw) + '</pre>' +
+    '</body></html>';
+
+  var blob = new Blob(['\ufeff', html], { type: 'application/msword' });
+  _triggerDownload(blob, _safeFileName(title) + '.doc');
+  toast('Word doc saved to Downloads');
+}
+
+function exportNotesPdf() {
+  var title = ($('noteTitle').value || 'Meeting Notes').trim();
+  var raw = ($('noteRaw').value || '').trim();
+  var summary = $('noteSummary').textContent || '';
+  if (!raw && !summary) { toast('Nothing to export — add notes first'); return; }
+  if (!window.jspdf || !window.jspdf.jsPDF) { toast('PDF library still loading — try again in a moment'); return; }
+  var jsPDF = window.jspdf.jsPDF;
+  var doc = new jsPDF({ unit:'pt', format:'letter' });
+  var W = doc.internal.pageSize.getWidth();
+  var H = doc.internal.pageSize.getHeight();
+  var margin = 50;
+  var maxW = W - margin*2;
+  var y = margin;
+  var dateStr = new Date().toLocaleString('en-US',{dateStyle:'long',timeStyle:'short'});
+
+  function addLine(text, size, color, weight, gap) {
+    doc.setFontSize(size);
+    doc.setTextColor(color[0], color[1], color[2]);
+    doc.setFont('helvetica', weight || 'normal');
+    var lines = doc.splitTextToSize(text || ' ', maxW);
+    for (var i=0;i<lines.length;i++) {
+      if (y > H - margin) { doc.addPage(); y = margin; }
+      doc.text(lines[i], margin, y);
+      y += size * 1.35;
+    }
+    if (gap) y += gap;
+  }
+
+  addLine(title, 22, [0,58,102], 'bold', 4);
+  addLine('Generated ' + dateStr + ' · Ri Ri Meeting Notes', 9, [136,136,136], 'normal', 12);
+  addLine('SUMMARY', 14, [0,104,140], 'bold', 4);
+  // Divider
+  doc.setDrawColor(0,212,255); doc.setLineWidth(0.8); doc.line(margin, y-8, W-margin, y-8);
+  y += 4;
+  addLine(summary || '(no summary)', 11, [40,40,40], 'normal', 16);
+
+  addLine('ORIGINAL NOTES', 14, [0,104,140], 'bold', 4);
+  doc.setDrawColor(0,212,255); doc.line(margin, y-8, W-margin, y-8);
+  y += 4;
+  addLine(raw || '(no notes)', 11, [60,60,60], 'normal', 0);
+
+  doc.save(_safeFileName(title) + '.pdf');
+  toast('PDF saved to Downloads');
+}
+
+function _esc(s) {
+  return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+function _triggerDownload(blob, filename) {
+  var url = URL.createObjectURL(blob);
+  var a = document.createElement('a');
+  a.href = url; a.download = filename;
+  document.body.appendChild(a); a.click();
+  setTimeout(function(){ document.body.removeChild(a); URL.revokeObjectURL(url); }, 100);
+}
+
+// ── STEP TRACKER (for HERCULES) ──────────────────────
+var stepState = { count:0, goal:5000, active:false, date:'', _lastPeakTs:0, _lastMag:0, _onMotion:null };
+
+function _todayKey() {
+  var d = new Date();
+  return d.getFullYear()+'-'+(d.getMonth()+1)+'-'+d.getDate();
+}
+function loadSteps() {
+  var saved = SG('aria_step_state');
+  if (saved) { try { stepState = Object.assign(stepState, JSON.parse(saved)); } catch(e){} }
+  var t = _todayKey();
+  if (stepState.date !== t) {
+    stepState.count = 0;
+    stepState.date = t;
+    saveSteps();
+  }
+  stepState.active = false;
+  stepState._onMotion = null;
+}
+function saveSteps() {
+  SS('aria_step_state', JSON.stringify({
+    count:stepState.count, goal:stepState.goal, date:stepState.date
+  }));
+}
+function renderSteps() {
+  var panel = $('stepPanel'); if (!panel) return;
+  var show = (currentAgent && currentAgent.id === 'hercules');
+  panel.style.display = show ? 'block' : 'none';
+  if (!show) { stopStepTracking(); return; }
+  var pct = Math.min(100, Math.round((stepState.count / (stepState.goal || 1)) * 100));
+  $('stepCount').textContent = stepState.count.toLocaleString();
+  $('stepGoalLbl').textContent = stepState.goal.toLocaleString();
+  $('stepPct').textContent = pct + '%';
+  $('stepBar').style.width = pct + '%';
+  $('stepToggle').textContent = stepState.active ? '⏸ STOP TRACKING' : '▶ START TRACKING';
+  $('stepToggle').classList.toggle('on', !!stepState.active);
+}
+function renderJeromePanel() {
+  var p = $('djLaunchPanel'); if (!p) return;
+  p.style.display = (currentAgent && currentAgent.id === 'jerome') ? 'block' : 'none';
+}
+function startStepTracking() {
+  if (stepState.active) return;
+  var go = function() {
+    stepState.active = true;
+    stepState._lastPeakTs = 0;
+    stepState._onMotion = function(ev) {
+      var a = ev.accelerationIncludingGravity || ev.acceleration;
+      if (!a) return;
+      var mag = Math.sqrt((a.x||0)*(a.x||0) + (a.y||0)*(a.y||0) + (a.z||0)*(a.z||0));
+      // Peak detection: rising edge above ~12 m/s², debounce 320ms
+      if (mag > 12 && stepState._lastMag <= 12) {
+        var now = Date.now();
+        if (now - stepState._lastPeakTs > 320) {
+          stepState._lastPeakTs = now;
+          stepState.count++;
+          saveSteps();
+          renderSteps();
+        }
+      }
+      stepState._lastMag = mag;
+    };
+    window.addEventListener('devicemotion', stepState._onMotion);
+    renderSteps();
+    toast('Step tracking on — keep phone in pocket');
+  };
+  // iOS 13+ requires permission
+  if (typeof DeviceMotionEvent !== 'undefined' && typeof DeviceMotionEvent.requestPermission === 'function') {
+    DeviceMotionEvent.requestPermission().then(function(res) {
+      if (res === 'granted') go();
+      else toast('Motion permission denied — use the + button to add steps');
+    }).catch(function(){ toast('Motion sensor unavailable on this device'); });
+  } else if (typeof DeviceMotionEvent !== 'undefined') {
+    go();
+  } else {
+    toast('No motion sensor — use the + button to add steps');
+  }
+}
+function stopStepTracking() {
+  if (stepState._onMotion) {
+    window.removeEventListener('devicemotion', stepState._onMotion);
+    stepState._onMotion = null;
+  }
+  stepState.active = false;
+}
+function toggleStepTracking() {
+  if (stepState.active) { stopStepTracking(); renderSteps(); toast('Tracking paused'); }
+  else startStepTracking();
+}
+function addStepsManual() {
+  stepState.count += 100;
+  saveSteps(); renderSteps();
+  toast('+100 steps');
+}
+function resetStepsToday() {
+  if (!confirm('Reset today\'s step count to 0?')) return;
+  stepState.count = 0; saveSteps(); renderSteps();
+}
+function setStepGoal() {
+  var n = prompt('Daily step goal:', String(stepState.goal));
+  if (!n) return;
+  var v = parseInt(n,10);
+  if (!isNaN(v) && v > 0 && v < 100000) { stepState.goal = v; saveSteps(); renderSteps(); }
+}
+
+// ── FILE ATTACHMENTS (VISION + TEXT) ─────────────────
+var _pendingAttachment = null; // {kind:'image'|'text', dataUrl?, text?, name}
+
+function pickFile() {
+  $('fileInput').click();
+}
+
+function clearAttachment() {
+  _pendingAttachment = null;
+  $('fileInput').value = '';
+  $('attachPreview').style.display = 'none';
+  $('attachThumb').src = '';
+  $('attachLabel').textContent = '';
+}
+
+function _readAsText(file) {
+  return new Promise(function(resolve, reject) {
+    var r = new FileReader();
+    r.onload = function() { resolve(r.result); };
+    r.onerror = function() { reject(r.error); };
+    r.readAsText(file);
+  });
+}
+function _readAsDataURL(file) {
+  return new Promise(function(resolve, reject) {
+    var r = new FileReader();
+    r.onload = function() { resolve(r.result); };
+    r.onerror = function() { reject(r.error); };
+    r.readAsDataURL(file);
+  });
+}
+
+// Resize big phone photos so we don't send 10MB to the API
+function _compressImage(dataUrl, maxDim, quality) {
+  return new Promise(function(resolve) {
+    var img = new Image();
+    img.onload = function() {
+      var w = img.width, h = img.height;
+      if (w > maxDim || h > maxDim) {
+        if (w >= h) { h = Math.round(h * maxDim / w); w = maxDim; }
+        else { w = Math.round(w * maxDim / h); h = maxDim; }
+      }
+      var canvas = document.createElement('canvas');
+      canvas.width = w; canvas.height = h;
+      var ctx = canvas.getContext('2d');
+      ctx.drawImage(img, 0, 0, w, h);
+      resolve(canvas.toDataURL('image/jpeg', quality || 0.85));
+    };
+    img.onerror = function() { resolve(dataUrl); };
+    img.src = dataUrl;
+  });
+}
+
+function handleFileSelect(file) {
+  if (!file) return;
+  if (file.size > 20 * 1024 * 1024) {
+    toast('File too big (max 20 MB). Try a smaller one.');
+    return;
+  }
+  var name = file.name || 'attachment';
+  var type = (file.type || '').toLowerCase();
+
+  if (type.startsWith('image/')) {
+    toast('Processing image...');
+    _readAsDataURL(file)
+      .then(function(du) { return _compressImage(du, 1024, 0.85); })
+      .then(function(compressed) {
+        _pendingAttachment = { kind:'image', dataUrl: compressed, name: name };
+        $('attachThumb').src = compressed;
+        $('attachLabel').textContent = '🖼 ' + name;
+        $('attachPreview').style.display = 'flex';
+        toast('Image attached — type your question and SEND');
+      })
+      .catch(function() { toast('Could not read that image'); });
+    return;
+  }
+
+  if (type === 'application/pdf' || /\.pdf$/i.test(name)) {
+    toast('PDF attached — note: Ri Ri reads PDFs as raw text. Best with text-based PDFs, not scanned.');
+    // Try extracting text using a CDN-loaded pdf.js
+    _extractPdfText(file)
+      .then(function(txt) {
+        _pendingAttachment = { kind:'text', text: txt, name: name };
+        $('attachThumb').src = '';
+        $('attachThumb').style.display = 'none';
+        $('attachLabel').textContent = '📕 ' + name + ' (' + txt.length + ' chars)';
+        $('attachPreview').style.display = 'flex';
+      })
+      .catch(function(e) { toast('Could not read that PDF: ' + (e.message || 'unknown')); });
+    return;
+  }
+
+  if (type.startsWith('text/') || /\.(txt|md|csv|json|log|rtf)$/i.test(name)) {
+    _readAsText(file).then(function(txt) {
+      _pendingAttachment = { kind:'text', text: txt, name: name };
+      $('attachThumb').style.display = 'none';
+      $('attachLabel').textContent = '📄 ' + name + ' (' + txt.length + ' chars)';
+      $('attachPreview').style.display = 'flex';
+      toast('File attached — type your question and SEND');
+    }).catch(function(){ toast('Could not read that file'); });
+    return;
+  }
+
+  toast('Unsupported file type — try image, PDF, or text file');
+}
+
+// Lazy-load pdf.js from CDN when needed
+var _pdfJsLoaded = false;
+function _loadPdfJs() {
+  return new Promise(function(resolve, reject) {
+    if (_pdfJsLoaded && window.pdfjsLib) { resolve(window.pdfjsLib); return; }
+    var s = document.createElement('script');
+    s.src = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js';
+    s.onload = function() {
+      try {
+        window.pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+        _pdfJsLoaded = true;
+        resolve(window.pdfjsLib);
+      } catch(e) { reject(e); }
+    };
+    s.onerror = function() { reject(new Error('Could not load PDF library')); };
+    document.head.appendChild(s);
+  });
+}
+function _extractPdfText(file) {
+  return _loadPdfJs().then(function(pdfjs) {
+    return _readAsDataURL(file).then(function(du) {
+      var b64 = du.split(',')[1];
+      var bin = atob(b64);
+      var bytes = new Uint8Array(bin.length);
+      for (var i=0;i<bin.length;i++) bytes[i] = bin.charCodeAt(i);
+      return pdfjs.getDocument({ data: bytes }).promise;
+    }).then(function(pdf) {
+      var pageCount = Math.min(pdf.numPages, 30); // cap at 30 pages
+      var promises = [];
+      for (var p=1; p<=pageCount; p++) promises.push(pdf.getPage(p).then(function(pg){ return pg.getTextContent(); }));
+      return Promise.all(promises);
+    }).then(function(pages) {
+      return pages.map(function(pg) {
+        return pg.items.map(function(it){ return it.str; }).join(' ');
+      }).join('\n\n');
+    });
+  });
+}
+
+// ── DJ SUITE (JEROME) ────────────────────────────────
+var djCtx = null, djAIMode = true, djAIInt = null, djBPM = 128;
+var djDecks = [
+  {buffer:null, source:null, gainNode:null, playing:false, startTime:0, pauseOffset:0, playbackRate:1.0, name:'No track loaded'},
+  {buffer:null, source:null, gainNode:null, playing:false, startTime:0, pauseOffset:0, playbackRate:1.0, name:'No track loaded'}
+];
+var djVinylRAF = null;
+var djHistory2 = (function(){ try { return JSON.parse(SG('aria_djhistory')||'{}') || {bpm:[],trans:0}; } catch(e){ return {bpm:[],trans:0}; } })();
+if (!djHistory2.bpm) djHistory2.bpm = []; if (typeof djHistory2.trans !== 'number') djHistory2.trans = 0;
+
+function getDJCtx() {
+  if (!djCtx) djCtx = new (window.AudioContext || window.webkitAudioContext)();
+  if (djCtx.state === 'suspended') { try { djCtx.resume(); } catch(e){} }
+  return djCtx;
+}
+function djLearn(bpm, act) {
+  djHistory2.bpm.push(bpm);
+  if (djHistory2.bpm.length > 20) djHistory2.bpm.shift();
+  if (act === 't') djHistory2.trans++;
+  try { SS('aria_djhistory', JSON.stringify(djHistory2)); } catch(e){}
+}
+function djAvgBPM() {
+  if (!djHistory2.bpm.length) return 128;
+  return Math.round(djHistory2.bpm.reduce(function(a,b){return a+b;},0) / djHistory2.bpm.length);
+}
+
+function djLoadTrack(n, inp) {
+  var file = inp.files && inp.files[0]; if (!file) return;
+  var ctx = getDJCtx(), reader = new FileReader();
+  $('djStatus').textContent = 'Loading ' + file.name + '...';
+  reader.onload = function(ev) {
+    ctx.decodeAudioData(ev.target.result, function(buf) {
+      var i = n - 1;
+      if (djDecks[i].source) { try { djDecks[i].source.stop(); } catch(e){} }
+      djDecks[i].buffer = buf; djDecks[i].playing = false; djDecks[i].pauseOffset = 0;
+      djDecks[i].name = file.name.replace(/\.[^.]+$/, '');
+      $('djTrack' + n + 'Name').textContent = djDecks[i].name;
+      $('djPlay' + n).textContent = '▶';
+      $('djProg' + n).style.width = '0%';
+      $('djStatus').textContent = 'Loaded Deck ' + (n===1?'A':'B') + ': ' + djDecks[i].name;
+    }, function() { $('djStatus').textContent = 'Could not decode that audio, Reni.'; });
+  };
+  reader.readAsArrayBuffer(file);
+}
+
+function _djMakeSrc(i) {
+  var ctx = getDJCtx(), deck = djDecks[i];
+  if (!deck.buffer) return null;
+  if (!deck.gainNode) { deck.gainNode = ctx.createGain(); deck.gainNode.connect(ctx.destination); }
+  var src = ctx.createBufferSource();
+  src.buffer = deck.buffer;
+  src.playbackRate.value = deck.playbackRate;
+  src.connect(deck.gainNode);
+  return src;
+}
+
+function djToggleDeck(n) {
+  var deck = djDecks[n-1];
+  if (!deck.buffer) { $('djStatus').textContent = 'Load a track first, Reni.'; return; }
+  if (deck.playing) djPauseDeck(n); else djPlayDeck(n);
+}
+function djPlayDeck(n) {
+  var i = n - 1, deck = djDecks[i]; if (!deck.buffer) return;
+  var ctx = getDJCtx(), src = _djMakeSrc(i); if (!src) return;
+  try { src.start(0, deck.pauseOffset % deck.buffer.duration); } catch(e){ return; }
+  src.onended = function() { if (deck.playing) { deck.playing = false; $('djPlay'+n).textContent='▶'; $('djProg'+n).style.width='0%'; } };
+  deck.source = src; deck.playing = true; deck.startTime = ctx.currentTime - deck.pauseOffset;
+  $('djPlay'+n).textContent = '⏸';
+  $('djStatus').textContent = 'Playing: ' + deck.name;
+  djLearn(djBPM, 'p'); djProg(n);
+}
+function djPauseDeck(n) {
+  var i = n - 1, deck = djDecks[i]; if (!deck.playing) return;
+  deck.pauseOffset = getDJCtx().currentTime - deck.startTime;
+  try { deck.source.stop(); } catch(e){}
+  deck.playing = false; $('djPlay'+n).textContent = '▶';
+}
+function djStopDeck(n) {
+  var i = n - 1, deck = djDecks[i];
+  try { if (deck.source) deck.source.stop(); } catch(e){}
+  deck.playing = false; deck.pauseOffset = 0;
+  $('djPlay'+n).textContent = '▶'; $('djProg'+n).style.width = '0%';
+  $('djStatus').textContent = 'Deck ' + (n===1?'A':'B') + ' stopped.';
+}
+function djProg(n) {
+  var i = n - 1, deck = djDecks[i];
+  if (!deck.playing || !deck.buffer) { $('djProg'+n).style.width = '0%'; return; }
+  var el = getDJCtx().currentTime - deck.startTime;
+  $('djProg'+n).style.width = Math.min(100, (el / deck.buffer.duration) * 100) + '%';
+  setTimeout(function(){ djProg(n); }, 500);
+}
+
+function djSetCross(v) {
+  var c = v / 100;
+  if (djDecks[0].gainNode) djDecks[0].gainNode.gain.value = 1 - c;
+  if (djDecks[1].gainNode) djDecks[1].gainNode.gain.value = c;
+}
+function djSetPitch(n, val) {
+  var i = n - 1, pct = parseFloat(val);
+  djDecks[i].playbackRate = 1.0 + pct / 100;
+  $('djPitchVal'+n).textContent = (pct >= 0 ? '+' : '') + pct + '%';
+  if (djDecks[i].source) { try { djDecks[i].source.playbackRate.value = djDecks[i].playbackRate; } catch(e){} }
+}
+function djSync() { $('djStatus').textContent = 'Decks synced at ' + djBPM + ' BPM, Reni.'; djLearn(djBPM, 's'); }
+function djChangeBPM(d) {
+  djBPM = Math.max(60, Math.min(200, djBPM + d));
+  $('djBpmVal').textContent = djBPM;
+  $('djStatus').textContent = 'BPM: ' + djBPM;
+}
+function djToggleAIMode() {
+  djAIMode = !djAIMode;
+  $('djAIBtn').textContent = '🤖 AI MIX MODE: ' + (djAIMode ? 'ON' : 'OFF');
+  $('djAIBtn').classList.toggle('off', !djAIMode);
+  if (djAIMode) djStartAIDJ(); else djStopAIDJ();
+}
+function djStartAIDJ() {
+  djStopAIDJ();
+  djAIInt = setInterval(function() {
+    if (!djAIMode) return;
+    var avg = djAvgBPM();
+    if (djBPM !== avg) { djBPM = avg; $('djBpmVal').textContent = djBPM; }
+    if (djDecks[0].buffer && djDecks[1].buffer) djAIMix();
+  }, 30000);
+}
+function djStopAIDJ() { if (djAIInt) { clearInterval(djAIInt); djAIInt = null; } }
+function djAIMix() {
+  if (!djDecks[0].buffer || !djDecks[1].buffer) { $('djStatus').textContent = 'Load tracks on both decks first, Reni.'; return; }
+  $('djStatus').textContent = 'Neural mix initiated...';
+  var cf = $('djCrossfader'), cur = parseInt(cf.value), target = cur < 50 ? 100 : 0, step = cur < 50 ? 3 : -3;
+  var ani = setInterval(function() {
+    cur += step; cf.value = cur; djSetCross(cur);
+    if ((step > 0 && cur >= target) || (step < 0 && cur <= target)) {
+      clearInterval(ani); djLearn(djBPM, 't');
+      $('djStatus').textContent = 'Mix complete, Reni.';
+    }
+  }, 60);
+}
+
+// ── VINYL TURNTABLE RENDERER ─────────────────────────
+function djDrawVinyl(n, angle) {
+  var canvas = $('djVinyl' + n);
+  if (!canvas) return;
+  var ctx = canvas.getContext('2d');
+  var cx = 70, cy = 70, R = 68;
+  ctx.clearRect(0, 0, 140, 140);
+  // Outer glow
+  var pg = ctx.createRadialGradient(cx, cy, R-6, cx, cy, R+4);
+  pg.addColorStop(0, 'rgba(168,85,247,0.6)'); pg.addColorStop(1, 'rgba(168,85,247,0)');
+  ctx.beginPath(); ctx.arc(cx, cy, R+4, 0, Math.PI*2); ctx.fillStyle = pg; ctx.fill();
+  // Record body
+  ctx.save(); ctx.translate(cx, cy); ctx.rotate(angle);
+  var rg = ctx.createRadialGradient(0, 0, 0, 0, 0, R);
+  rg.addColorStop(0, '#1a0030'); rg.addColorStop(0.12, '#0d0020');
+  rg.addColorStop(0.13, '#2a0050'); rg.addColorStop(0.35, '#0a0018'); rg.addColorStop(1, '#050010');
+  ctx.beginPath(); ctx.arc(0, 0, R, 0, Math.PI*2); ctx.fillStyle = rg; ctx.fill();
+  // Grooves
+  for (var g = 14; g < R - 3; g += 2.6) {
+    var sh = 0.06 + Math.sin(g * 0.4 + angle * 2) * 0.04;
+    ctx.beginPath(); ctx.arc(0, 0, g, 0, Math.PI*2);
+    ctx.strokeStyle = 'rgba(168,85,247,' + sh.toFixed(3) + ')';
+    ctx.lineWidth = 0.6; ctx.stroke();
+  }
+  // Label
+  var lr = 22;
+  var lg = ctx.createRadialGradient(0, 0, 0, 0, 0, lr);
+  lg.addColorStop(0, '#c084fc'); lg.addColorStop(0.3, '#a855f7');
+  lg.addColorStop(0.7, '#7c3aed'); lg.addColorStop(1, '#4c1d95');
+  ctx.beginPath(); ctx.arc(0, 0, lr, 0, Math.PI*2); ctx.fillStyle = lg; ctx.fill();
+  // Label text
+  ctx.save(); ctx.rotate(-angle);
+  ctx.fillStyle = 'rgba(255,255,255,0.9)'; ctx.font = 'bold 6px Orbitron, monospace'; ctx.textAlign = 'center';
+  ctx.fillText('JEROME', 0, -6);
+  ctx.font = '5px Share Tech Mono, monospace'; ctx.fillStyle = 'rgba(224,170,255,0.8)';
+  ctx.fillText('DJ SUITE', 0, 2); ctx.fillText('45 RPM', 0, 10);
+  ctx.restore();
+  ctx.beginPath(); ctx.arc(0, 0, lr, 0, Math.PI*2);
+  ctx.strokeStyle = 'rgba(192,132,252,0.6)'; ctx.lineWidth = 1.2; ctx.stroke();
+  ctx.beginPath(); ctx.arc(0, 0, 2.5, 0, Math.PI*2); ctx.fillStyle = '#000'; ctx.fill();
+  // Highlight arc
+  ctx.beginPath(); ctx.arc(0, 0, R * 0.72, -Math.PI*0.6, -Math.PI*0.1);
+  ctx.strokeStyle = 'rgba(255,255,255,0.06)'; ctx.lineWidth = 6; ctx.stroke();
+  ctx.restore();
+  // Outer ring
+  ctx.beginPath(); ctx.arc(cx, cy, R, 0, Math.PI*2);
+  ctx.strokeStyle = 'rgba(168,85,247,0.8)'; ctx.lineWidth = 1.5; ctx.stroke();
+}
+
+function djUpdateVinyls() {
+  djVinylRAF = requestAnimationFrame(djUpdateVinyls);
+  var t = Date.now() * 0.001;
+  for (var n = 1; n <= 2; n++) {
+    var i = n - 1, deck = djDecks[i];
+    var angle = deck.playing
+      ? ((getDJCtx().currentTime - deck.startTime) * deck.playbackRate * 2 * Math.PI * (45/60))
+      : (t * 0.05); // gentle idle spin
+    djDrawVinyl(n, angle);
+    // Tonearm position (lowered when playing)
+    var ta = $('djTonearmG' + n);
+    if (ta) ta.setAttribute('transform', 'rotate(' + (deck.playing ? 35 : 25) + ',120,15)');
+  }
+}
+
+function openDJ() {
+  $('djPanel').classList.add('on');
+  getDJCtx(); // ensures audio context is created on user gesture
+  if (djAIMode) djStartAIDJ();
+  if (!djVinylRAF) djUpdateVinyls();
+  $('djAIBtn').textContent = '🤖 AI MIX MODE: ' + (djAIMode ? 'ON' : 'OFF');
+  $('djAIBtn').classList.toggle('off', !djAIMode);
+  $('djStatus').textContent = 'Welcome to the booth, Reni.';
+}
+function closeDJ() {
+  $('djPanel').classList.remove('on');
+  djStopAIDJ();
+  if (djVinylRAF) { cancelAnimationFrame(djVinylRAF); djVinylRAF = null; }
+  // Don't stop the music — let it keep playing in background
+}
+
+// ── AI BRAIN (Cloudflare Worker → Pollinations) ──────
+var CF_WORKER = 'https://damp-sunset-b633.renni32.workers.dev/';
+function callAI(query) {
+  var city = SG('aria_city') || 'Framingham, MA';
+  var dt = new Date().toLocaleString('en-US',{weekday:'long',month:'long',day:'numeric',year:'numeric',hour:'numeric',minute:'2-digit'});
+  var sys = currentAgent.p + ' Location: ' + city + '. Current date and time: ' + dt + '. Always address the user as Reni.';
+
+  // If there's an attachment, route through Pollinations OpenAI-compatible endpoint (supports vision)
+  if (_pendingAttachment) {
+    return callAIWithAttachment(query, sys);
+  }
+
+  setResponse('Thinking...');
+  setOrbState('speaking');
+  var t0 = Date.now();
+  var done = false;
+  var timeoutId = setTimeout(function() {
+    if (done) return; done = true;
+    setResponse('Taking a moment, Reni. Check your internet and try again.');
+    setOrbState('idle');
+    doSpeak('Taking a moment, Reni. Try again.');
+  }, 12000);
+  fetch(CF_WORKER, {
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({query:query, system:sys})
+  })
+  .then(function(r){
+    if (done) return null;
+    clearTimeout(timeoutId); done = true;
+    _realLatency = Date.now() - t0; $('v3').textContent = _realLatency + 'ms';
+    if (!r.ok) throw new Error('status '+r.status);
+    return r.json();
+  })
+  .then(function(data){
+    if (!data) return;
+    var reply = data.reply && data.reply.trim();
+    if (reply && reply.length > 2) {
+      aiHistory.push({r:'u',t:query}); aiHistory.push({r:'a',t:reply});
+      if (aiHistory.length > 20) aiHistory = aiHistory.slice(-20);
+      respond(query, reply);
+    } else {
+      respond(query, 'I did not catch that, Reni. Try asking again.');
+    }
+  })
+  .catch(function(){
+    if (done) return;
+    clearTimeout(timeoutId); done = true;
+    setResponse('Connection issue, Reni. Check your internet.');
+    setOrbState('idle');
+    doSpeak('Connection issue. Check your internet, Reni.');
+  });
+}
+
+// Vision/text-aware AI call — used when an attachment is present
+function callAIWithAttachment(query, sys) {
+  var att = _pendingAttachment;
+  if (!att) { callAI(query); return; }
+
+  setResponse(att.kind === 'image' ? 'Looking at your image, Reni...' : 'Reading your file, Reni...');
+  setOrbState('speaking');
+  var t0 = Date.now();
+
+  // Build the user message content
+  var userContent;
+  if (att.kind === 'image') {
+    userContent = [
+      { type: 'text', text: query },
+      { type: 'image_url', image_url: { url: att.dataUrl } }
+    ];
+  } else {
+    // Text/PDF attachment: include content as context, capped to ~30k chars
+    var fileText = (att.text || '').slice(0, 30000);
+    if ((att.text || '').length > 30000) fileText += '\n\n[...truncated, file was longer]';
+    userContent = 'File "' + att.name + '" content:\n\n' + fileText + '\n\n---\n\nReni\'s question/request: ' + query;
+  }
+
+  var payload = {
+    model: 'openai',
+    messages: [
+      { role: 'system', content: sys },
+      { role: 'user', content: userContent }
+    ],
+    private: true
+  };
+
+  var attachedName = att.name; // remember for the transcript line
+
+  fetch('https://text.pollinations.ai/openai', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload)
+  })
+  .then(function(r){
+    _realLatency = Date.now() - t0; $('v3').textContent = _realLatency + 'ms';
+    if (!r.ok) throw new Error('status ' + r.status);
+    return r.json();
+  })
+  .then(function(data){
+    var reply = '';
+    try { reply = (data.choices[0].message.content || '').trim(); }
+    catch(e) { reply = (data && data.text) || ''; }
+    if (!reply) reply = 'I had trouble processing that file, Reni. Try again or use a different file.';
+    aiHistory.push({r:'u', t: '[📎 ' + attachedName + '] ' + query});
+    aiHistory.push({r:'a', t: reply});
+    if (aiHistory.length > 20) aiHistory = aiHistory.slice(-20);
+    respond(query, reply);
+    clearAttachment();
+  })
+  .catch(function(err){
+    setResponse('Could not process the file, Reni. Try a smaller/clearer one.');
+    setOrbState('idle');
+    doSpeak('Could not process the file, Reni.');
+    toast('File error: ' + (err && err.message || 'unknown'));
+  });
+}
+
+// ── INPUT HANDLING ───────────────────────────────────
+function sendTyped() {
+  var inp = $('typeIn'), text = inp.value.trim();
+  // Allow sending with an attachment even if text is empty
+  if (!text && !_pendingAttachment) return;
+  if (!text && _pendingAttachment) {
+    text = (_pendingAttachment.kind === 'image')
+      ? 'What do you see in this image, Reni? Describe it for me.'
+      : 'Summarize this file for me, please.';
+  }
+  inp.value = '';
+  setTranscript(text);
+  handleQuery(text);
+  vibrate(8);
+}
+function onSpeakBtn() {
+  var t = $('response').textContent || 'Ri Ri voice test.';
+  doSpeak(t);
+}
+
+// ── SETTINGS ─────────────────────────────────────────
+function refreshVoiceStatus() {
+  var key = (SG('aria_eleven_key') || '').trim();
+  var voice = (SG('aria_eleven_voice') || '').trim();
+  var st = $('voiceStatus');
+  if (!st) return;
+  if (key && voice) {
+    st.className = 'voiceStatus ok';
+    st.innerHTML = '🟢 USING ELEVENLABS — voice: <code style="background:rgba(0,0,0,.3);padding:2px 6px;border-radius:3px">' + voice.slice(0,10) + '...</code>';
+  } else if (key && !voice) {
+    st.className = 'voiceStatus warn';
+    st.innerHTML = '🟡 KEY SAVED — but no voice picked yet. Tap LOAD MY VOICES below.';
+  } else {
+    st.className = 'voiceStatus warn';
+    st.innerHTML = '🟡 USING BROWSER VOICE — paste an ElevenLabs key below for premium Ri Ri voice';
+  }
+}
+
+function loadCfg() {
+  $('cityIn').value = SG('aria_city') || 'Framingham, MA';
+  $('briefIn').value = SG('aria_brief') || '08:00';
+  $('elevenKeyIn').value = SG('aria_eleven_key') || '';
+  $('elevenVoiceIn').value = SG('aria_eleven_voice') || DEFAULT_ELEVEN_VOICE;
+  loadVoiceList();
+  refreshVoiceStatus();
+}
+function saveCfg() {
+  SS('aria_city', $('cityIn').value.trim() || 'Framingham, MA');
+  SS('aria_brief', $('briefIn').value);
+  var vs = $('voiceSel'); if (vs && vs.value) SS('aria_voice', vs.value);
+  var newKey = ($('elevenKeyIn').value || '').trim();
+  SS('aria_eleven_key', newKey);
+  SS('aria_eleven_voice', ($('elevenVoiceIn').value || '').trim() || DEFAULT_ELEVEN_VOICE);
+  pickVoice();
+  refreshVoiceStatus();
+  toast('Settings saved');
+  // If a key was just saved, test it immediately so Reni hears the change
+  if (newKey) {
+    setTimeout(function() { testElevenNow(); }, 200);
+  } else {
+    doSpeak('Settings saved, Reni.');
+  }
+}
+
+function testElevenNow() {
+  // Grab the CURRENT field values so the user doesn't have to save first
+  var key = ($('elevenKeyIn').value || '').trim();
+  var voice = ($('elevenVoiceIn').value || '').trim();
+  if (!key) {
+    toast('Paste your ElevenLabs key first, then test');
+    return;
+  }
+  if (!voice) {
+    toast('Enter a voice ID, or tap LOAD MY VOICES first');
+    return;
+  }
+  // Save them so elevenSpeak picks them up
+  SS('aria_eleven_key', key);
+  SS('aria_eleven_voice', voice);
+  refreshVoiceStatus();
+  toast('Testing ElevenLabs voice...');
+  try { speechSynthesis.cancel(); } catch(e){}
+  elevenStop();
+  isSpeaking = true; setOrbState('speaking');
+  elevenSpeak(
+    'Hello Reni. This is Ri Ri speaking with the ElevenLabs voice. If you can hear me, everything is working.',
+    function() { isSpeaking = false; setOrbState('idle'); toast('✓ ElevenLabs voice working'); },
+    function() {
+      isSpeaking = false; setOrbState('idle');
+      _doSpeakBrowser('ElevenLabs failed. Check the message at the top of the screen for the specific error, Reni.');
+    }
+  );
+}
+
+// ── BOOT ─────────────────────────────────────────────
+window.addEventListener('load', function() {
+  // Tab bar
+  document.querySelectorAll('.tab').forEach(function(t) {
+    t.addEventListener('click', function() { switchView(t.dataset.view); });
+  });
+  $('agentBtn').onclick = function() { switchView('agents'); };
+
+  // Floating settings cog — jumps to settings + scrolls ElevenLabs key into view
+  $('cogBtn').onclick = function() {
+    switchView('more');
+    setTimeout(function() {
+      var el = $('elevenKeyIn');
+      if (el) {
+        el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        setTimeout(function() { try { el.focus(); } catch(e){} }, 400);
+      }
+    }, 100);
+  };
+
+  // Chat controls
+  $('micBtn').onclick = function() {
+    if (isSpeaking) { stopAll(); return; }
+    if (srMode === 'listen') srSubmit();  // Tap again to send what's been captured
+    else srStart();                        // First tap: start listening
+  };
+  $('stopBtn').onclick = stopAll;
+  $('speakBtn').onclick = onSpeakBtn;
+  $('alwaysOnBtn').onclick = function() {
+    alwaysOn = !alwaysOn;
+    this.classList.toggle('on', alwaysOn);
+    this.textContent = alwaysOn ? '🔁 AUTO ON' : '🔁 AUTO';
+    if (alwaysOn) {
+      toast('Always-On mic: ON — I\'ll keep listening after each response');
+      if (srMode === 'idle' && !isSpeaking) srStart();
+    } else {
+      toast('Always-On mic: OFF');
+    }
+  };
+  $('sendBtn').onclick = sendTyped;
+  $('typeIn').addEventListener('keydown', function(ev) {
+    if (ev.key === 'Enter') { sendTyped(); ev.preventDefault(); }
+  });
+
+  // File attachment wiring
+  $('attachBtn').onclick = pickFile;
+  $('attachRemove').onclick = clearAttachment;
+  $('fileInput').onchange = function(ev) {
+    var f = ev.target.files && ev.target.files[0];
+    if (f) handleFileSelect(f);
+  };
+
+  // Calendar
+  var today = new Date();
+  var iso = today.getFullYear()+'-'+String(today.getMonth()+1).padStart(2,'0')+'-'+String(today.getDate()).padStart(2,'0');
+  $('calDate').value = iso;
+  $('calAddBtn').onclick = function() {
+    if (addCalEvent($('calTitle').value, $('calDate').value, $('calTime').value)) {
+      $('calTitle').value = ''; $('calTime').value = '';
+      renderCal(); toast('Event added');
+    }
+  };
+  $('calTitle').addEventListener('keydown', function(ev){ if(ev.key==='Enter') $('calAddBtn').click(); });
+  $('gcalLink').onclick = function() { window.open('https://calendar.google.com','_blank'); };
+
+  // Todo
+  $('todoAddBtn').onclick = function() {
+    if (addTodo($('todoIn').value)) { $('todoIn').value=''; renderTodos(); toast('Task added'); }
+  };
+  $('todoIn').addEventListener('keydown', function(ev){ if(ev.key==='Enter') $('todoAddBtn').click(); });
+  $('clrDoneBtn').onclick = clearDoneTodos;
+
+  // More view
+  $('saveCfgBtn').onclick = saveCfg;
+  $('testVoiceBtn').onclick = testElevenNow;
+  $('loadVoicesBtn').onclick = loadMyVoices;
+  $('clearElBtn').onclick = function() {
+    if (!confirm('Turn off ElevenLabs and use the browser voice instead?')) return;
+    SS('aria_eleven_key', '');
+    SS('aria_eleven_voice', '');
+    $('elevenKeyIn').value = '';
+    $('elevenVoiceIn').value = '';
+    $('myVoicePickerLbl').style.display = 'none';
+    refreshVoiceStatus();
+    toast('Switched to browser voice');
+    doSpeak('Switched to browser voice, Reni.');
+  };
+  $('myVoicePicker').onchange = function() {
+    if (this.value) {
+      $('elevenVoiceIn').value = this.value;
+      toast('Voice selected — tap TEST VOICE NOW or SAVE SETTINGS');
+    }
+  };
+  $('loadNewsBtn').onclick = fetchNews;
+  $('foxBtn').onclick = function() { window.open('https://www.fox25boston.com','_blank'); };
+  $('clrHistBtn').onclick = function() {
+    if (!confirm('Clear all history, Reni?')) return;
+    convHist = []; try{localStorage.removeItem('aria_history');}catch(e){}
+    renderHistory(); toast('History cleared');
+  };
+
+  // Notes (meeting summaries)
+  $('summarizeBtn').onclick = summarizeNotes;
+  $('clearNotesBtn').onclick = clearNotes;
+  $('exportDocBtn').onclick = exportNotesWord;
+  $('exportPdfBtn').onclick = exportNotesPdf;
+
+  // Step tracker (Hercules)
+  loadSteps();
+  $('stepToggle').onclick = toggleStepTracking;
+  $('stepAddBtn').onclick = addStepsManual;
+  $('stepGoalBtn').onclick = setStepGoal;
+  $('stepResetBtn').onclick = resetStepsToday;
+  renderSteps();
+
+  // DJ Suite (Jerome)
+  $('djLaunchBtn').onclick = openDJ;
+  $('djCloseBtn').onclick = closeDJ;
+  $('djPlay1').onclick = function(){ djToggleDeck(1); };
+  $('djPlay2').onclick = function(){ djToggleDeck(2); };
+  $('djStop1').onclick = function(){ djStopDeck(1); };
+  $('djStop2').onclick = function(){ djStopDeck(2); };
+  $('djFile1').onchange = function(ev){ djLoadTrack(1, ev.target); };
+  $('djFile2').onchange = function(ev){ djLoadTrack(2, ev.target); };
+  $('djCrossfader').oninput = function(){ djSetCross(this.value); };
+  $('djPitch1').oninput = function(){ djSetPitch(1, this.value); };
+  $('djPitch2').oninput = function(){ djSetPitch(2, this.value); };
+  $('djBpmPlus').onclick = function(){ djChangeBPM(1); };
+  $('djBpmMinus').onclick = function(){ djChangeBPM(-1); };
+  $('djAIBtn').onclick = djToggleAIMode;
+  $('djMixBtn').onclick = djAIMix;
+  $('djSyncBtn').onclick = djSync;
+  renderJeromePanel();
+
+  // ── WATCH MODE (Ticwris Max & similar tiny screens) ──
+  // Pref values: 'auto' (default), 'on' (force), 'off' (force off)
+  function applyWatchMode() {
+    var pref = SG('aria_watch_mode') || 'auto';
+    var btn = $('watchModeBtn');
+    var auto = (window.innerWidth <= 700 && window.innerHeight <= 520);
+    var on = (pref === 'on') || (pref === 'auto' && auto);
+    document.body.classList.toggle('watch-mode', on);
+    if (btn) {
+      btn.textContent = pref === 'auto' ? (on ? 'AUTO ✓' : 'AUTO') : (pref === 'on' ? 'ON' : 'OFF');
+      btn.classList.toggle('on', on);
+    }
+  }
+  $('watchModeBtn').onclick = function() {
+    // Cycle: auto → on → off → auto
+    var p = SG('aria_watch_mode') || 'auto';
+    var next = p === 'auto' ? 'on' : (p === 'on' ? 'off' : 'auto');
+    SS('aria_watch_mode', next);
+    applyWatchMode();
+    toast('Watch mode: ' + next.toUpperCase());
+  };
+  applyWatchMode();
+  window.addEventListener('resize', function() {
+    if ((SG('aria_watch_mode') || 'auto') === 'auto') applyWatchMode();
+  });
+
+  // Init
+  startClock();
+  setInterval(updStats, 2200); updStats();
+  loadCfg();
+  renderCal(); renderTodos(); renderAgents();
+  initOrb(); setOrbState('idle');
+
+  speechSynthesis.onvoiceschanged = function() { loadVoiceList(); pickVoice(); };
+  setTimeout(function(){ loadVoiceList(); pickVoice(); }, 400);
+  setTimeout(function(){ loadVoiceList(); pickVoice(); }, 1500);
+
+  // Unlock audio on first gesture (Android requires it)
+  var gestured = false;
+  function unlock() {
+    if (gestured) return; gestured = true;
+    try {
+      var ac = new (window.AudioContext||window.webkitAudioContext)();
+      ac.resume().then(function(){ac.close();});
+    } catch(e) {}
+    document.removeEventListener('touchstart', unlock);
+    document.removeEventListener('click', unlock);
+  }
+  document.addEventListener('touchstart', unlock, {passive:true});
+  document.addEventListener('click', unlock);
+
+  // Welcome
+  setTimeout(function() {
+    setResponse('Ri Ri online. Welcome back, Reni. Tap the mic and speak, or type below.');
+  }, 200);
+});
+
+})();
+</script>
+</body>
+</html>
