@@ -1,16 +1,11 @@
 {
-  "name": "Ri Ri — Personal AI",
-  "short_name": "Ri Ri",
-  "description": "Reni's personal AI assistant — agents, briefings, translator, classroom tools and more.",
-  "start_url": "index.html",
-  "scope": "./",
+  "name": "RIRI",
+  "short_name": "RIRI",
+  "description": "Responsive Intelligent Reasoning Interface",
+  "start_url": "./index.html",
   "display": "standalone",
-  "orientation": "portrait",
-  "background_color": "#000810",
-  "theme_color": "#000810",
-  "icons": [
-    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
-    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
-    { "src": "icon-maskable.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
-  ]
+  "background_color": "#02060f",
+  "theme_color": "#02060f",
+  "orientation": "any",
+  "icons": []
 }
