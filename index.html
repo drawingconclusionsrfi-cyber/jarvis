@@ -1267,9 +1267,64 @@ body.watch-mode.desktop-mode #tabs{max-width:none;transform:none;left:0}
 .linkRow{display:block;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.14);border-radius:9px;padding:10px 12px;margin-top:7px;font-size:13px;color:var(--text);text-decoration:none}
 .linkRow:active{background:rgba(255,255,255,.12)}
 
+/* ══════════════════════════════════════════════════════════════
+   IRON MAN · JARVIS SKIN (mobile portrait)
+   PNG is the full UI; we overlay live orb, live radar, and
+   transparent functional hotspots at measured % coordinates.
+   Activates only when the PNG loads (body.iron-on via JS).
+   ══════════════════════════════════════════════════════════════ */
+#ironLayer{position:fixed;inset:0;z-index:40;display:none;background:#050000;overflow:hidden}
+body.iron-on #ironLayer{display:block}
+#ironStage{
+  position:absolute;top:0;left:50%;transform:translateX(-50%);
+  width:100vw;max-width:520px;aspect-ratio:853 / 1844;
+}
+#ironBg{position:absolute;inset:0;width:100%;height:100%;display:block;pointer-events:none;-webkit-user-drag:none}
+.ironHot{position:absolute;cursor:pointer;background:transparent;border:none;border-radius:8px;-webkit-tap-highlight-color:transparent;padding:0}
+.ironHot:active{background:rgba(255,120,40,.18);box-shadow:inset 0 0 18px rgba(255,90,30,.4)}
+/* live orb over face circle (center x44% y29% of width; box left15% top0% width58%) */
+#ironOrbBox{position:absolute;left:15%;top:0%;width:58%;aspect-ratio:1/1;border-radius:50%;overflow:hidden;display:flex;align-items:center;justify-content:center;pointer-events:none}
+#ironOrbBox canvas{width:100%;height:100%;display:block}
+/* live radar over proximity dish */
+#ironRadar{position:absolute;left:70.5%;top:17%;width:21%;aspect-ratio:1/1;border-radius:50%;overflow:hidden;border:2px solid rgba(255,90,30,.7);box-shadow:0 0 12px rgba(255,90,30,.5);pointer-events:none;background:#100}
+#ironRadar img{width:100%;height:100%;object-fit:cover;display:block;filter:hue-rotate(-15deg) saturate(1.4) brightness(.95)}
+#ironRadarSweep{position:absolute;inset:0;border-radius:50%;background:conic-gradient(from 0deg,rgba(255,120,0,0) 0%,rgba(255,120,0,.35) 18%,rgba(255,120,0,0) 24%);animation:ironSweep 2.6s linear infinite;mix-blend-mode:screen}
+@keyframes ironSweep{to{transform:rotate(360deg)}}
+#ironRadar.failed img{display:none}
+#ironRadar.failed::after{content:'OFFLINE';position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-family:'Orbitron',monospace;font-size:7px;letter-spacing:1px;color:rgba(255,120,40,.7)}
+/* reply + status readouts mapped onto the PNG's log area */
+#ironReply{position:absolute;left:6%;right:6%;top:40%;max-height:5%;overflow:hidden;font-family:'Share Tech Mono',monospace;font-size:9px;line-height:1.3;color:#ffd9c2;text-align:center;pointer-events:none;text-shadow:0 0 6px rgba(255,90,30,.4)}
+#ironStatus{position:absolute;left:0;right:0;top:72%;text-align:center;font-family:'Orbitron',monospace;font-size:8px;letter-spacing:2px;color:rgba(255,120,40,.85);pointer-events:none;min-height:10px}
+#ironExit{position:absolute;top:1%;right:2%;z-index:50;font-family:'Orbitron',monospace;font-size:9px;letter-spacing:1px;color:#ff5a1e;background:rgba(20,0,0,.6);border:1px solid rgba(255,90,30,.5);border-radius:14px;padding:5px 9px;cursor:pointer}
+
 </style>
 </head>
 <body>
+
+<!-- ════ IRON MAN · JARVIS SKIN OVERLAY ════ -->
+<div id="ironLayer">
+  <div id="ironStage">
+    <img id="ironBg" src="skin-ironman.png" alt=""/>
+    <div id="ironOrbBox"><canvas id="ironOrbCanvas" width="240" height="240"></canvas></div>
+    <div id="ironRadar"><img id="ironRadarImg" alt=""/><div id="ironRadarSweep"></div></div>
+    <div id="ironReply"></div>
+    <div id="ironStatus"></div>
+    <button class="ironHot" id="ironSpeak"  style="left:10%;top:79.5%;width:30%;height:5%"></button>
+    <button class="ironHot" id="ironMic"    style="left:43%;top:78%;width:14%;height:8%;border-radius:50%"></button>
+    <button class="ironHot" id="ironAuto"   style="left:61%;top:79.5%;width:21%;height:5%"></button>
+    <button class="ironHot" id="ironStop"   style="left:84%;top:79.5%;width:12%;height:5%"></button>
+    <button class="ironHot" id="ironInput"  style="left:12%;top:87.5%;width:65%;height:5%"></button>
+    <button class="ironHot" id="ironSend"   style="left:79%;top:87.5%;width:17%;height:5%"></button>
+    <button class="ironHot" id="ironRadarHot" style="left:70.5%;top:17%;width:21%;height:9.7%;border-radius:50%"></button>
+    <button class="ironHot" id="ironTab0" style="left:1%;top:93.5%;width:14.6%;height:6%"></button>
+    <button class="ironHot" id="ironTab1" style="left:17.6%;top:93.5%;width:14.6%;height:6%"></button>
+    <button class="ironHot" id="ironTab2" style="left:34.2%;top:93.5%;width:14.6%;height:6%"></button>
+    <button class="ironHot" id="ironTab3" style="left:50.8%;top:93.5%;width:14.6%;height:6%"></button>
+    <button class="ironHot" id="ironTab4" style="left:67.4%;top:93.5%;width:14.6%;height:6%"></button>
+    <button class="ironHot" id="ironTab5" style="left:84%;top:93.5%;width:14.6%;height:6%"></button>
+  </div>
+  <button id="ironExit">✕ EXIT SKIN</button>
+</div>
 
 <!-- DOPPLER WEATHER RADAR MODAL -->
 <div id="dopplerModal">
@@ -1981,6 +2036,14 @@ body.watch-mode.desktop-mode #tabs{max-width:none;transform:none;left:0}
         <h2>// APPEARANCE</h2>
         <div class="fhint" style="margin-bottom:10px">Make her yours, Reni — pick an avatar, a color theme, or set your own accent color.</div>
 
+        <label style="font-size:12px;color:var(--ac)">FULL SKIN</label>
+        <div class="fhint" style="margin:3px 0 8px">A complete interface makeover — not just colors. The Iron Man / JARVIS skin is built for mobile portrait.</div>
+        <div style="display:flex;gap:8px;margin-bottom:8px">
+          <button class="btnSec" id="ironSkinBtn" style="flex:1">🔴 IRON MAN · JARVIS</button>
+          <button class="btnSec" id="noSkinBtn" style="flex:1">◯ STANDARD</button>
+        </div>
+        <div id="ironSkinStatus" class="fhint" style="margin:0 0 12px"></div>
+
         <label style="font-size:12px;color:var(--ac)">AVATAR</label>
         <div class="fhint" style="margin:3px 0 8px">How she appears at the top of the chat screen.</div>
         <div id="avatarPicker" class="optGrid"></div>
@@ -2594,6 +2657,7 @@ function initOrb() {
 
 function setOrbState(s) {
   orbState = s;
+  try { document.body.setAttribute('data-orbstate', s); } catch(e){}
   var shadows = {
     listening:'0 0 60px 18px rgba(0,255,136,.55),0 0 110px 38px rgba(0,255,136,.2),inset 0 0 50px rgba(0,40,20,.4)',
     speaking: '0 0 60px 18px rgba(255,120,0,.55),0 0 110px 38px rgba(255,80,0,.2),inset 0 0 50px rgba(50,20,0,.4)',
@@ -6608,16 +6672,43 @@ function showBriefing(withWeather){
   if(withWeather){
     L+='\n\uD83C\uDF24 WEATHER\nChecking\u2026';
     out.textContent=L;
-    var done=false;
-    var fin=function(w){
-      if(done) return; done=true;
-      var full=L.replace('Checking\u2026', w||'Unavailable right now.');
+    var weatherDone=false, newsDone=false;
+    var weatherText='', newsText='';
+    function tryComplete(){
+      if(!weatherDone || !newsDone) return;
+      var full=L.replace('Checking\u2026', weatherText||'Unavailable right now.');
+      full += '\n\n\uD83D\uDCF0 TOP HEADLINES\n' + (newsText || '\u2022 Headlines unavailable right now.\n');
       out.textContent=full; _briefDone(full);
+    }
+    // Weather
+    var wfin=function(w){
+      if(weatherDone) return; weatherDone=true;
+      weatherText = w || 'Unavailable right now.';
+      tryComplete();
     };
-    try{ apiWeather('weather', fin); }catch(e){ fin('Weather unavailable.'); }
-    setTimeout(function(){ fin('Weather unavailable right now.'); }, 12000);
+    try{ apiWeather('weather', wfin); }catch(e){ wfin('Weather unavailable.'); }
+    setTimeout(function(){ wfin('Weather unavailable right now.'); }, 12000);
+    // News — top 3 BBC World headlines (same free RSS source used elsewhere)
+    var newsFin=function(txt){
+      if(newsDone) return; newsDone=true;
+      newsText = txt;
+      tryComplete();
+    };
+    try {
+      fetch('https://api.rss2json.com/v1/api.json?rss_url=' + encodeURIComponent('https://feeds.bbci.co.uk/news/world/rss.xml'))
+        .then(function(r){ return r.json(); })
+        .then(function(d){
+          var items = (d && d.items) ? d.items.slice(0,3) : [];
+          if(!items.length){ newsFin(''); return; }
+          var t='';
+          items.forEach(function(it){ t += '\u2022 ' + (it.title||'').replace(/\s+/g,' ').trim() + '\n'; });
+          newsFin(t);
+        })
+        .catch(function(){ newsFin(''); });
+    } catch(e){ newsFin(''); }
+    setTimeout(function(){ newsFin(''); }, 12000);
   } else {
-    L+='\nTap REFRESH to fold in today\u2019s weather.';
+    L+='\nTap REFRESH to fold in today\u2019s weather and headlines.';
     out.textContent=L; _briefDone(L);
   }
 }
@@ -9182,6 +9273,132 @@ window.addEventListener('load', function(){
   wcRender();
 });
 
+})();
+</script>
+
+<script>
+/* ════════════════════════════════════════════════════════════
+   IRON MAN · JARVIS SKIN — self-contained engine
+   Independent script block: no dependency on the main app's
+   private scope. Talks to the app only via the DOM (clicking
+   the real buttons by id) so wiring can never break.
+   ════════════════════════════════════════════════════════════ */
+(function(){
+  function $(id){ return document.getElementById(id); }
+  function lsGet(k){ try{ return localStorage.getItem(k)||''; }catch(e){ return ''; } }
+  function lsSet(k,v){ try{ localStorage.setItem(k,v); }catch(e){} }
+
+  var orbRAF=null, orbT=0, radarLoaded=false, radarTimer=null;
+
+  function active(){ return document.body.classList.contains('iron-on'); }
+
+  function drawOrb(){
+    var c=$('ironOrbCanvas'); if(!c){ orbRAF=null; return; }
+    var ctx=c.getContext('2d'), w=c.width, h=c.height, cx=w/2, cy=h/2;
+    var t=orbT++;
+    ctx.clearRect(0,0,w,h);
+    // read app state from the body if available (listening/speaking flips color)
+    var st = document.body.getAttribute('data-orbstate') || '';
+    var rgb = st==='listening' ? '0,255,136' : '255,90,20';
+    var lively = (st==='listening'||st==='speaking');
+    var pulse = lively ? (Math.sin(t*0.12)*0.5+0.5) : (Math.sin(t*0.04)*0.5+0.5);
+    var baseR = 60 + pulse*8;
+    for(var i=3;i>=1;i--){ ctx.beginPath();ctx.arc(cx,cy,baseR+i*14+pulse*4,0,Math.PI*2);ctx.strokeStyle='rgba('+rgb+','+(0.07*i)+')';ctx.lineWidth=2;ctx.stroke(); }
+    var a0=t*0.03; ctx.beginPath();ctx.arc(cx,cy,baseR+24,a0,a0+Math.PI*0.6);ctx.strokeStyle='rgba('+rgb+',.55)';ctx.lineWidth=3;ctx.stroke();
+    var a1=-t*0.045; ctx.beginPath();ctx.arc(cx,cy,baseR+38,a1,a1+Math.PI*0.4);ctx.strokeStyle='rgba('+rgb+',.3)';ctx.lineWidth=2;ctx.stroke();
+    var g=ctx.createRadialGradient(cx,cy,3,cx,cy,baseR);
+    g.addColorStop(0,'rgba('+rgb+',.9)');g.addColorStop(.5,'rgba('+rgb+',.35)');g.addColorStop(1,'rgba('+rgb+',.04)');
+    ctx.beginPath();ctx.arc(cx,cy,baseR,0,Math.PI*2);ctx.fillStyle=g;ctx.fill();
+    for(var p=0;p<10;p++){ var ang=t*0.02+p*(Math.PI*2/10), rr=baseR+16+Math.sin(t*0.05+p)*8; ctx.beginPath();ctx.arc(cx+Math.cos(ang)*rr,cy+Math.sin(ang)*rr,2,0,Math.PI*2);ctx.fillStyle='rgba('+rgb+',.7)';ctx.fill(); }
+    orbRAF=requestAnimationFrame(drawOrb);
+  }
+
+  function loadRadar(){
+    var img=$('ironRadarImg'), box=$('ironRadar'); if(!img) return;
+    var ts=Date.now();
+    if(box) box.classList.remove('failed');
+    img.onload=function(){ if(box) box.classList.remove('failed'); };
+    img.onerror=function(){ img.onerror=function(){ if(box) box.classList.add('failed'); }; img.src='https://radar.weather.gov/Conus/Loop/neus_loop.gif?t='+ts; };
+    img.src='https://radar.weather.gov/ridge/standard/KBOX_0.gif?t='+ts;
+  }
+
+  function enter(){
+    var test=new Image();
+    test.onload=function(){
+      if(test.naturalWidth<1){ fail(); return; }
+      document.body.classList.add('iron-on');
+      lsSet('riri_skin','iron');
+      if(!orbRAF) drawOrb();
+      if(!radarLoaded){ radarLoaded=true; loadRadar(); }
+      if(!radarTimer) radarTimer=setInterval(function(){ if(active()){ radarLoaded=false; loadRadar(); } },360000);
+      var s=$('ironSkinStatus'); if(s) s.innerHTML='<span style="color:#ff5a1e">Iron Man skin active.</span>';
+    };
+    test.onerror=fail;
+    test.src='skin-ironman.png';
+  }
+  function fail(){
+    var s=$('ironSkinStatus');
+    if(s) s.innerHTML='<span style="color:#ff8080">Couldn\u2019t load skin-ironman.png \u2014 make sure it\u2019s in your repo root, Reni. (Works on your live site, not the preview.)</span>';
+  }
+  function exit(){
+    document.body.classList.remove('iron-on');
+    lsSet('riri_skin','');
+    if(orbRAF){ cancelAnimationFrame(orbRAF); orbRAF=null; orbT=0; }
+    if(radarTimer){ clearInterval(radarTimer); radarTimer=null; }
+    var s=$('ironSkinStatus'); if(s) s.textContent='';
+  }
+
+  function clickReal(id){ var e=$(id); if(e) e.click(); }
+
+  function wire(){
+    var on=$('ironSkinBtn'), off=$('noSkinBtn'), ex=$('ironExit');
+    if(on) on.onclick=enter;
+    if(off) off.onclick=exit;
+    if(ex) ex.onclick=exit;
+
+    if($('ironMic'))   $('ironMic').onclick   = function(){ clickReal('micBtn'); };
+    if($('ironSpeak')) $('ironSpeak').onclick = function(){ clickReal('speakBtn'); };
+    if($('ironAuto'))  $('ironAuto').onclick  = function(){ clickReal('alwaysOnBtn'); };
+    if($('ironStop'))  $('ironStop').onclick  = function(){ clickReal('stopBtn'); };
+    if($('ironSend'))  $('ironSend').onclick  = function(){ clickReal('sendBtn'); };
+    if($('ironInput')) $('ironInput').onclick = function(){ var t=$('typeIn'); if(t) t.focus(); };
+    if($('ironRadarHot')) $('ironRadarHot').onclick = function(){
+      var b=$('dopplerOpenBtn'); if(b){ b.click(); return; }
+      var m=$('dopplerModal'); if(m){ m.classList.add('show'); }
+    };
+    // bottom nav tabs → click the real tab buttons (data-view)
+    var views=['chat','cal','todo','notes','agents','more'];
+    for(var i=0;i<6;i++){
+      (function(idx){
+        var el=$('ironTab'+idx); if(!el) return;
+        el.onclick=function(){
+          var realTab=document.querySelector('.tab[data-view="'+views[idx]+'"]');
+          if(idx!==0) exit();       // leave skin so Reni sees the full view
+          if(realTab) realTab.click();
+        };
+      })(i);
+    }
+  }
+
+  // Mirror the app's reply + orb state into the skin readouts (poll lightly)
+  function mirror(){
+    if(active()){
+      var r=$('response'), ir=$('ironReply');
+      if(r && ir) ir.textContent = r.textContent || '';
+      var isr=$('ironStatus');
+      var st=document.body.getAttribute('data-orbstate')||'';
+      if(isr) isr.textContent = st==='listening'?'LISTENING…':st==='speaking'?'RESPONDING…':'AWAITING COMMAND…';
+    }
+    setTimeout(mirror, 600);
+  }
+
+  function init(){
+    wire();
+    mirror();
+    if(lsGet('riri_skin')==='iron') enter();
+  }
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded', init);
+  else init();
 })();
 </script>
 </body>
