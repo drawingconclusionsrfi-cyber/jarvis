@@ -1391,7 +1391,7 @@ body.iron-alt-on #ironAltLayer{display:flex;align-items:center;justify-content:c
 #ironDesktopLayer,#ironDesktopAltLayer{position:fixed;inset:0;z-index:40;display:none;background:#050000;overflow:hidden}
 body.iron-desktop-on #ironDesktopLayer{display:flex;align-items:center;justify-content:center}
 body.iron-desktop-alt-on #ironDesktopAltLayer{display:flex;align-items:center;justify-content:center}
-#ironDesktopStage,#ironDesktopAltStage{position:relative;width:100%;height:auto;aspect-ratio:1536 / 1024;max-height:100vh}
+#ironDesktopStage,#ironDesktopAltStage{position:relative;height:100vh;width:auto;aspect-ratio:1536 / 1024;max-width:100vw}
 #ironDesktopBg,#ironDesktopAltBg{position:absolute;inset:0;width:100%;height:100%;display:block;pointer-events:none;-webkit-user-drag:none}
 
 /* live orb in the central HUD ring — sized to fit inside the empty inner circle */
@@ -1451,6 +1451,7 @@ body.iron-desktop-alt-on #ironDesktopAltLayer{display:flex;align-items:center;ju
     <button class="ironHot" id="ironAuto"   style="left:61%;top:79.5%;width:21%;height:5%"></button>
     <button class="ironHot" id="ironStop"   style="left:84%;top:79.5%;width:12%;height:5%"></button>
     <button class="ironHot" id="ironInput"  style="left:12%;top:87.5%;width:65%;height:5%"></button>
+    <button class="ironHot" id="ironAttach" style="left:2%;top:87%;width:9%;height:5.5%"></button>
     <button class="ironHot" id="ironSend"   style="left:79%;top:87.5%;width:17%;height:5%"></button>
     <button class="ironHot" id="ironRadarHot" style="left:72%;top:22.5%;width:22%;height:10.2%;border-radius:50%"></button>
     <button class="ironHot" id="ironTab0" style="left:1%;top:93.5%;width:14.6%;height:6%"></button>
@@ -1483,6 +1484,7 @@ body.iron-desktop-alt-on #ironDesktopAltLayer{display:flex;align-items:center;ju
     <button class="ironAltHot" id="ironAltAuto"   style="left:57%;top:86.2%;width:25%;height:5%"></button>
     <button class="ironAltHot" id="ironAltStop"   style="left:85%;top:86.2%;width:11%;height:5%"></button>
     <button class="ironAltHot" id="ironAltInput"  style="left:12%;top:91.7%;width:64%;height:4%"></button>
+    <button class="ironAltHot" id="ironAltAttach" style="left:2%;top:96%;width:9%;height:3.5%"></button>
     <button class="ironAltHot" id="ironAltSend"   style="left:78%;top:91.7%;width:18%;height:4%"></button>
     <button class="ironAltHot" id="ironAltRadarHot" style="left:72%;top:22.5%;width:22%;height:10.2%;border-radius:50%"></button>
     <button class="ironAltHot" id="ironAltTab0" style="left:1%;top:95.7%;width:15.5%;height:4%"></button>
@@ -1508,6 +1510,7 @@ body.iron-desktop-alt-on #ironDesktopAltLayer{display:flex;align-items:center;ju
     <button class="ironHot" id="ironDesktopAuto"     style="left:54%;top:74.5%;width:17%;height:8%"></button>
     <button class="ironHot" id="ironDesktopStop"     style="left:71%;top:74.5%;width:6%;height:8%"></button>
     <button class="ironHot" id="ironDesktopInput"    style="left:74%;top:74.5%;width:18%;height:12%"></button>
+    <button class="ironHot" id="ironDesktopAttach"   style="left:17%;top:80%;width:6%;height:11%"></button>
     <button class="ironHot" id="ironDesktopSend"     style="left:92%;top:74.5%;width:6%;height:12%"></button>
     <button class="ironHot" id="ironDesktopRadarHot" style="left:84%;top:11%;width:13%;aspect-ratio:1/1;border-radius:50%"></button>
     <button class="ironHot" id="ironDesktopTab0" style="left:5%;top:89%;width:7%;height:9%"></button>
@@ -1534,6 +1537,7 @@ body.iron-desktop-alt-on #ironDesktopAltLayer{display:flex;align-items:center;ju
     <button class="ironAltHot" id="ironDesktopAltAuto"     style="left:54%;top:74.5%;width:17%;height:8%"></button>
     <button class="ironAltHot" id="ironDesktopAltStop"     style="left:71%;top:74.5%;width:6%;height:8%"></button>
     <button class="ironAltHot" id="ironDesktopAltInput"    style="left:74%;top:74.5%;width:18%;height:12%"></button>
+    <button class="ironAltHot" id="ironDesktopAltAttach"   style="left:17%;top:80%;width:6%;height:11%"></button>
     <button class="ironAltHot" id="ironDesktopAltSend"     style="left:92%;top:74.5%;width:6%;height:12%"></button>
     <button class="ironAltHot" id="ironDesktopAltRadarHot" style="left:84%;top:11%;width:13%;aspect-ratio:1/1;border-radius:50%"></button>
     <button class="ironAltHot" id="ironDesktopAltTab0" style="left:5%;top:89%;width:7%;height:9%"></button>
@@ -2422,7 +2426,7 @@ body.iron-desktop-alt-on #ironDesktopAltLayer{display:flex;align-items:center;ju
           Ri Ri Williams · Mobile<br>
           Built for Android · Free AI brain · Private storage<br>
           Calendar &amp; to-do never leave this device.<br>
-          <span style="color:var(--ac);font-family:Orbitron,sans-serif;font-size:10px;letter-spacing:.5px">BUILD 2026-06-03-B · Desktop orb/radar repositioned, scroll expanded</span>
+          <span style="color:var(--ac);font-family:Orbitron,sans-serif;font-size:10px;letter-spacing:.5px">BUILD 2026-06-03-C · Iron head = attach button, desktop stage fit fixed</span>
         </div>
       </div>
 
@@ -10347,6 +10351,7 @@ window.addEventListener('load', function(){
     if(ex) ex.onclick=function(){ exitAlt(); exit(true); if(activeDesktopAlt()) exitDesktopAlt(); if(activeDesktop()) exitDesktop(true); };
 
     if($('ironMic'))   $('ironMic').onclick   = function(){ clickReal('micBtn'); };
+    if($('ironAttach')) $('ironAttach').onclick = function(){ clickReal('attachBtn'); };
     if($('ironSpeak')) $('ironSpeak').onclick = function(){ clickReal('speakBtn'); };
     if($('ironAuto'))  $('ironAuto').onclick  = function(){ clickReal('alwaysOnBtn'); };
     if($('ironStop'))  $('ironStop').onclick  = function(){ clickReal('stopBtn'); };
@@ -10680,6 +10685,7 @@ window.addEventListener('load', function(){
   // wire alt-skin hotspots to the real buttons
   function wireAlt(){
     if($('ironAltMic'))   $('ironAltMic').onclick   = function(){ clickReal('micBtn'); };
+    if($('ironAltAttach')) $('ironAltAttach').onclick = function(){ clickReal('attachBtn'); };
     if($('ironAltSpeak')) $('ironAltSpeak').onclick = function(){ clickReal('speakBtn'); };
     if($('ironAltAuto'))  $('ironAltAuto').onclick  = function(){ clickReal('alwaysOnBtn'); };
     if($('ironAltStop'))  $('ironAltStop').onclick  = function(){ clickReal('stopBtn'); };
@@ -10882,6 +10888,7 @@ window.addEventListener('load', function(){
 
     // Desktop main-skin hotspots
     if($('ironDesktopMic'))   $('ironDesktopMic').onclick   = function(){ clickReal('micBtn'); };
+    if($('ironDesktopAttach')) $('ironDesktopAttach').onclick = function(){ clickReal('attachBtn'); };
     if($('ironDesktopSpeak')) $('ironDesktopSpeak').onclick = function(){ clickReal('speakBtn'); };
     if($('ironDesktopAuto'))  $('ironDesktopAuto').onclick  = function(){ clickReal('alwaysOnBtn'); };
     if($('ironDesktopStop'))  $('ironDesktopStop').onclick  = function(){ clickReal('stopBtn'); };
@@ -10893,6 +10900,7 @@ window.addEventListener('load', function(){
     };
     // Desktop alt-skin hotspots
     if($('ironDesktopAltMic'))   $('ironDesktopAltMic').onclick   = function(){ clickReal('micBtn'); };
+    if($('ironDesktopAltAttach')) $('ironDesktopAltAttach').onclick = function(){ clickReal('attachBtn'); };
     if($('ironDesktopAltSpeak')) $('ironDesktopAltSpeak').onclick = function(){ clickReal('speakBtn'); };
     if($('ironDesktopAltAuto'))  $('ironDesktopAltAuto').onclick  = function(){ clickReal('alwaysOnBtn'); };
     if($('ironDesktopAltStop'))  $('ironDesktopAltStop').onclick  = function(){ clickReal('stopBtn'); };
