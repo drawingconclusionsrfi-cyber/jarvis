@@ -1339,6 +1339,13 @@ body.iron-on #ironLayer{display:flex;align-items:center;justify-content:center}
 #ironRadar.failed img{display:none}
 #ironRadar.failed::after{content:'OFFLINE';position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-family:'Orbitron',monospace;font-size:7px;letter-spacing:1px;color:rgba(255,120,40,.7)}
 
+/* Live waveform overlay — sits over the painted-in "VOICE A.F.2" panel
+   in the iron skin. The canvas draws frequency bars from the ElevenLabs
+   audio output when Ri Ri is speaking; idle when she's silent so the
+   painted artwork beneath shows through clearly. */
+#ironWave{position:absolute;left:73%;top:38.6%;width:25%;height:6.8%;pointer-events:none;opacity:0;transition:opacity .35s ease}
+#ironWave.on{opacity:.95}
+
 /* ── DIALOG: the black band under her head shows the convo ── */
 #ironDialog{position:absolute;left:6%;right:6%;top:47%;height:5%;overflow-y:auto;display:flex;flex-direction:column;justify-content:flex-end;gap:2px;pointer-events:auto;font-family:'Share Tech Mono',monospace;font-size:8.5px;line-height:1.25;background:rgba(6,1,0,.55);border-radius:5px;padding:2px 6px}
 #ironDialog .dRow{display:block}
@@ -1488,6 +1495,7 @@ body.iron-desktop-alt-on #ironDesktopAltLayer{display:flex;align-items:center;ju
       <canvas id="ironOrbCanvas" width="240" height="240"></canvas>
     </div>
     <div id="ironRadar"><img id="ironRadarImg" alt=""/><div id="ironRadarSweep"></div></div>
+    <canvas id="ironWave" width="320" height="80"></canvas>
     <div id="ironDialog"></div>
     <div class="ironData" id="ironInspire"></div>
     <div class="ironData" id="ironSchedule"></div>
@@ -2264,6 +2272,16 @@ body.iron-desktop-alt-on #ironDesktopAltLayer{display:flex;align-items:center;ju
       </div>
 
       <div class="moreSection">
+        <h2>// PHONE CONTACTS</h2>
+        <div class="fhint" style="margin-bottom:10px">Import contacts from your phone into Ri Ri's phonebook so you can say things like <em>"text Mom — running late"</em>. Works on Android Chrome (and other Chromium browsers); on iOS the picker isn't supported by Apple, so use the manual phonebook in CONTACTS.</div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <button class="btnSec" id="pbImportBtn" style="flex:1;min-width:160px;white-space:nowrap">📇 IMPORT FROM PHONE</button>
+          <button class="btnSec" id="pbOpenBtn"   style="white-space:nowrap;min-width:140px">OPEN PHONEBOOK ▸</button>
+        </div>
+        <div id="pbImportStat" class="fhint" style="margin-top:8px"></div>
+      </div>
+
+      <div class="moreSection">
         <h2>// RI RI'S MEMORY <span id="memCount" style="font-size:11px;color:var(--muted);font-family:'Share Tech Mono',monospace;font-weight:normal;letter-spacing:1px">0 / 1000</span></h2>
         <div class="fhint" style="margin-bottom:10px">Things Ri Ri keeps about you, Reni. She picks these up automatically as you talk, you can say "remember that…" anytime, or add one here yourself. Every agent uses these. She can hold up to 1,000 memories.</div>
         <div style="display:flex;gap:8px;margin-bottom:10px">
@@ -2534,7 +2552,7 @@ body.iron-desktop-alt-on #ironDesktopAltLayer{display:flex;align-items:center;ju
           Ri Ri Williams · Mobile<br>
           Built for Android · Free AI brain · Private storage<br>
           Calendar &amp; to-do never leave this device.<br>
-          <span style="color:var(--ac);font-family:Orbitron,sans-serif;font-size:10px;letter-spacing:.5px">BUILD 2026-06-06-D · Phonebook tab + visible slider fade</span>
+          <span style="color:var(--ac);font-family:Orbitron,sans-serif;font-size:10px;letter-spacing:.5px">BUILD 2026-06-06-E · Male orb + CONTACTS tab + Settings phone-import + live waveform</span>
         </div>
       </div>
 
@@ -2563,7 +2581,7 @@ body.iron-desktop-alt-on #ironDesktopAltLayer{display:flex;align-items:center;ju
   <button class="tab" data-view="notes"><div class="ico">📝</div><div>NOTES</div></button>
   <button class="tab" data-view="agents"><div class="ico">⬡</div><div>AGENTS</div></button>
   <button class="tab" data-view="texts"><div class="ico">✉</div><div>TEXTS</div></button>
-  <button class="tab" data-view="phonebook"><div class="ico">📇</div><div>BOOK</div></button>
+  <button class="tab" data-view="phonebook"><div class="ico"><img src="tab-contacts.png" alt="" style="width:24px;height:24px;object-fit:contain;display:block;margin:0 auto"/></div><div>CONTACTS</div></button>
   <button class="tab" data-view="more"><div class="ico">⚙</div><div>SETTINGS</div></button>
 </nav>
 
@@ -3077,11 +3095,37 @@ var THEMES = [
 var AVATARS = [
   {id:'orb',     name:'Orb of Light',  desc:'The classic particle sphere'},
   {id:'face',    name:'Cosmic Spirit', desc:'Glowing starfield face'},
-  {id:'live',    name:'Cosmic (Live)', desc:'Animated face — moves as she speaks'},
+  {id:'live',    name:'Cosmic (Live)', desc:'Animated face — auto-switches male/female per agent'},
   {id:'crystal', name:'Crystal',       desc:'Rotating geometric gem'},
   {id:'wave',    name:'Waveform',      desc:'Audio-reactive rings'},
   {id:'nova',    name:'Nova Core',     desc:'JARVIS-style orange particle sun'}
 ];
+
+// Which video file to play for the 'live' avatar, based on current agent.
+// Male agents (Hercules / Socrates / Jerome / Chiron) get the cosmic male
+// head; everyone else gets the original cosmic female. This means picking
+// "Cosmic (Live)" once gives Reni per-personality male/female heads
+// automatically, no per-agent UI required.
+function _liveAvatarSrc() {
+  try {
+    if (currentAgent && currentAgent.vp && currentAgent.vp.gender === 'm') return 'avatar-male.mp4';
+  } catch(e){}
+  return 'avatar-live.mp4';
+}
+function _refreshLiveAvatarSrc() {
+  var src = _liveAvatarSrc();
+  ['avatarVideo','ironOrbVid','ironAltOrbVid'].forEach(function(id){
+    var v = document.getElementById(id);
+    if (!v) return;
+    // Compare by suffix because v.src is absolute
+    if (!v.src || v.src.indexOf(src) === -1) {
+      var wasPlaying = !v.paused;
+      v.src = src;
+      try { v.load(); } catch(e){}
+      if (wasPlaying) { try { v.play().catch(function(){}); } catch(e){} }
+    }
+  });
+}
 function hexToRgb(h){
   h = String(h||'').replace('#','');
   if (h.length === 3) h = h[0]+h[0]+h[1]+h[1]+h[2]+h[2];
@@ -3105,6 +3149,84 @@ function currentAccent(){
 }
 function currentAvatar(){
   return SG('aria_avatar') || 'orb';
+}
+
+// ── LIVE WAVEFORM — iron skin "VOICE A.F.2" panel mirrors Ri Ri's voice ──
+// We attach a Web Audio AnalyserNode to whichever HTMLAudioElement plays
+// ElevenLabs output. While audio is playing, a rAF loop reads frequency
+// data and paints orange bars on #ironWave. When she stops, the canvas
+// fades and the painted artwork beneath shows through again.
+var _voiceCtx = null, _voiceAnalyser = null, _voiceSource = null;
+var _ironWaveRaf = 0;
+function _attachVoiceAnalyser(audioEl){
+  if (!audioEl) return;
+  if (!('AudioContext' in window || 'webkitAudioContext' in window)) return;
+  try {
+    if (!_voiceCtx) _voiceCtx = new (window.AudioContext || window.webkitAudioContext)();
+    // Each HTMLAudioElement can only be sourced once. Tag the element so we
+    // don't try a second MediaElementSource on a re-used Audio object.
+    if (audioEl._sourced) return;
+    _voiceSource = _voiceCtx.createMediaElementSource(audioEl);
+    audioEl._sourced = true;
+    if (!_voiceAnalyser) {
+      _voiceAnalyser = _voiceCtx.createAnalyser();
+      _voiceAnalyser.fftSize = 128;
+      _voiceAnalyser.smoothingTimeConstant = 0.75;
+    }
+    _voiceSource.connect(_voiceAnalyser);
+    _voiceAnalyser.connect(_voiceCtx.destination);
+    if (_voiceCtx.state === 'suspended') _voiceCtx.resume();
+  } catch(e){}
+}
+function _startIronWave(){
+  var cv = document.getElementById('ironWave');
+  if (!cv) return;
+  cv.classList.add('on');
+  if (_ironWaveRaf) return;
+  var ctx = cv.getContext('2d');
+  var bins = _voiceAnalyser ? new Uint8Array(_voiceAnalyser.frequencyBinCount) : null;
+  function step(){
+    var w = cv.width, h = cv.height;
+    ctx.clearRect(0,0,w,h);
+    if (_voiceAnalyser && bins){
+      _voiceAnalyser.getByteFrequencyData(bins);
+      // Use a clean middle slice of bins (skip very low/very high noise)
+      var lo = 2, hi = Math.min(bins.length - 4, 48);
+      var n = hi - lo;
+      var bw = w / n;
+      ctx.fillStyle = 'rgba(255,140,40,.95)';
+      ctx.shadowColor = 'rgba(255,90,30,.85)';
+      ctx.shadowBlur = 6;
+      for (var i = 0; i < n; i++){
+        var v = bins[lo + i] / 255;
+        var bh = Math.max(2, v * h * 0.95);
+        var x = i * bw + 1;
+        var y = (h - bh) / 2;
+        ctx.fillRect(x, y, bw - 2, bh);
+      }
+      ctx.shadowBlur = 0;
+    } else {
+      // Fallback: synthetic shimmer so something is moving even without analyser
+      var t = performance.now() / 220;
+      ctx.fillStyle = 'rgba(255,140,40,.85)';
+      var nn = 28, bbw = w / nn;
+      for (var j = 0; j < nn; j++){
+        var bh2 = (Math.sin(t + j * 0.45) + 1) / 2 * h * 0.7 + h * 0.05;
+        ctx.fillRect(j * bbw + 1, (h - bh2) / 2, bbw - 2, bh2);
+      }
+    }
+    _ironWaveRaf = requestAnimationFrame(step);
+  }
+  step();
+}
+function _stopIronWave(){
+  if (_ironWaveRaf){ cancelAnimationFrame(_ironWaveRaf); _ironWaveRaf = 0; }
+  var cv = document.getElementById('ironWave');
+  if (cv){
+    cv.classList.remove('on');
+    var ctx = cv.getContext('2d');
+    if (ctx) ctx.clearRect(0,0,cv.width,cv.height);
+  }
 }
 
 // --- Avatar 3 & 4 run on their own 2D canvas (#avatarCanvas) ---
@@ -3622,6 +3744,8 @@ function switchAgent(ag) {
   document.documentElement.style.setProperty('--acDim', hex2rgba(acColor, .6));
   document.documentElement.style.setProperty('--acFaint', hex2rgba(acColor, .18));
   $('agentLabel').textContent = (ag.id === 'aria') ? aiName().toUpperCase() : ag.name;
+  // If the user picked the live cosmic avatar, swap to the male video for male agents.
+  try { _refreshLiveAvatarSrc(); } catch(e){}
   $('agentBtn').style.background = hex2rgba(ag.color, .12);
   $('agentBtn').style.borderColor = ag.color;
   $('agentBtn').style.color = ag.color;
@@ -4147,6 +4271,12 @@ function _spkNext() {
     if (ev.error === 'interrupted') { _spkNext(); return; }
     _spkDone();
   };
+  // Animate the iron-skin waveform while browser TTS is talking. There is no
+  // accessible audio buffer for SpeechSynthesis, so this drives the synthetic
+  // shimmer fallback in _startIronWave.
+  currentUtter.onstart = function(){ try { _startIronWave(); } catch(e){} };
+  var _origEnd = currentUtter.onend;
+  currentUtter.onend = function(){ try { _stopIronWave(); } catch(e){} _origEnd && _origEnd(); };
   try { speechSynthesis.speak(currentUtter); } catch(e) { _spkDone(); }
   clearInterval(_spkKeep);
   _spkKeep = setInterval(function() { if (speechSynthesis.paused) speechSynthesis.resume(); }, 8000);
@@ -4233,11 +4363,14 @@ function elevenSpeak(text, onDone, onFail) {
     var url = URL.createObjectURL(blob);
     if (_elAudio) { try { _elAudio.pause(); } catch(e){} }
     _elAudio = new Audio(url);
+    // Wire the live-waveform overlay (iron skin) to this audio element's
+    // output. Fails silently on browsers that block Web Audio.
+    try { _attachVoiceAnalyser(_elAudio); } catch(e){}
     // Once audio is genuinely playing, cancel the watchdog so it can never
     // abort a long (legitimately over-9-second) spoken reply.
-    _elAudio.onplaying = function() { _lastVoiceUsed = 'eleven'; refreshVoiceStatus(); if (watchdog) { clearTimeout(watchdog); watchdog = null; } };
-    _elAudio.onended  = function() { URL.revokeObjectURL(url); _elAudio = null; finishOK(); };
-    _elAudio.onerror  = function() { URL.revokeObjectURL(url); _elAudio = null; toast('✗ Audio playback failed — using browser voice.'); finishFail(); };
+    _elAudio.onplaying = function() { _lastVoiceUsed = 'eleven'; refreshVoiceStatus(); if (watchdog) { clearTimeout(watchdog); watchdog = null; } try { _startIronWave(); } catch(e){} };
+    _elAudio.onended  = function() { URL.revokeObjectURL(url); _elAudio = null; try { _stopIronWave(); } catch(e){} finishOK(); };
+    _elAudio.onerror  = function() { URL.revokeObjectURL(url); _elAudio = null; try { _stopIronWave(); } catch(e){} toast('✗ Audio playback failed — using browser voice.'); finishFail(); };
     var p = _elAudio.play();
     if (p && p.then) {
       p.then(function(){ if (watchdog) { clearTimeout(watchdog); watchdog = null; } })
@@ -7503,6 +7636,38 @@ function _txtPbSave(){
 }
 
 // Pick from real phone contacts (Chrome Android only, gracefully degrades).
+// Pick MANY contacts from the phone at once and dump them into the phonebook.
+// Used by the "Import from Phone" button in Settings.
+function _pbImportFromPhone(){
+  var stat = document.getElementById('pbImportStat');
+  function say(msg, ok){
+    if (stat){ stat.textContent = msg; stat.style.color = ok ? '#5fd35f' : ''; }
+  }
+  if (!('contacts' in navigator) || !navigator.contacts || !navigator.contacts.select){
+    say('Not available on this device. iOS Safari doesn\u2019t support the contact picker — use the manual phonebook.');
+    toast('Contact picker not supported on this device.');
+    return;
+  }
+  navigator.contacts.select(['name','tel'], {multiple:true}).then(function(arr){
+    if (!arr || !arr.length){ say('No contacts picked, Reni.'); return; }
+    var added = 0, skipped = 0;
+    arr.forEach(function(c){
+      var nm = (c.name && c.name[0]) ? String(c.name[0]).trim() : '';
+      var ph = _txtNormPhone((c.tel && c.tel[0]) || '');
+      if (!nm || !ph){ skipped++; return; }
+      if (phonebook.find(function(x){ return x.phone === ph; })){ skipped++; return; }
+      phonebook.push({ id: Date.now()+Math.floor(Math.random()*9999), name: nm, phone: ph });
+      added++;
+    });
+    if (added){ savePhonebook(); try { renderPhonebook(); } catch(e){} }
+    say('Imported ' + added + (skipped ? (' \u00b7 ' + skipped + ' skipped') : '') + '.', added > 0);
+    toast(added ? ('Imported ' + added + ' contact' + (added===1?'':'s')) : 'Nothing new imported.');
+    vibrate(15);
+  }).catch(function(){
+    say('Import cancelled or blocked.');
+  });
+}
+
 function _txtPickFromPhone(){
   if (!('contacts' in navigator) || !navigator.contacts || !navigator.contacts.select){
     toast('Phone contact picker not available on this device — use the phonebook below.');
@@ -9379,6 +9544,19 @@ window.addEventListener('load', function() {
     if (!confirm('Clear everything Ri Ri remembers about you, Reni?')) return;
     memClear(); renderMemory(); toast('Memory cleared');
   };
+
+  // Phone contacts — import from device + jump to the phonebook view
+  var _pbImp = $('pbImportBtn');
+  if (_pbImp) _pbImp.onclick = function(){ try { _pbImportFromPhone(); } catch(e){ toast('Import failed.'); } };
+  var _pbOpn = $('pbOpenBtn');
+  if (_pbOpn) _pbOpn.onclick = function(){ try { switchView('phonebook'); } catch(e){} };
+  // Status hint: if the Contact Picker API is missing, say so up front
+  try {
+    var _pbHint = $('pbImportStat');
+    if (_pbHint && (!('contacts' in navigator) || !navigator.contacts || !navigator.contacts.select)) {
+      _pbHint.textContent = 'Contact Picker not supported on this device. Use the manual phonebook in CONTACTS.';
+    }
+  } catch(e){}
 
   // Ri Ri's Knowledge Base panel
   var _kbAdd = $('kbAddBtn');
