@@ -1,0 +1,24 @@
+{
+  "name": "RIRI",
+  "short_name": "RIRI",
+  "description": "Responsive Intelligent Reasoning Interface",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#02060f",
+  "theme_color": "#02060f",
+  "orientation": "any",
+  "icons": [
+    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icon-maskable.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ],
+  "shortcuts": [
+    {
+      "name": "Mind Map",
+      "short_name": "Mind Map",
+      "description": "Open the full-screen mind map",
+      "url": "./index.html?screen=mindmap",
+      "icons": [ { "src": "icon-192.png", "sizes": "192x192", "type": "image/png" } ]
+    }
+  ]
+}
