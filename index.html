@@ -2709,7 +2709,7 @@ body.kari #ironNav{font-size:7px!important;line-height:1.32!important}
         <div id="libListDesk"></div>
 
         <!-- ════ SKIN PER AI PERSONALITY (additive · each AI remembers its own skin) ════ -->
-        <label style="font-size:12px;color:var(--ac);margin-top:14px;display:block">SKIN PER AI PERSONALITY</label>
+        <label style="font-size:12px;color:var(--ac);margin-top:14px;display:block">SKIN PER AI PERSONALITY · build N</label>
         <div class="fhint" style="margin:3px 0 8px">Pick an AI below, turn on any skin above, then tap SAVE — that skin locks to just that AI. Each AI loads its own saved skin when you pick it and after you close the app. RESET puts only the chosen AI back on the default.</div>
         <select id="agentSkinPick" style="width:100%;padding:11px 10px;border-radius:9px;background:var(--bg3,#161618);color:#dff;border:1px solid var(--ac);font-size:14px;margin-bottom:8px"></select>
         <div class="fhint" style="margin:0 0 8px;color:#dff">Editing: <b id="agentSkinWho">RI RI</b> &nbsp;·&nbsp; Saved skin: <b id="agentSkinWhat">—</b> &nbsp;·&nbsp; Add-ons: <b id="agentSkinAddons">—</b></div>
@@ -2717,6 +2717,7 @@ body.kari #ironNav{font-size:7px!important;line-height:1.32!important}
           <button class="btnSec" id="agentSkinSaveBtn" style="flex:1">💾 SAVE THIS SKIN TO THIS AI</button>
           <button class="btnSec" id="agentSkinResetBtn" style="flex:1">↺ RESET THIS AI'S SKIN</button>
         </div>
+        <div style="margin-bottom:8px"><button class="btnSec" id="agentSkinDebugBtn" style="width:100%;font-size:12px">🐞 SKIN DEBUG (show what's saved for this AI)</button></div>
         <div id="agentSkinStatus" class="fhint" style="margin:0 0 12px"></div>
 
         <label style="font-size:12px;color:var(--ac)">AVATAR</label>
@@ -3123,7 +3124,7 @@ body.kari #ironNav{font-size:7px!important;line-height:1.32!important}
           Ri Ri Williams · Mobile<br>
           Built for Android · Free AI brain · Private storage<br>
           Calendar &amp; to-do never leave this device.<br>
-          <span style="color:var(--ac);font-family:Orbitron,sans-serif;font-size:10px;letter-spacing:.5px">BUILD 2026-07-02-M · Add-on fix: changing/uploading a skin no longer kicks a specialist back to RI RI's home grid. All 4 skin-apply paths (HUD mobile/desktop, Skin Library mobile/desktop) now enter the ACTIVE agent's own layer, keeping that AI's add-on panel. Add-ons were never stored in skin records — nothing to migrate. Save/reset confirmations now say add-ons are preserved. (Built on L.) SW v114.</span>
+          <span style="color:var(--ac);font-family:Orbitron,sans-serif;font-size:10px;letter-spacing:.5px">BUILD 2026-07-02-N · Uploaded skins now VISIBLE per specialist: the ALT skin layer (mobile + desktop) finally paints each AI's own uploaded HUD image instead of the generic Iron Man art — the real reason personality skins looked unsaved. Save now MERGES (never wipes a record); added a helper API + a 🐞 SKIN DEBUG button (Settings -> Appearance) that prints the full per-AI store to the console. Build tag shows next to the feature so you can confirm the live build. (Built on M.) SW v115.</span>
         </div>
       </div>
 
@@ -14423,11 +14424,17 @@ window.addEventListener('load', function(){
     // Don't double-enter; also exit main iron skin first if it's somehow on
     if(active()) exit(false);
     if(activeAlt()){ mountAgentPanel(); return; }
+    // Per-AI custom HUD: a specialist with its OWN uploaded skin shows THAT
+    // image as its backdrop; otherwise the generic ALT skin (unchanged).
+    var _altPk=(typeof lsGet==='function')?lsGet('riri_pngskin'):'';
+    var _altCustom=(_altPk==='custom')?lsGet('riri_overlay_mobile'):'';
+    var _altBg=_altCustom?_altCustom:'skin-ironmanai.png';
     var test=new Image();
     test.onload=function(){
       if(test.naturalWidth<1){ failAlt(); return; }
       document.body.classList.add('iron-alt-on');
-      var bg=$('ironAltBg'); if(bg) bg.src='skin-ironmanai.png';
+      document.body.classList.toggle('iron-alt-custom', !!_altCustom);
+      var bg=$('ironAltBg'); if(bg) bg.src=_altBg;
       startAltOrbVideo();
       if(!altOrbRAF) drawAltOrb();
       if(!altRadarLoaded){ altRadarLoaded=true; loadAltRadar(); }
@@ -14435,7 +14442,7 @@ window.addEventListener('load', function(){
       mountAgentPanel();
     };
     test.onerror=failAlt;
-    test.src='skin-ironmanai.png';
+    test.src=_altBg;
   }
   function failAlt(){
     var s=$('ironSkinStatus');
@@ -14617,11 +14624,15 @@ window.addEventListener('load', function(){
     if(activeAlt()) exitAlt();
     if(activeDesktop()) exitDesktop(false);
     if(activeDesktopAlt()){ mountDesktopAgentPanel(); return; }
+    var _dAltPk=(typeof lsGet==='function')?lsGet('riri_pngskin'):'';
+    var _dAltCustom=(_dAltPk==='custom')?lsGet('riri_overlay_desktop'):'';
+    var _dAltBg=_dAltCustom?_dAltCustom:'skin-ironmandesktopotherai.png';
     var test=new Image();
     test.onload=function(){
       if(test.naturalWidth<1){ failDesktopAlt(); return; }
       document.body.classList.add('iron-desktop-alt-on');
-      var bg=$('ironDesktopAltBg'); if(bg) bg.src='skin-ironmandesktopotherai.png';
+      document.body.classList.toggle('iron-desktop-alt-custom', !!_dAltCustom);
+      var bg=$('ironDesktopAltBg'); if(bg) bg.src=_dAltBg;
       startOrbVideoInto('ironDesktopAltOrbVid','ironDesktopAltOrbCanvas');
       if(!dskAltOrbRAF) drawDskAltOrb();
       if(!dskAltRadarLoaded){ dskAltRadarLoaded=true; loadRadarInto('ironDesktopAltRadarImg','ironDesktopAltRadar'); }
@@ -14629,7 +14640,7 @@ window.addEventListener('load', function(){
       mountDesktopAgentPanel();
     };
     test.onerror=failDesktopAlt;
-    test.src='skin-ironmandesktopotherai.png';
+    test.src=_dAltBg;
   }
   function failDesktopAlt(){
     var s=$('ironSkinStatus');
@@ -15330,6 +15341,7 @@ window.addEventListener('load', function(){
   function el(id){ return document.getElementById(id); }
   function esc(t){ return String(t).replace(/[&<>"]/g,function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]; }); }
   function status(m,bad){ var x=el('agentSkinStatus'); if(x) x.innerHTML='<span style="color:'+(bad?'#ff8080':'#7fffd0')+'">'+m+'</span>'; }
+  function dbg(){ try{ if(localStorage.getItem('riri_skindebug')==='1'){ console.log.apply(console,['[RIRI-SKIN]'].concat([].slice.call(arguments))); } }catch(e){} }
   function map(){ try{ return JSON.parse(localStorage.getItem(KEY)||'{}'); }catch(e){ return {}; } }
   function saveMap(m){ try{ localStorage.setItem(KEY,JSON.stringify(m)); return true; }catch(e){ return false; } }
   function lib(key){ try{ return JSON.parse(localStorage.getItem(key)||'[]'); }catch(e){ return []; } }
@@ -15460,17 +15472,18 @@ window.addEventListener('load', function(){
   function onSwitch(id,name){
     curId=id||'aria';
     curName=name||(curId==='aria'?'RI RI':curId.toUpperCase());
-    var m=map(), rec=m[curId]||m.__default;
-    restore(rec,false,curId);
+    var m=map(), own=m[curId], rec=own||m.__default;
+    dbg('SWITCH id='+curId,'usedFallback='+(!own),'skin='+((rec&&rec.skin)||'(none)'),'record=',rec);
+    restore(rec,false,own?curId:'__default');
     refreshLabels();
   }
 
   function doSave(){
-    var m=map();
     var rec=protectUpload(snapshot());
     if(rec.skin==='custom'){ var w=g('riri_custom_skin'); if(w) s(wallKey(curId),w); }
-    m[curId]=rec;
-    if(!saveMap(m)){ status('Storage is full — delete an old saved skin, then try again.',true); return; }
+    var saved=savePersonalitySettings(curId, rec);   // MERGE into existing — never replaces the record
+    if(!saved){ status('Storage is full — delete an old saved skin, then try again.',true); return; }
+    dbg('SAVE id='+curId,'record=',saved,'persistedKey=riri_agent_skins');
     refreshLabels();
     status('Skin saved for '+esc(curName)+'. Add-ons preserved.');
   }
@@ -15481,6 +15494,7 @@ window.addEventListener('load', function(){
     delete m[curId];
     saveMap(m);
     s(wallKey(curId),'');                           // drop this AI's wallpaper copy
+    dbg('RESET id='+curId,'-> fallback default',m.__default);
     restore(m.__default,true,'__default');
     refreshLabels();
     status(esc(curName)+' is back on the default skin. Add-ons untouched.');
@@ -15523,9 +15537,29 @@ window.addEventListener('load', function(){
     if(sb) sb.addEventListener('click',doSave);
     if(rb) rb.addEventListener('click',doReset);
     if(pk){ pk.addEventListener('change',pick); pk.addEventListener('focus',fillPicker); }
+    var db=el('agentSkinDebugBtn'); if(db) db.addEventListener('click',doDebug);
     fillPicker(); refreshLabels();
   }
-  window.__agentSkins={ onSwitch:onSwitch, save:doSave, reset:doReset };
+  // ── Public, auditable helpers (thin wrappers over the ONE store: riri_agent_skins) ──
+  function getActivePersonalityId(){ return curId; }
+  function getPersonalitySettings(id){ var m=map(); return m[id]||null; }
+  // MERGE partial into existing settings — NEVER replaces the whole record.
+  function savePersonalitySettings(id, partial){ var m=map(); var merged=Object.assign({}, m[id]||{}, partial||{}); merged.updated=Date.now(); m[id]=merged; return saveMap(m)?merged:null; }
+  function savePersonalitySkin(id, skinFields){ return savePersonalitySettings(id, skinFields||{}); }
+  function loadPersonalitySkin(id){ var m=map(); return m[id]||m.__default||null; }
+  function applyPersonalitySettings(id, enterNow){ var m=map(); var own=m[id]; restore(own||m.__default, !!enterNow, own?id:'__default'); }
+  function doDebug(){
+    var on = g('riri_skindebug')!=='1'; s('riri_skindebug', on?'1':'');
+    var m=map(), own=m[curId];
+    var n=Object.keys(m).filter(function(k){return k!=='__default';}).length;
+    status(esc('Console debug '+(on?'ON':'OFF')+' · editing '+curName+' · '+(own?('own skin: '+describe(own)):('using fallback default: '+describe(m.__default)))+' · '+n+' AI skin(s) saved · stored in localStorage[\'riri_agent_skins\']'));
+    dbg('STATE id='+curId,'usedFallback='+(!own),'wall='+(g(wallKey(curId))?'yes':'no'));
+    try{ console.log('[RIRI-SKIN] full riri_agent_skins map =', m); }catch(e){}
+  }
+  window.__agentSkins={ onSwitch:onSwitch, save:doSave, reset:doReset, debug:doDebug,
+    getActivePersonalityId:getActivePersonalityId, getPersonalitySettings:getPersonalitySettings,
+    savePersonalitySettings:savePersonalitySettings, savePersonalitySkin:savePersonalitySkin,
+    loadPersonalitySkin:loadPersonalitySkin, applyPersonalitySettings:applyPersonalitySettings };
   if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',wire); else wire();
 })();
 </script>
