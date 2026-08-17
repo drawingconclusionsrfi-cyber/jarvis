@@ -3053,12 +3053,19 @@ body.kari #ironNav{font-size:7px!important;line-height:1.32!important}
         <div id="voiceStatus" class="voiceStatus"></div>
 
         <div class="field">
-          <label>Voice Mode</label>
+          <label>🎙 VOICE ENGINE <span style="color:var(--ac)">(who actually speaks)</span></label>
+          <div class="fhint" style="margin-bottom:8px">Tap one. The dot next to each name below says whether it is ready to go. If the engine you pick fails mid-sentence she drops down the list instead of going silent.</div>
           <div class="watchModeToggle" style="display:flex;gap:6px;flex-wrap:wrap">
-            <button id="vmBrowserBtn" style="flex:1;min-width:110px">🔊 BROWSER (FREE)</button>
-            <button id="vmElevenBtn" style="flex:1;min-width:110px">⭐ ELEVENLABS</button>
-            
+            <button id="vmAutoBtn"    style="flex:1;min-width:104px">⚙ AUTO</button>
+            <button id="vmBrowserBtn" style="flex:1;min-width:104px">🔊 BROWSER</button>
+            <button id="vmCfBtn"      style="flex:1;min-width:104px">☁ CLOUDFLARE</button>
+            <button id="vmPollBtn"    style="flex:1;min-width:104px">🆓 RIRI FREE</button>
+            <button id="vmEdgeBtn"    style="flex:1;min-width:104px">🌐 EDGE</button>
+            <button id="vmElevenBtn"  style="flex:1;min-width:104px">⭐ ELEVENLABS</button>
           </div>
+          <div id="vmReady" class="fhint" style="margin-top:10px;line-height:1.85"></div>
+          <button class="bigBtn ac" id="vmTestBtn" style="margin-top:10px">▶ TEST THE ENGINE I PICKED</button>
+          <div id="vmTestStat" class="fhint" style="margin-top:6px"></div>
           <div class="fhint">Browser voice is free and unlimited. ElevenLabs needs a key + credits. Edge Neural is free Microsoft neural voices (needs the free Worker below). Pick whichever you want — this overrides everything.</div>
         </div>
 
@@ -3411,7 +3418,7 @@ body.kari #ironNav{font-size:7px!important;line-height:1.32!important}
           Ri Ri Williams · Mobile<br>
           Built for Android · Free AI brain · Private storage<br>
           Calendar &amp; to-do never leave this device.<br>
-          <span style="color:var(--ac);font-family:Orbitron,sans-serif;font-size:10px;letter-spacing:.5px">BUILD 2026-08-17-BC · HER OWN AI SERVER: Settings has a new RIRI AI BRIDGE section. Deploy the one file riri-ai-worker.js as a Cloudflare Worker called riri-ai, add a secret named RIRI_TOKEN, add a Workers AI binding named exactly AI, then paste the URL and the same token into Settings. That gives her four free engines on Cloudflare’s own hardware — voice, transcription, embeddings and images — on 10,000 free neurons a day that reset at midnight UTC, no card. Three TEST buttons sit right under the fields so you can prove each route works before anything depends on it. Your Cloudflare account keys never touch the phone: they stay inside the Worker, and the browser only ever holds the one token that unlocks that single Worker. Nothing else in the app uses the bridge yet — this build is the road, the traffic comes next. SW v141 · BUILD 2026-08-17-BB · HER MOUTH MOVES AGAIN: six separate faults were freezing the talking animation, on every agent, not just Ri Ri. The big one — the silence gate that’s meant to still her mouth between words was reading the audio from your PREVIOUS reply. That clip had finished, so it read as permanent silence, and the gate held every avatar frozen for the whole of the next answer. She talked, her face didn’t. It now only trusts the sound meter while the clip it’s attached to is genuinely playing, forgets it the moment a reply ends, and lets go on its own if it has ever held the mouth shut longer than a second and a half. Second — her free voice was being read through a connection the browser mutes for security, so the meter saw pure silence there too; that’s now opened properly. Third — every reply was leaving a dead audio node wired into the meter and never unhooking it, so a long conversation slowly clogged. Fourth, and this one only bit the specialists: switching to a male-voiced agent could swap the avatar file mid-load and wipe out the only line of code that makes a skin’s face visible, leaving it hidden forever and dropped from lip sync entirely. Fifth, the Knight Rider scan bar was calling video commands on something that isn’t a video, throwing an error every single time you opened that skin. Sixth, kari-scanbar.mp4 has been shipped and cached since the day it was added and has never once played. No new files, no new permissions. SW v141 · BUILD 2026-08-17-BA · SHE HEARS YOU PROPERLY NOW: new switch in Settings → REMINDER ALERTS — 🎧 WHISPER EARS. Flip it on and tapping the mic records what you say and sends it to Whisper instead of the browser’s recogniser. The difference is names, slang and anything said fast or with an accent finally landing right instead of turning into nonsense. It stops on its own about a second and a half after you go quiet, or tap 🎙 again to send early; twenty seconds is the cap on one go. Free — 20 a minute, 2,000 a day, no card. It needs a Groq key, and here is the thing: RIRI has been reading a Groq key since the last build but there was never a box to put one in, so the Groq half of RIRI FREE VOICES could never fire either. That box now exists — Settings → RI RI’S BRAIN → Groq API Key, free at console.groq.com/keys. One key, two features. Every failure hands the turn straight back to the browser ears mid-sentence — no key, no mic permission, no signal, slow reply, all of it — so voice input can never go dead. Whisper also works on browsers that have no speech recognition at all, which the browser ears never did. Always-on and wake word deliberately keep using the browser engine: they need to hear you continuously, and a record-then-send transcriber cannot do that. SW v140 · BUILD 2026-08-17-AZ · MONEY AND FOOD, NO KEYS: two new live sources, both free, neither needs an account. CURRENCY — ask “how much is 200 dollars in euros”, “convert 50 usd to yen”, “usd to gbp” or just “what’s the exchange rate” and she answers off real central-bank reference rates, 84 banks, updated daily, with the date the rate is from. FOOD — ask “recipe for jerk chicken”, “how do I make oxtail” or “what can I make with chicken” and you get the full ingredient list with measures, the method, and the YouTube walkthrough when there is one; ask for a dish she doesn’t have and she checks it as an ingredient before giving up. Recipes come from TheMealDB, credited on every reply. Also fixed while in there: asking for synonyms came back empty far too often because the thesaurus only checked exact-synonym links — it now falls back to a broader “means like” search before giving up, so you get an answer instead of a shrug. Every one of these times out at nine seconds and falls through to her normal brain, so a slow API never costs you a reply. SW v140 · BUILD 2026-08-09-AY · THE FREE VOICE BUTTON ACTUALLY WORKS NOW: Settings already had four voice engines — Browser, ElevenLabs, Edge Neural and RiRi Free Voices — but picking RIRI FREE VOICES did nothing. The button saved your choice and then the speaking code ignored it completely, falling through to ElevenLabs and quietly spending your credits every single time, in normal chat, in her streamed speech, and in meditation sessions. All three now honour what you picked. Choose RIRI FREE VOICES and she really does route through the free Groq and Pollinations voices — zero ElevenLabs credits. Meditation now honours Edge Neural too, which it never did. And every engine keeps a safety net: if the one you picked fails or you’re offline, she drops to the next one down instead of going silent, so you always hear her. Nothing else changed. · BUILD 2026-08-08-AX · DESK MODE BUTTON FIX: the Settings DESK MODE button now actually opens the dock. It was defined inside the app’s main closure, where the button’s tap — which runs in the page’s outer scope — couldn’t see it, so taps silently did nothing; the “desk mode” voice command already worked because it calls from inside. Wired it the same way every other Settings button is wired. The dock itself is unchanged. · DESK MODE — A BEDSIDE DOCK WHILE SHE CHARGES: stand the phone on its side on the charger and RIRI switches to a big-format dock — a huge clock, the live temperature, your next calendar item, and one giant TALK button that works exactly like tapping the mic. The screen stays awake the whole time it’s docked, and only while it’s docked — unplug or turn the phone upright and she drops straight back to normal, screen free to sleep again so nothing drains overnight. It arms itself the moment you’re charging and sideways; no switch to remember. If your phone doesn’t report charging to the browser, just say “desk mode” or tap Settings → 🖥 DESK MODE and it opens anyway (turning upright still exits). The clock and weather refresh themselves while it sits there. Everything runs on your device — the only network call is the small weather lookup. Say “desk mode” to enter, “exit desk mode” or tap EXIT to leave. No new files, no new permissions. SW v139 · BUILD 2026-07-24-AV · ALARMS THAT GO OFF WITH THE APP CLOSED: until now every alarm and reminder lived inside the page, so closing RIRI or letting the phone sleep killed the timer. Android now holds them for her. Your clock alarms, calendar events, a nightly streak check and three water nudges a day are handed to the phone with their times attached — they arrive whether RIRI is open, backgrounded or fully shut. Tap one and she opens and SAYS it out loud. Nothing to switch on: it schedules itself when you open the app and tops itself back up every time you come back. Two things worth knowing — turn on Reminder Alerts in Settings once (that grants the permission), and whitelist RIRI in your Android battery settings or Samsung and Xiaomi will still hold notifications back. Recurring nudges are laid down 7 days ahead, so open her once a week and they never run dry; alarms and events are scheduled the moment you create them. On any phone that doesn’t support scheduling, everything silently falls back to the old in-app timers. SW v139 · BUILD 2026-07-22-AU · SHE LEARNS YOU ON HER OWN: every sixth message, quietly in the background, RIRI now reads back over what you just talked about and pulls out anything durable about you — people, projects, health, preferences, dates — and files it away herself. No buttons, no prompts, nothing on screen. You never have to say “remember that” again unless you want to. Anything one agent learns, every agent knows: tell Ceres you skipped breakfast and Hercules already has it. She also checks new facts against what she already knows and merges rephrasings instead of stacking near-duplicates, so the memory stays sharp instead of bloating. And once a week she writes herself a short private briefing on who you are RIGHT NOW — what you’re working on, what’s weighing on you, how you like to be spoken to — and hands it to every agent before they answer. Nothing leaves your device except the one small request that builds it. SW v138 · BUILD 2026-07-21-AT · MEET COCO, YOUR STYLIST — AND TRY CLOTHES ON YOURSELF: new agent in your roster, plus a wardrobe that actually knows what you own. Say “open my wardrobe”, “style me”, “what should I wear” or “try this on” — or Settings → 👗 WARDROBE. Four tabs. CLOSET: photograph each piece and COCO reads the type, colour, pattern and style herself, no typing. STYLE ME: tell her the occasion and she builds you one outfit out of clothes you already own, showing the actual photos, with a styling note — or tap WHAT’S MISSING and she names the three gaps that would unlock the most new outfits. TRY ON: this is the one — she paints the outfit onto YOUR photo so you see it on your body before you commit. MY PHOTOS: add a front, back and side shot once and they’re yours forever, stored only on your device. Try-on fires ONE ANGLE PER TAP so it never spends credits you didn’t ask for, and any angle you’ve already rendered comes back free. Honest about limits: it shows silhouette, proportion and colour truthfully — it can’t tell you if something’s tight across the shoulders. Also: SAVE ALL and SYNC NOW now sit side by side at the very top of Settings, no scrolling. And meditation now opens by voice — that route was missing from the last build. SW v137 · BUILD 2026-07-20-AS · MEDITATION, UNDER SOCRATES: say “meditate”, “help me relax”, “body scan” or “help me sleep” — or Settings → 🧘 MEDITATION — and a room opens with three tabs. MINE holds everything saved on your device, playable with no signal at all. GET NEW downloads real recorded guided sessions (public-domain and Creative Commons, credited in the panel), or CHOOSE lets you add any MP3 you already own. MAKE ONE is the good one: pick a type and a length, tell it what’s on your mind, and Socrates writes you a script and reads it aloud in his own voice, pausing in the silences the way a real teacher does. Music plays underneath all of it — a soft ambient bed with its own volume slider, plus a singing bowl at the start and the end. Three sliders remember where you left them: VOICE, MUSIC, BELL. A breathing orb paces you while it plays. Everything is stored on your device and costs nothing. SW v136 · BUILD 2026-07-20-AR · SHE TALKS BACK LIKE A PERSON: five changes make voice chat feel live instead of laggy. (1) STREAMED SPEECH — she starts speaking her first sentence while the rest of the answer is still being written, so her first word lands in about a second instead of five. (2) She waits a lot less after you stop talking before she answers. (3) A soft chirp fires the instant she hears you finish, so you never wonder if it registered. (4) Spoken replies are kept to about three sentences — typed chat is unchanged and still gives you the full answer. (5) The voice connection is warmed up the moment you tap the mic. Two switches in Settings → REMINDER ALERTS: ⚡ FAST VOICE and 🔔 HEARD-YOU TONE, both on by default. Also: say “open sentry” (or type /sentry) and your watch station opens in its own window — Ri Ri and Janus both know it. SW v135 · BUILD 2026-07-12-AQ · MEET IRIS, YOUR CREATIVE DIRECTOR: new agent in your roster — a warm, imaginative filmmaker’s eye who helps you conceive and DIRECT visuals using the tools RIRI already has. She art-directs and can fire them for you: /img and /img hq for stills, /vid for short AI videos, /edit to repaint a photo you’ve attached or one open in the viewer. She also gives real guidance — shot lists, trailer structure, color-grade direction, mood and music. She’s honest about limits: no live AR, no body tracking, no 3D export — she’ll offer a generated image or video instead. Say anything about editing, cinematic looks, trailers or shots and she takes over, or pick her from the AGENTS tab. She answers the morning roll call. Upload her a skin like any other agent. SW v134 · BUILD 2026-07-12-AP · CALIBRATE REMOVES EVERYTHING: the ✕ in CALIBRATE now reaches EVERY element on a skin — not just the buttons, but the chat/dialogue box, the location and voice-wave readouts, and even the skin background image itself. Tap ✕ to remove any of them from THIS skin, tap 👁 to bring it back, then SAVE. The background is remove-only (you can’t drag it), everything else still drags and resizes. RESET restores the whole skin. SW v133 · BUILD 2026-07-12-AO · MEET ATLAS, YOUR SPORTS DESK: new agent in your roster — an all-sports anchor who covers every league (NFL, NBA, MLB, NHL, soccer, college, tennis, golf, F1, UFC and more). He leads with the teams in YOUR area and pulls fresh scores, standings and news live off the web before answering, so results are current, not guessed. Say anything sporty — “who won last night”, “latest on the Celtics”, “what’s the score”, “NBA standings” — and he takes over automatically, or pick him from the AGENTS tab. He answers the morning roll call with everyone else. Upload him a skin like any other agent. Set your city in Settings so his local coverage is spot-on. SW v132 · BUILD 2026-07-12-AN · REMOVE CONTROLS PER SKIN: tap ✏️ CALIBRATE on any skin (phone or desktop) and every control now shows a red ✕ in its corner. Tap ✕ to remove that control from THIS skin (it dims), tap the 👁 to bring it back, then SAVE. Removed controls vanish on that skin only and are remembered per device — the same button still works on every other skin. RESET restores them all. SW v131 · BUILD 2026-07-12-AM · CALLIOPE HEARS YOU SING: say \"pitch trainer\" or \"listen to me sing\" — a live trainer opens with her ears on. Pick a target note (or SURPRISE ME), tap HEAR THE NOTE to hear it, START LISTENING and sing: the big readout shows your exact note, the needle shows flat/sharp in cents, hold the green for half a second to score a HIT. When you stop, your real numbers (tries, hits, average cents off, vocal range) are saved and Calliope coaches from them — she genuinely heard you. Works offline, costs nothing. SW v130 · BUILD 2026-07-10-AL · CLOUD SYNC — ONE BRAIN, EVERY DEVICE: Settings now has a CLOUD SYNC section. Point every copy of RIRI at your own private sync worker and her memories, calendar, to-dos, journal, chat history, contacts, custom agents, imported notes, API keys and preferences flow between phone and desktop automatically — on open, every 3 minutes when something changed, and when you switch away. Merging is additive: nothing is ever deleted by a sync. Gallery media and skins stay per-device. SW v129 · BUILD 2026-07-10-AK · ROLL CALL FIXED: Calliope now answers the morning roll call with the rest of the roster, and the auto morning briefing politely waits until the roll call fully finishes before RIRI starts speaking — no more talking over each other. SW v128 · BUILD 2026-07-10-AJ · MEET CALLIOPE, YOUR VOCAL COACH: new agent in your roster — a warm, conservatory-trained singing teacher. Say anything about singing, pitch, breath support or warm-ups and she takes over automatically, or pick her from the AGENTS tab. She gives step-by-step drills you can do on the spot, builds practice plans, and can set practice reminders that speak. Upload her a skin like any other agent. SW v127 · BUILD 2026-07-10-AI · WAKE WORD + MORNING VOICE + PDF BRAIN: (1) Settings → REMINDER ALERTS now has \uD83C\uDF99 WAKE WORD — flip it ON, say \"Hey Riri\" from across the room while the app is open and she answers hands-free (uses more battery, phone stays awake). (2) Say \"good morning\" or \"brief me\" any time and she SPEAKS your full briefing — schedule, open tasks, live weather, top headlines; plus she does it automatically on your first open of the day between 5am and noon (toggle in the same Settings section). (3) Her notes brain already eats PDFs — Settings → knowledge base accepts .pdf, .docx, .txt and .md; feed her anything. SW v126 · BUILD 2026-07-10-AH · STARK SENSES: (1) EYES — attach or snap a photo with \uD83D\uDCCE and ask anything; RIRI now sees it through Gemini vision first (sharper, your key) with the free engine as backup. (2) LIVE KNOWLEDGE — say \"look up X\" or \"what's the latest on X\" and she pulls the live web + Wikipedia into her answer, in character, any agent. (3) REMINDERS THAT SPEAK — when a reminder or event hits its time she now SAYS it out loud and toasts it, always; the OS notification stays as a bonus when Reminder Alerts is ON in Settings. SW v125 · BUILD 2026-07-10-AG · HUD CONTROL + PREMIUM IMAGES: Settings now has 👁 HUD PANELS — seven switches that hide or show the chat box, location, map, voice wave, inspiration, schedule, and to-do panels on EVERY skin at once (dimmed = hidden, remembered forever). And /img hq plus a description uses the premium Puter engine on demand while plain /img stays free and unlimited. SW v124 · BUILD 2026-07-10-AF · PC POWERS + MAX PERSONALITY: say "set up folders in D:/Art" and RIRI creates Music, Videos, Documents, Screenshots, Other there; say "move vacation.jpg to pictures" and she moves it — never deletes, name clashes get (2). Needs agent v1.5 running on the PC. Every agent's personality is now dialed to maximum — full voice, opinions and humor in every reply. SW v123 · BUILD 2026-07-10-AE · VIDEO VAULT + SPECIALIST GRIDS + TEXT SIZE: (1) /vid results now have a ⭐ SAVE button — videos live in your gallery as 🎬 tiles, tap to replay, ✕ to delete. (2) DAILY INSPIRATION, SCHEDULE, TO-DO and LOCATION data now paint on every specialist skin, phone and desktop — drag them into your artwork with CALIBRATE. (3) Settings → 💬 CHAT TEXT SIZE slider resizes the chat text on every AI's skin and the chat bubbles, 80–170%. (Built on AD.) SW v122 · BUILD 2026-07-10-AD · TYPING FIXED + FREE IMAGES FIRST: (1) After using CALIBRATE once, its drag handlers stayed alive forever — every tap on a text box moved the box instead of typing. Now dragging only happens while CALIBRATE edit mode is actually on. (2) /img now tries the always-free image source (Pollinations) FIRST and only touches your Puter credits as a last resort; auto-illustrations never spend Puter credits at all. /edit and /vid still use Puter (no free equivalent exists for those). (Built on AC.) SW v121 · BUILD 2026-07-10-AC · SPECIALIST HUD DATA: the CURRENT LOCATION readout and the VOICE A.F.2 sound wave now light up on every specialist's desktop skin — they only existed on Ri Ri's skins before. Both are calibratable: tap CALIBRATE, drag them into your skin's boxes, SAVE. (Built on AB.) SW v120 · BUILD 2026-07-10-AB · SPECIALIST CHAT FIXED EVERYWHERE: two real bugs found. (1) The painter loop that draws chat text was only wired to Ri Ri's skins — it literally never ran on specialist skins, so their text and threads never appeared. (2) The specialist DESKTOP skin had NO chat box at all — there was nowhere for text to land. Both fixed: every specialist skin (phone + desktop) now shows that AI's live reply and full scrollable thread. The new desktop chat box is calibratable — tap CALIBRATE and drag/resize it to fit your skin art, SAVE remembers it per skin. (Built on Z.) SW v119 · BUILD 2026-07-09-Z · CREATIVE SUITE: /edit + an instruction repaints the photo you attached with 📎 or the image open in the viewer ("/edit make it a watercolor painting"). /vid + a description makes a short AI video (2–3 min wait, view-only for now — screen-record keepers). Say "open my gallery" anywhere to see saved images by voice. AUTO-ILLUSTRATE: your AIs can now decide a picture would help their reply and paint one on their own — sparingly, about one reply in ten, tap ⭐ to keep it. (Built on Y.) SW v117 · PER-AI THREADS FIXED: (V) NOTES BRAIN FIXED — the OneNote import existed but was broken two ways: a hidden variable clash between two note systems silently poisoned both, AND the reader file (mammoth.browser.min.js) was never shipped, so imports always failed. Both fixed — NEW FILE mammoth.browser.min.js required in repo root. Export any OneNote page as Word (.docx), Settings → 📚 IMPORT NOTES, and every AI answers from YOUR notes when they match your question. (W) REAL MOUTH SYNC — her mouth now FREEZES the instant her voice goes quiet between words and sentences, and moves again the instant sound returns. Mouths don't move in silence — now hers doesn't either. (X) DEPLOY + BACKUP by voice were already wired — say "riri deploy" or "back up my art" once the one-time git setup is done (see agent config). (Built on U.) SW v117 · FILE JANITOR (needs PC AGENT v1.3): say "clean my downloads" (works for documents, desktop, pictures, music, videos too) → RIRI scans and tells you what she found, sorted by type. Say "yes, clean it" → she MOVES the loose files into tidy subfolders (Images, Documents, Videos, Music, Archives, Installers, Other) right inside that folder. Nothing is ever deleted; files already in subfolders are never touched; name clashes get a (2). Requires the updated riri-agent.py v1.3 running on the PC. (Built on T.) SW v116 · SCROLL UNBLOCKED: found the real culprit — a CSS setting (justify-content:flex-end) on the skin chat boxes that has silently made scrolling impossible on EVERY build until now, no matter what the code put in the box. Removed on all skin dialogs (mobile, desktop, alt, Kari). Now: swipe/scroll up inside the chat box on any skin and your older messages with THAT AI are right there. Thread stays bottom-anchored when short. (Built on S.) SW v116 · SMARTER MEMORY, EVERY AI: (1) Relevance-ranked recall — when you ask something, RIRI now searches your ENTIRE saved memory store for facts that match your question (not just the newest ones), so old facts resurface exactly when they matter. (2) Journal awareness — your 3 most recent journal entries are quietly available to every AI, referenced gently and only when relevant. (3) No more amnesia — reload the app or switch specialists and back, and each AI continues its own conversation with you right where it left off, fed from its saved thread. No new files. (Built on R.) SW v116 · IMAGE GENERATION: type /img and a description in chat (example: /img a red dragon over Boston) → RIRI paints it with cloud AI (Puter first, Pollinations backup — no GPU needed, works on the Intel PC and phone). The image pops up full-screen with ⭐ SAVE. Saved images live in Settings → 🖼 IMAGE GALLERY (stored in IndexedDB via localForage — survives reloads, no storage cap worries). Tap a gallery thumbnail to enlarge, 🗑 to delete. First image ever may show a one-time Puter sign-in popup — allow it once and it remembers. NEW FILE REQUIRED in repo root: localforage.min.js. (Built on Q.) SW v115 · SKIN chat scrollback fixed: the chat bubble on the Iron-Man/custom skins now holds your FULL saved conversation (up to 80 lines) — scroll up inside it for older messages. It filters to the AI you're talking to: switch specialists and the bubble swaps to that AI's own thread instantly. Survives reloads. The Custom-HUD "OUR CONVERSATION" box shows the same full thread. (Built on P.) SW v115 · Per-AI scrollback: the chat thread now filters to the AI you're talking to — switch to any specialist and you see ONLY your conversation with THAT AI, and each reply bubble is labeled with its name. Older un-tagged messages show under Ri Ri. (Built on O.) SW v115 · Chat scrollback: the standard chat screen now shows your full conversation as a scrollable You ↔ Ri Ri thread below the live reply — scroll up inside it for older messages. Fed by your saved history (last 60 turns), updates live on every reply, and never touches the reply box, voice, or any skin. (Built on N.) SW v115 · Uploaded skins now VISIBLE per specialist: the ALT skin layer (mobile + desktop) finally paints each AI's own uploaded HUD image instead of the generic Iron Man art — the real reason personality skins looked unsaved. Save now MERGES (never wipes a record); added a helper API + a 🐞 SKIN DEBUG button (Settings -> Appearance) that prints the full per-AI store to the console. Build tag shows next to the feature so you can confirm the live build. (Built on M.) SW v115.</span>
+          <span style="color:var(--ac);font-family:Orbitron,sans-serif;font-size:10px;letter-spacing:.5px">BUILD 2026-08-17-BE · SETTINGS FINALLY TELLS YOU THE TRUTH ABOUT HER VOICE: the voice picker only ever had TWO buttons built into the page — Browser and ElevenLabs. Edge Neural and RiRi Free Voices were fully wired in the code but their buttons were never actually put on the screen, so there has never been a way to pick either one, no matter what the last few builds claimed. All six are there now: AUTO, BROWSER, CLOUDFLARE, RIRI FREE, EDGE and ELEVENLABS, and exactly one lights up — the one really saved, not a guess based on whether you have a key. Under them is a list with a green or red dot per engine telling you at a glance which are ready and which still need a key or a URL, and why. The status bar at the top now shows two things instead of one: what you PICKED and what LAST SPOKE. If those ever differ it turns amber and says your pick failed and she dropped to a backup — so you are never again guessing why she sounds different. One TEST button tests whatever is currently picked and names the engine that actually made the sound. SW v142 · BUILD 2026-08-17-BD · SHE HAS HER VOICE BACK: the last build broke her completely — she would type a reply and move her mouth but no sound came out at all. The cause was mine: I told the free voice to load over a strict security mode that Pollinations does not support, and instead of just losing the lip sync it stopped the audio downloading full stop. Removed. She speaks again. Also NEW — CLOUDFLARE is now a voice you can pick, running on the riri-ai worker you just set up. It is the best-sounding free option and the only one where her mouth moves in real time with the actual sound, because it comes back through your own worker instead of a third-party stream. It works in normal chat, in her streamed replies and in meditation, and if it ever fails it drops to the free voice and then the browser voice rather than going quiet. Heads up on the free pool: Cloudflare voice costs a lot more per word than the others while their cheap voice model is having problems, so it is roughly seven thousand characters a day, not hours. SW v142 · BUILD 2026-08-17-BC · HER OWN AI SERVER: Settings has a new RIRI AI BRIDGE section. Deploy the one file riri-ai-worker.js as a Cloudflare Worker called riri-ai, add a secret named RIRI_TOKEN, add a Workers AI binding named exactly AI, then paste the URL and the same token into Settings. That gives her four free engines on Cloudflare’s own hardware — voice, transcription, embeddings and images — on 10,000 free neurons a day that reset at midnight UTC, no card. Three TEST buttons sit right under the fields so you can prove each route works before anything depends on it. Your Cloudflare account keys never touch the phone: they stay inside the Worker, and the browser only ever holds the one token that unlocks that single Worker. Nothing else in the app uses the bridge yet — this build is the road, the traffic comes next. SW v141 · BUILD 2026-08-17-BB · HER MOUTH MOVES AGAIN: six separate faults were freezing the talking animation, on every agent, not just Ri Ri. The big one — the silence gate that’s meant to still her mouth between words was reading the audio from your PREVIOUS reply. That clip had finished, so it read as permanent silence, and the gate held every avatar frozen for the whole of the next answer. She talked, her face didn’t. It now only trusts the sound meter while the clip it’s attached to is genuinely playing, forgets it the moment a reply ends, and lets go on its own if it has ever held the mouth shut longer than a second and a half. Second — her free voice was being read through a connection the browser mutes for security, so the meter saw pure silence there too; that’s now opened properly. Third — every reply was leaving a dead audio node wired into the meter and never unhooking it, so a long conversation slowly clogged. Fourth, and this one only bit the specialists: switching to a male-voiced agent could swap the avatar file mid-load and wipe out the only line of code that makes a skin’s face visible, leaving it hidden forever and dropped from lip sync entirely. Fifth, the Knight Rider scan bar was calling video commands on something that isn’t a video, throwing an error every single time you opened that skin. Sixth, kari-scanbar.mp4 has been shipped and cached since the day it was added and has never once played. No new files, no new permissions. SW v141 · BUILD 2026-08-17-BA · SHE HEARS YOU PROPERLY NOW: new switch in Settings → REMINDER ALERTS — 🎧 WHISPER EARS. Flip it on and tapping the mic records what you say and sends it to Whisper instead of the browser’s recogniser. The difference is names, slang and anything said fast or with an accent finally landing right instead of turning into nonsense. It stops on its own about a second and a half after you go quiet, or tap 🎙 again to send early; twenty seconds is the cap on one go. Free — 20 a minute, 2,000 a day, no card. It needs a Groq key, and here is the thing: RIRI has been reading a Groq key since the last build but there was never a box to put one in, so the Groq half of RIRI FREE VOICES could never fire either. That box now exists — Settings → RI RI’S BRAIN → Groq API Key, free at console.groq.com/keys. One key, two features. Every failure hands the turn straight back to the browser ears mid-sentence — no key, no mic permission, no signal, slow reply, all of it — so voice input can never go dead. Whisper also works on browsers that have no speech recognition at all, which the browser ears never did. Always-on and wake word deliberately keep using the browser engine: they need to hear you continuously, and a record-then-send transcriber cannot do that. SW v140 · BUILD 2026-08-17-AZ · MONEY AND FOOD, NO KEYS: two new live sources, both free, neither needs an account. CURRENCY — ask “how much is 200 dollars in euros”, “convert 50 usd to yen”, “usd to gbp” or just “what’s the exchange rate” and she answers off real central-bank reference rates, 84 banks, updated daily, with the date the rate is from. FOOD — ask “recipe for jerk chicken”, “how do I make oxtail” or “what can I make with chicken” and you get the full ingredient list with measures, the method, and the YouTube walkthrough when there is one; ask for a dish she doesn’t have and she checks it as an ingredient before giving up. Recipes come from TheMealDB, credited on every reply. Also fixed while in there: asking for synonyms came back empty far too often because the thesaurus only checked exact-synonym links — it now falls back to a broader “means like” search before giving up, so you get an answer instead of a shrug. Every one of these times out at nine seconds and falls through to her normal brain, so a slow API never costs you a reply. SW v140 · BUILD 2026-08-09-AY · THE FREE VOICE BUTTON ACTUALLY WORKS NOW: Settings already had four voice engines — Browser, ElevenLabs, Edge Neural and RiRi Free Voices — but picking RIRI FREE VOICES did nothing. The button saved your choice and then the speaking code ignored it completely, falling through to ElevenLabs and quietly spending your credits every single time, in normal chat, in her streamed speech, and in meditation sessions. All three now honour what you picked. Choose RIRI FREE VOICES and she really does route through the free Groq and Pollinations voices — zero ElevenLabs credits. Meditation now honours Edge Neural too, which it never did. And every engine keeps a safety net: if the one you picked fails or you’re offline, she drops to the next one down instead of going silent, so you always hear her. Nothing else changed. · BUILD 2026-08-08-AX · DESK MODE BUTTON FIX: the Settings DESK MODE button now actually opens the dock. It was defined inside the app’s main closure, where the button’s tap — which runs in the page’s outer scope — couldn’t see it, so taps silently did nothing; the “desk mode” voice command already worked because it calls from inside. Wired it the same way every other Settings button is wired. The dock itself is unchanged. · DESK MODE — A BEDSIDE DOCK WHILE SHE CHARGES: stand the phone on its side on the charger and RIRI switches to a big-format dock — a huge clock, the live temperature, your next calendar item, and one giant TALK button that works exactly like tapping the mic. The screen stays awake the whole time it’s docked, and only while it’s docked — unplug or turn the phone upright and she drops straight back to normal, screen free to sleep again so nothing drains overnight. It arms itself the moment you’re charging and sideways; no switch to remember. If your phone doesn’t report charging to the browser, just say “desk mode” or tap Settings → 🖥 DESK MODE and it opens anyway (turning upright still exits). The clock and weather refresh themselves while it sits there. Everything runs on your device — the only network call is the small weather lookup. Say “desk mode” to enter, “exit desk mode” or tap EXIT to leave. No new files, no new permissions. SW v139 · BUILD 2026-07-24-AV · ALARMS THAT GO OFF WITH THE APP CLOSED: until now every alarm and reminder lived inside the page, so closing RIRI or letting the phone sleep killed the timer. Android now holds them for her. Your clock alarms, calendar events, a nightly streak check and three water nudges a day are handed to the phone with their times attached — they arrive whether RIRI is open, backgrounded or fully shut. Tap one and she opens and SAYS it out loud. Nothing to switch on: it schedules itself when you open the app and tops itself back up every time you come back. Two things worth knowing — turn on Reminder Alerts in Settings once (that grants the permission), and whitelist RIRI in your Android battery settings or Samsung and Xiaomi will still hold notifications back. Recurring nudges are laid down 7 days ahead, so open her once a week and they never run dry; alarms and events are scheduled the moment you create them. On any phone that doesn’t support scheduling, everything silently falls back to the old in-app timers. SW v139 · BUILD 2026-07-22-AU · SHE LEARNS YOU ON HER OWN: every sixth message, quietly in the background, RIRI now reads back over what you just talked about and pulls out anything durable about you — people, projects, health, preferences, dates — and files it away herself. No buttons, no prompts, nothing on screen. You never have to say “remember that” again unless you want to. Anything one agent learns, every agent knows: tell Ceres you skipped breakfast and Hercules already has it. She also checks new facts against what she already knows and merges rephrasings instead of stacking near-duplicates, so the memory stays sharp instead of bloating. And once a week she writes herself a short private briefing on who you are RIGHT NOW — what you’re working on, what’s weighing on you, how you like to be spoken to — and hands it to every agent before they answer. Nothing leaves your device except the one small request that builds it. SW v138 · BUILD 2026-07-21-AT · MEET COCO, YOUR STYLIST — AND TRY CLOTHES ON YOURSELF: new agent in your roster, plus a wardrobe that actually knows what you own. Say “open my wardrobe”, “style me”, “what should I wear” or “try this on” — or Settings → 👗 WARDROBE. Four tabs. CLOSET: photograph each piece and COCO reads the type, colour, pattern and style herself, no typing. STYLE ME: tell her the occasion and she builds you one outfit out of clothes you already own, showing the actual photos, with a styling note — or tap WHAT’S MISSING and she names the three gaps that would unlock the most new outfits. TRY ON: this is the one — she paints the outfit onto YOUR photo so you see it on your body before you commit. MY PHOTOS: add a front, back and side shot once and they’re yours forever, stored only on your device. Try-on fires ONE ANGLE PER TAP so it never spends credits you didn’t ask for, and any angle you’ve already rendered comes back free. Honest about limits: it shows silhouette, proportion and colour truthfully — it can’t tell you if something’s tight across the shoulders. Also: SAVE ALL and SYNC NOW now sit side by side at the very top of Settings, no scrolling. And meditation now opens by voice — that route was missing from the last build. SW v137 · BUILD 2026-07-20-AS · MEDITATION, UNDER SOCRATES: say “meditate”, “help me relax”, “body scan” or “help me sleep” — or Settings → 🧘 MEDITATION — and a room opens with three tabs. MINE holds everything saved on your device, playable with no signal at all. GET NEW downloads real recorded guided sessions (public-domain and Creative Commons, credited in the panel), or CHOOSE lets you add any MP3 you already own. MAKE ONE is the good one: pick a type and a length, tell it what’s on your mind, and Socrates writes you a script and reads it aloud in his own voice, pausing in the silences the way a real teacher does. Music plays underneath all of it — a soft ambient bed with its own volume slider, plus a singing bowl at the start and the end. Three sliders remember where you left them: VOICE, MUSIC, BELL. A breathing orb paces you while it plays. Everything is stored on your device and costs nothing. SW v136 · BUILD 2026-07-20-AR · SHE TALKS BACK LIKE A PERSON: five changes make voice chat feel live instead of laggy. (1) STREAMED SPEECH — she starts speaking her first sentence while the rest of the answer is still being written, so her first word lands in about a second instead of five. (2) She waits a lot less after you stop talking before she answers. (3) A soft chirp fires the instant she hears you finish, so you never wonder if it registered. (4) Spoken replies are kept to about three sentences — typed chat is unchanged and still gives you the full answer. (5) The voice connection is warmed up the moment you tap the mic. Two switches in Settings → REMINDER ALERTS: ⚡ FAST VOICE and 🔔 HEARD-YOU TONE, both on by default. Also: say “open sentry” (or type /sentry) and your watch station opens in its own window — Ri Ri and Janus both know it. SW v135 · BUILD 2026-07-12-AQ · MEET IRIS, YOUR CREATIVE DIRECTOR: new agent in your roster — a warm, imaginative filmmaker’s eye who helps you conceive and DIRECT visuals using the tools RIRI already has. She art-directs and can fire them for you: /img and /img hq for stills, /vid for short AI videos, /edit to repaint a photo you’ve attached or one open in the viewer. She also gives real guidance — shot lists, trailer structure, color-grade direction, mood and music. She’s honest about limits: no live AR, no body tracking, no 3D export — she’ll offer a generated image or video instead. Say anything about editing, cinematic looks, trailers or shots and she takes over, or pick her from the AGENTS tab. She answers the morning roll call. Upload her a skin like any other agent. SW v134 · BUILD 2026-07-12-AP · CALIBRATE REMOVES EVERYTHING: the ✕ in CALIBRATE now reaches EVERY element on a skin — not just the buttons, but the chat/dialogue box, the location and voice-wave readouts, and even the skin background image itself. Tap ✕ to remove any of them from THIS skin, tap 👁 to bring it back, then SAVE. The background is remove-only (you can’t drag it), everything else still drags and resizes. RESET restores the whole skin. SW v133 · BUILD 2026-07-12-AO · MEET ATLAS, YOUR SPORTS DESK: new agent in your roster — an all-sports anchor who covers every league (NFL, NBA, MLB, NHL, soccer, college, tennis, golf, F1, UFC and more). He leads with the teams in YOUR area and pulls fresh scores, standings and news live off the web before answering, so results are current, not guessed. Say anything sporty — “who won last night”, “latest on the Celtics”, “what’s the score”, “NBA standings” — and he takes over automatically, or pick him from the AGENTS tab. He answers the morning roll call with everyone else. Upload him a skin like any other agent. Set your city in Settings so his local coverage is spot-on. SW v132 · BUILD 2026-07-12-AN · REMOVE CONTROLS PER SKIN: tap ✏️ CALIBRATE on any skin (phone or desktop) and every control now shows a red ✕ in its corner. Tap ✕ to remove that control from THIS skin (it dims), tap the 👁 to bring it back, then SAVE. Removed controls vanish on that skin only and are remembered per device — the same button still works on every other skin. RESET restores them all. SW v131 · BUILD 2026-07-12-AM · CALLIOPE HEARS YOU SING: say \"pitch trainer\" or \"listen to me sing\" — a live trainer opens with her ears on. Pick a target note (or SURPRISE ME), tap HEAR THE NOTE to hear it, START LISTENING and sing: the big readout shows your exact note, the needle shows flat/sharp in cents, hold the green for half a second to score a HIT. When you stop, your real numbers (tries, hits, average cents off, vocal range) are saved and Calliope coaches from them — she genuinely heard you. Works offline, costs nothing. SW v130 · BUILD 2026-07-10-AL · CLOUD SYNC — ONE BRAIN, EVERY DEVICE: Settings now has a CLOUD SYNC section. Point every copy of RIRI at your own private sync worker and her memories, calendar, to-dos, journal, chat history, contacts, custom agents, imported notes, API keys and preferences flow between phone and desktop automatically — on open, every 3 minutes when something changed, and when you switch away. Merging is additive: nothing is ever deleted by a sync. Gallery media and skins stay per-device. SW v129 · BUILD 2026-07-10-AK · ROLL CALL FIXED: Calliope now answers the morning roll call with the rest of the roster, and the auto morning briefing politely waits until the roll call fully finishes before RIRI starts speaking — no more talking over each other. SW v128 · BUILD 2026-07-10-AJ · MEET CALLIOPE, YOUR VOCAL COACH: new agent in your roster — a warm, conservatory-trained singing teacher. Say anything about singing, pitch, breath support or warm-ups and she takes over automatically, or pick her from the AGENTS tab. She gives step-by-step drills you can do on the spot, builds practice plans, and can set practice reminders that speak. Upload her a skin like any other agent. SW v127 · BUILD 2026-07-10-AI · WAKE WORD + MORNING VOICE + PDF BRAIN: (1) Settings → REMINDER ALERTS now has \uD83C\uDF99 WAKE WORD — flip it ON, say \"Hey Riri\" from across the room while the app is open and she answers hands-free (uses more battery, phone stays awake). (2) Say \"good morning\" or \"brief me\" any time and she SPEAKS your full briefing — schedule, open tasks, live weather, top headlines; plus she does it automatically on your first open of the day between 5am and noon (toggle in the same Settings section). (3) Her notes brain already eats PDFs — Settings → knowledge base accepts .pdf, .docx, .txt and .md; feed her anything. SW v126 · BUILD 2026-07-10-AH · STARK SENSES: (1) EYES — attach or snap a photo with \uD83D\uDCCE and ask anything; RIRI now sees it through Gemini vision first (sharper, your key) with the free engine as backup. (2) LIVE KNOWLEDGE — say \"look up X\" or \"what's the latest on X\" and she pulls the live web + Wikipedia into her answer, in character, any agent. (3) REMINDERS THAT SPEAK — when a reminder or event hits its time she now SAYS it out loud and toasts it, always; the OS notification stays as a bonus when Reminder Alerts is ON in Settings. SW v125 · BUILD 2026-07-10-AG · HUD CONTROL + PREMIUM IMAGES: Settings now has 👁 HUD PANELS — seven switches that hide or show the chat box, location, map, voice wave, inspiration, schedule, and to-do panels on EVERY skin at once (dimmed = hidden, remembered forever). And /img hq plus a description uses the premium Puter engine on demand while plain /img stays free and unlimited. SW v124 · BUILD 2026-07-10-AF · PC POWERS + MAX PERSONALITY: say "set up folders in D:/Art" and RIRI creates Music, Videos, Documents, Screenshots, Other there; say "move vacation.jpg to pictures" and she moves it — never deletes, name clashes get (2). Needs agent v1.5 running on the PC. Every agent's personality is now dialed to maximum — full voice, opinions and humor in every reply. SW v123 · BUILD 2026-07-10-AE · VIDEO VAULT + SPECIALIST GRIDS + TEXT SIZE: (1) /vid results now have a ⭐ SAVE button — videos live in your gallery as 🎬 tiles, tap to replay, ✕ to delete. (2) DAILY INSPIRATION, SCHEDULE, TO-DO and LOCATION data now paint on every specialist skin, phone and desktop — drag them into your artwork with CALIBRATE. (3) Settings → 💬 CHAT TEXT SIZE slider resizes the chat text on every AI's skin and the chat bubbles, 80–170%. (Built on AD.) SW v122 · BUILD 2026-07-10-AD · TYPING FIXED + FREE IMAGES FIRST: (1) After using CALIBRATE once, its drag handlers stayed alive forever — every tap on a text box moved the box instead of typing. Now dragging only happens while CALIBRATE edit mode is actually on. (2) /img now tries the always-free image source (Pollinations) FIRST and only touches your Puter credits as a last resort; auto-illustrations never spend Puter credits at all. /edit and /vid still use Puter (no free equivalent exists for those). (Built on AC.) SW v121 · BUILD 2026-07-10-AC · SPECIALIST HUD DATA: the CURRENT LOCATION readout and the VOICE A.F.2 sound wave now light up on every specialist's desktop skin — they only existed on Ri Ri's skins before. Both are calibratable: tap CALIBRATE, drag them into your skin's boxes, SAVE. (Built on AB.) SW v120 · BUILD 2026-07-10-AB · SPECIALIST CHAT FIXED EVERYWHERE: two real bugs found. (1) The painter loop that draws chat text was only wired to Ri Ri's skins — it literally never ran on specialist skins, so their text and threads never appeared. (2) The specialist DESKTOP skin had NO chat box at all — there was nowhere for text to land. Both fixed: every specialist skin (phone + desktop) now shows that AI's live reply and full scrollable thread. The new desktop chat box is calibratable — tap CALIBRATE and drag/resize it to fit your skin art, SAVE remembers it per skin. (Built on Z.) SW v119 · BUILD 2026-07-09-Z · CREATIVE SUITE: /edit + an instruction repaints the photo you attached with 📎 or the image open in the viewer ("/edit make it a watercolor painting"). /vid + a description makes a short AI video (2–3 min wait, view-only for now — screen-record keepers). Say "open my gallery" anywhere to see saved images by voice. AUTO-ILLUSTRATE: your AIs can now decide a picture would help their reply and paint one on their own — sparingly, about one reply in ten, tap ⭐ to keep it. (Built on Y.) SW v117 · PER-AI THREADS FIXED: (V) NOTES BRAIN FIXED — the OneNote import existed but was broken two ways: a hidden variable clash between two note systems silently poisoned both, AND the reader file (mammoth.browser.min.js) was never shipped, so imports always failed. Both fixed — NEW FILE mammoth.browser.min.js required in repo root. Export any OneNote page as Word (.docx), Settings → 📚 IMPORT NOTES, and every AI answers from YOUR notes when they match your question. (W) REAL MOUTH SYNC — her mouth now FREEZES the instant her voice goes quiet between words and sentences, and moves again the instant sound returns. Mouths don't move in silence — now hers doesn't either. (X) DEPLOY + BACKUP by voice were already wired — say "riri deploy" or "back up my art" once the one-time git setup is done (see agent config). (Built on U.) SW v117 · FILE JANITOR (needs PC AGENT v1.3): say "clean my downloads" (works for documents, desktop, pictures, music, videos too) → RIRI scans and tells you what she found, sorted by type. Say "yes, clean it" → she MOVES the loose files into tidy subfolders (Images, Documents, Videos, Music, Archives, Installers, Other) right inside that folder. Nothing is ever deleted; files already in subfolders are never touched; name clashes get a (2). Requires the updated riri-agent.py v1.3 running on the PC. (Built on T.) SW v116 · SCROLL UNBLOCKED: found the real culprit — a CSS setting (justify-content:flex-end) on the skin chat boxes that has silently made scrolling impossible on EVERY build until now, no matter what the code put in the box. Removed on all skin dialogs (mobile, desktop, alt, Kari). Now: swipe/scroll up inside the chat box on any skin and your older messages with THAT AI are right there. Thread stays bottom-anchored when short. (Built on S.) SW v116 · SMARTER MEMORY, EVERY AI: (1) Relevance-ranked recall — when you ask something, RIRI now searches your ENTIRE saved memory store for facts that match your question (not just the newest ones), so old facts resurface exactly when they matter. (2) Journal awareness — your 3 most recent journal entries are quietly available to every AI, referenced gently and only when relevant. (3) No more amnesia — reload the app or switch specialists and back, and each AI continues its own conversation with you right where it left off, fed from its saved thread. No new files. (Built on R.) SW v116 · IMAGE GENERATION: type /img and a description in chat (example: /img a red dragon over Boston) → RIRI paints it with cloud AI (Puter first, Pollinations backup — no GPU needed, works on the Intel PC and phone). The image pops up full-screen with ⭐ SAVE. Saved images live in Settings → 🖼 IMAGE GALLERY (stored in IndexedDB via localForage — survives reloads, no storage cap worries). Tap a gallery thumbnail to enlarge, 🗑 to delete. First image ever may show a one-time Puter sign-in popup — allow it once and it remembers. NEW FILE REQUIRED in repo root: localforage.min.js. (Built on Q.) SW v115 · SKIN chat scrollback fixed: the chat bubble on the Iron-Man/custom skins now holds your FULL saved conversation (up to 80 lines) — scroll up inside it for older messages. It filters to the AI you're talking to: switch specialists and the bubble swaps to that AI's own thread instantly. Survives reloads. The Custom-HUD "OUR CONVERSATION" box shows the same full thread. (Built on P.) SW v115 · Per-AI scrollback: the chat thread now filters to the AI you're talking to — switch to any specialist and you see ONLY your conversation with THAT AI, and each reply bubble is labeled with its name. Older un-tagged messages show under Ri Ri. (Built on O.) SW v115 · Chat scrollback: the standard chat screen now shows your full conversation as a scrollable You ↔ Ri Ri thread below the live reply — scroll up inside it for older messages. Fed by your saved history (last 60 turns), updates live on every reply, and never touches the reply box, voice, or any skin. (Built on N.) SW v115 · Uploaded skins now VISIBLE per specialist: the ALT skin layer (mobile + desktop) finally paints each AI's own uploaded HUD image instead of the generic Iron Man art — the real reason personality skins looked unsaved. Save now MERGES (never wipes a record); added a helper API + a 🐞 SKIN DEBUG button (Settings -> Appearance) that prints the full per-AI store to the console. Build tag shows next to the feature so you can confirm the live build. (Built on M.) SW v115.</span>
         </div>
       </div>
 
@@ -5180,7 +5187,7 @@ function _orbSyncStart(){
     // from the previous reply froze the mouth for the whole of this one.
     var useAnalyser = _voiceAnalyser && _analyserLive() &&
       (_lastVoiceUsed === 'eleven' || _lastVoiceUsed === 'edge' ||
-       _lastVoiceUsed === 'groq-tts' || _lastVoiceUsed === 'poll');
+       _lastVoiceUsed === 'groq-tts' || _lastVoiceUsed === 'cf');
     if (useAnalyser){
       if (!_orbAmpBuf || _orbAmpBuf.length !== _voiceAnalyser.fftSize) _orbAmpBuf = new Uint8Array(_voiceAnalyser.fftSize);
       try {
@@ -7120,6 +7127,33 @@ function _groqSpeak(gk, spoken, gvoice, onDone, onFail){
   })
   .catch(function(){ if(onFail)onFail(); });
 }
+// ══ BUILD BD — CLOUDFLARE VOICE ══════════════════════════════════════
+// Speaks through Reni's own riri-ai Worker. Comes back as base64 on a data:
+// URL, which is same-origin, so unlike the Pollinations route the analyser
+// can read it and the mouth gets real lip sync instead of a synthetic breath.
+function cfSpeak(text, onDone, onFail){
+  if (typeof _cfReady !== 'function' || !_cfReady()){ if (onFail) onFail(); return; }
+  var spoken = String(text || '').slice(0, 1200);
+  if (!spoken){ if (onFail) onFail(); return; }
+  try { elevenStop(); } catch(e){}
+  _cfTTS(spoken, function(j){
+    if (!j || !j.audio){ if (onFail) onFail(); return; }
+    try {
+      var au = new Audio('data:' + (j.mime || 'audio/mpeg') + ';base64,' + j.audio);
+      _elAudio = au;
+      au.onplaying = function(){
+        _lastVoiceUsed = 'cf';
+        try{refreshVoiceStatus();}catch(e){}
+        try{_attachVoiceAnalyser(au);}catch(e){}
+        try{_startIronWave();}catch(e){}
+      };
+      au.onended = function(){ try{_stopIronWave();}catch(e){} if (onDone) onDone(); };
+      au.onerror = function(){ try{_stopIronWave();}catch(e){} if (onFail) onFail(); };
+      au.play().catch(function(){ if (onFail) onFail(); });
+    } catch(e){ if (onFail) onFail(); }
+  }, function(){ if (onFail) onFail(); });
+}
+
 function pollSpeak(text, onDone, onFail, forceVoice, skipGroq){
   var voice = forceVoice || pollVoiceForAgent();
   var spoken = String(text||'').slice(0, 600);
@@ -7138,10 +7172,13 @@ function pollSpeak(text, onDone, onFail, forceVoice, skipGroq){
     encodeURIComponent('Repeat exactly, word for word, and say nothing else: ' + spoken) +
     '?model=openai-audio&voice=' + encodeURIComponent(voice) + '&seed=' + Math.floor(Math.random()*99999);
   var au = new Audio(); _elAudio = au;
-  // BUILD BB: without this the element is cross-origin-tainted, and a tainted
-  // MediaElementAudioSourceNode outputs pure silence — which the gate reads as
-  // "she stopped talking" and freezes the mouth for the whole reply.
-  try { au.crossOrigin = 'anonymous'; } catch(e){}
+  // BUILD BD: BB set crossOrigin='anonymous' here to un-taint the analyser.
+  // Pollinations sends no Access-Control-Allow-Origin, so that flag made the
+  // audio element refuse to load AT ALL and she went silent. Reverted.
+  // The analyser is deliberately NOT attached on this route below — a
+  // cross-origin element feeds it silence anyway, and _analyserLive() from BB
+  // means no analyser simply falls back to the synthetic breath. Mouth still
+  // moves, voice still plays, nothing freezes.
   var settled = false;
   function fail(){
     if (settled) return; settled = true;
@@ -7150,7 +7187,8 @@ function pollSpeak(text, onDone, onFail, forceVoice, skipGroq){
   }
   au.onplaying = function(){
     settled = true; _lastVoiceUsed='poll';
-    try{refreshVoiceStatus();}catch(e){} try{_attachVoiceAnalyser(au);}catch(e){} try{_startIronWave();}catch(e){}
+    // BUILD BD: no _attachVoiceAnalyser here on purpose — see the note above.
+    try{refreshVoiceStatus();}catch(e){} try{_startIronWave();}catch(e){}
   };
   au.onended = function(){ try{_stopIronWave();}catch(e){} if(onDone) onDone(); };
   au.onerror = fail;
@@ -7261,11 +7299,14 @@ function riStreamPump(){
   function done(){ _rsActive = false; riStreamPump(); }
   var mode = SG('aria_voice_mode') || 'auto';
   try {
-    if (mode === 'edge' && (SG('aria_edge_url')||'').trim() && typeof edgeSpeak === 'function') {
+    if (mode === 'cf' && typeof cfSpeak === 'function') {              // BUILD BD
+      cfSpeak(next, done, function(){ _rsBrowserOne(next, done); });
+    } else if (mode === 'edge' && (SG('aria_edge_url')||'').trim() && typeof edgeSpeak === 'function') {
       edgeSpeak(next, done, function(){ _rsBrowserOne(next, done); });
     } else if (mode === 'poll' && typeof pollSpeak === 'function') {   // BUILD AY
       pollSpeak(next, done, function(){ _rsBrowserOne(next, done); });
-    } else if (mode !== 'browser' && mode !== 'poll' && SG('aria_eleven_key') && typeof elevenSpeak === 'function') {
+    } else if (mode !== 'browser' && mode !== 'poll' && mode !== 'cf' && mode !== 'edge'
+               && SG('aria_eleven_key') && typeof elevenSpeak === 'function') {
       elevenSpeak(next, done, function(){ _rsBrowserOne(next, done); });
     } else {
       _rsBrowserOne(next, done);
@@ -7315,6 +7356,13 @@ function doSpeak(text) {
   }
 
 
+  // BUILD BD: Cloudflare — Reni's own riri-ai Worker.
+  if (mode === 'cf') {
+    isSpeaking = true; setOrbState('speaking');
+    cfSpeak(text, _afterSpeak, function(){ pollSpeak(text, _afterSpeak, function(){ _doSpeakBrowser(text); }); });
+    return;
+  }
+
   // BUILD AY: 'poll' (RiRi free voices) had NO branch here, so picking it fell
   // straight through to the ElevenLabs test below and quietly spent credits.
   if (mode === 'poll') {
@@ -7326,7 +7374,8 @@ function doSpeak(text) {
   // Voice mode: 'browser' forces the free browser voice even if an
   // ElevenLabs key is saved. 'eleven' (or unset) uses ElevenLabs when a key exists.
   // 'poll' and 'edge' are handled above, so they can never reach this test.
-  var useEleven = (mode !== 'browser' && mode !== 'poll') && !!SG('aria_eleven_key');
+  var useEleven = (mode !== 'browser' && mode !== 'poll' && mode !== 'cf' && mode !== 'edge')
+                  && !!SG('aria_eleven_key');
 
   if (useEleven) {
     isSpeaking = true; setOrbState('speaking');
@@ -12785,7 +12834,9 @@ function _mdSpeakNext(){
 
   var mode = SG('aria_voice_mode') || 'auto';
   try {
-    if (mode === 'edge' && (SG('aria_edge_url')||'').trim() && typeof edgeSpeak === 'function'){
+    if (mode === 'cf' && typeof cfSpeak === 'function'){                    // BUILD BD
+      cfSpeak(line, after, function(){ _mdBrowserLine(line, after); });
+    } else if (mode === 'edge' && (SG('aria_edge_url')||'').trim() && typeof edgeSpeak === 'function'){
       edgeSpeak(line, after, function(){ _mdBrowserLine(line, after); });   // BUILD AY
     } else if (mode === 'poll' && typeof pollSpeak === 'function'){
       pollSpeak(line, after, function(){ _mdBrowserLine(line, after); });   // BUILD AY
@@ -15981,31 +16032,98 @@ function onSpeakBtn() {
 }
 
 // ── SETTINGS ─────────────────────────────────────────
+// ══ BUILD BE — VOICE STATUS ══════════════════════════════════════════
+// The old readout only knew 'eleven' and 'browser', so picking Edge, RiRi
+// Free or Cloudflare left it saying something untrue. It now names every
+// engine, and shows PICKED and LAST SPOKE separately — if they differ, the
+// one you chose failed and fell back, and it says so out loud.
+var VM_LABEL = {
+  auto:    'Auto',
+  browser: 'Browser voice',
+  cf:      'Cloudflare (your riri-ai Worker)',
+  poll:    'RiRi Free Voices',
+  edge:    'Edge Neural',
+  eleven:  'ElevenLabs'
+};
+var VU_LABEL = {
+  browser:    'Browser voice (free)',
+  cf:         'Cloudflare — your riri-ai Worker',
+  poll:       'RiRi Free — Pollinations',
+  'groq-tts': 'RiRi Free — Groq',
+  edge:       'Edge Neural',
+  eleven:     'ElevenLabs (credits)'
+};
+function _vmPicked(){ return SG('aria_voice_mode') || 'auto'; }
+function _vmReadyMap(){
+  return {
+    browser: true,
+    cf:      (typeof _cfReady === 'function') ? _cfReady() : false,
+    poll:    true,
+    edge:    !!(SG('aria_edge_url')   || '').trim(),
+    eleven:  !!(SG('aria_eleven_key') || '').trim()
+  };
+}
 function refreshVoiceStatus() {
   var st = $('voiceStatus');
   if (!st) return;
-  var key = (SG('aria_eleven_key') || '').trim();
-  var agentName = (currentAgent && currentAgent.name) || 'RI RI';
-  var overrides = jparse(SG('aria_agent_voices'), {}) || {};
-  var agentId = (currentAgent && currentAgent.id) || '';
-  var assigned = agentId && overrides[agentId];
-
-  if (_lastVoiceUsed === 'eleven') {
-    st.className = 'voiceStatus ok';
-    st.innerHTML = '🟢 LAST SPOKE: ElevenLabs voice — ' + escHtml(agentName) +
-      (assigned ? ' (custom voice assigned ✓)' : ' (default voice)');
-  } else if (_lastVoiceUsed === 'browser') {
-    st.className = 'voiceStatus warn';
-    st.innerHTML = key
-      ? '🟡 LAST SPOKE: Browser voice — ElevenLabs did not work, so it fell back. Tap LOAD MY VOICES and assign a ✅ FREE voice.'
-      : '🟡 LAST SPOKE: Browser voice (free). Add an ElevenLabs key below for premium voices.';
-  } else {
-    // nothing has spoken yet this session
-    st.className = key ? 'voiceStatus ok' : 'voiceStatus warn';
-    st.innerHTML = key
-      ? '⚪ ElevenLabs key saved. Tap TEST VOICE — the status will then show which voice actually played.'
-      : '🟡 BROWSER VOICE (free). Add an ElevenLabs key below for premium voices.';
+  var picked = _vmPicked();
+  var ready  = _vmReadyMap();
+  var used   = _lastVoiceUsed || '';
+  var line1  = 'PICKED: ' + (VM_LABEL[picked] || picked);
+  if (picked === 'auto'){
+    line1 += ready.eleven ? ' \u2014 currently ElevenLabs' : ' \u2014 currently Browser voice';
+  } else if (!ready[picked]) {
+    line1 += ' \u2014 NOT SET UP YET';
   }
+
+  var cls, line2;
+  if (!used){
+    cls = 'voiceStatus warn';
+    line2 = 'Nothing has spoken yet. Tap TEST below and this will tell you exactly which engine played.';
+  } else {
+    var usedPicked =
+      (picked === 'poll'   && (used === 'poll' || used === 'groq-tts')) ||
+      (picked === used) ||
+      (picked === 'auto'   && (used === 'eleven' || used === 'browser'));
+    cls = usedPicked ? 'voiceStatus ok' : 'voiceStatus warn';
+    line2 = 'LAST SPOKE: ' + (VU_LABEL[used] || used) +
+            (usedPicked ? '' : '  \u2014 your pick failed, so she dropped to this one.');
+  }
+  st.className = cls;
+  // textContent, not innerHTML \u2014 no markup goes near agent names.
+  st.textContent = (usedPicked === false ? '\u26A0 ' : (used ? '\u2705 ' : '\u26AA ')) + line1 + '  \u00B7  ' + line2;
+  try { _vmPaintRows(); } catch(e){}
+}
+
+// The readiness list under the buttons. Green dot = usable right now.
+function _vmPaintRows(){
+  var el = $('vmReady'); if (!el) return;
+  var r = _vmReadyMap();
+  var gk = (SG('aria_groq_key') || '').trim();
+  var rows = [
+    ['\uD83D\uDD0A Browser', r.browser, 'always ready \u00b7 free \u00b7 unlimited \u00b7 works offline'],
+    ['\u2601 Cloudflare', r.cf, r.cf ? 'your riri-ai Worker \u00b7 best lip sync' : 'set the Worker URL + token in RIRI AI BRIDGE below'],
+    ['\uD83C\uDD93 RiRi Free', r.poll, gk ? 'Groq voice first, then Pollinations \u00b7 free' : 'Pollinations \u00b7 free \u00b7 add a Groq key for better voices'],
+    ['\uD83C\uDF10 Edge', r.edge, r.edge ? 'your edge-tts Worker \u00b7 free' : 'paste your Edge Worker URL below'],
+    ['\u2B50 ElevenLabs', r.eleven, r.eleven ? 'key saved \u00b7 SPENDS CREDITS' : 'paste a key below']
+  ];
+  el.textContent = '';
+  rows.forEach(function(row){
+    var line = document.createElement('div');
+    var dot  = document.createElement('span');
+    dot.textContent = row[1] ? '\u25CF ' : '\u25CB ';
+    dot.style.color = row[1] ? '#5fd35f' : '#ff8080';
+    line.appendChild(dot);
+    var txt = document.createElement('span');
+    txt.textContent = row[0] + ' \u2014 ' + row[2];
+    if (!row[1]) txt.style.opacity = '.65';
+    line.appendChild(txt);
+    el.appendChild(line);
+  });
+  var foot = document.createElement('div');
+  foot.style.cssText = 'margin-top:8px;opacity:.75';
+  foot.textContent = 'If your pick fails she falls to the next one that works, so she never goes silent.';
+  el.appendChild(foot);
 }
 
 function loadCfg() {
@@ -16373,16 +16491,19 @@ window.addEventListener('load', function() {
   };
   // Voice mode toggle — Browser vs ElevenLabs vs Edge Neural
   function _refreshVoiceMode() {
+    // BUILD BE: exactly one button lights, and it is the one actually saved.
+    // The old version derived Browser/ElevenLabs from the key rather than the
+    // saved mode, so AUTO looked identical to a real pick.
     var mode = SG('aria_voice_mode') || 'auto';
-    var usingEdge = (mode === 'edge');
-    var usingPoll = (mode === 'poll');
-    var usingBrowser = !usingEdge && !usingPoll && ((mode === 'browser') || (mode === 'auto' && !SG('aria_eleven_key')));
-    var usingEleven = !usingEdge && !usingPoll && !usingBrowser;
-    var bb = $('vmBrowserBtn'), eb = $('vmElevenBtn'), gb = $('vmEdgeBtn'), pb = $('vmPollBtn');
-    if (bb) bb.classList.toggle('on', usingBrowser);
-    if (eb) eb.classList.toggle('on', usingEleven);
-    if (gb) gb.classList.toggle('on', usingEdge);
-    if (pb) pb.classList.toggle('on', usingPoll);
+    var bb = $('vmBrowserBtn'), eb = $('vmElevenBtn'), gb = $('vmEdgeBtn'),
+        pb = $('vmPollBtn'),    ab = $('vmAutoBtn'),   cb = $('vmCfBtn');
+    if (ab) ab.classList.toggle('on', mode === 'auto');
+    if (bb) bb.classList.toggle('on', mode === 'browser');
+    if (cb) cb.classList.toggle('on', mode === 'cf');
+    if (pb) pb.classList.toggle('on', mode === 'poll');
+    if (gb) gb.classList.toggle('on', mode === 'edge');
+    if (eb) eb.classList.toggle('on', mode === 'eleven');
+    try { _vmPaintRows(); } catch(e){}
     // Re-list the per-agent dropdowns so the active engine's voices are front and center
     try { buildAgentVoiceRows(); } catch(e){}
   }
@@ -16422,6 +16543,51 @@ window.addEventListener('load', function() {
     _refreshVoiceMode();
     toast('Voice mode: RiRi free voices');
     doSpeak('Now using my free neural voice, Reni.');
+  };
+  // BUILD BE — AUTO and CLOUDFLARE were never in the picker.
+  var _vmA = $('vmAutoBtn');
+  if (_vmA) _vmA.onclick = function() {
+    SS('aria_voice_mode', 'auto');
+    _refreshVoiceMode();
+    toast('Voice mode: Auto \u2014 best available');
+    doSpeak('Auto voice, Reni. I will use the best one that works.');
+  };
+  var _vmC = $('vmCfBtn');
+  if (_vmC) _vmC.onclick = function() {
+    if (typeof _cfReady !== 'function' || !_cfReady()){
+      toast('Set the Worker URL and token in RIRI AI BRIDGE first');
+      var f = $('cfUrlIn'); if (f) { try { f.focus(); } catch(e){} }
+      return;
+    }
+    SS('aria_voice_mode', 'cf');
+    _refreshVoiceMode();
+    toast('Voice mode: Cloudflare');
+    doSpeak('Now speaking through my own Cloudflare worker, Reni.');
+  };
+  // One test button that always tests whatever is currently picked, and
+  // reports which engine actually made the sound.
+  var _vmT = $('vmTestBtn'), _vmTS = $('vmTestStat');
+  if (_vmT) _vmT.onclick = function(){
+    var before = _lastVoiceUsed;
+    _lastVoiceUsed = '';
+    if (_vmTS){ _vmTS.textContent = 'Speaking\u2026'; _vmTS.style.color = ''; }
+    doSpeak('Testing one, two. This is the voice you picked, Reni.');
+    setTimeout(function(){
+      if (!_vmTS) return;
+      if (!_lastVoiceUsed){
+        _lastVoiceUsed = before;
+        _vmTS.textContent = 'Nothing played. Check the dots above \u2014 the engine you picked may not be set up.';
+        _vmTS.style.color = '#ff8080';
+      } else {
+        var picked = _vmPicked();
+        var ok = (picked === _lastVoiceUsed) ||
+                 (picked === 'poll' && (_lastVoiceUsed === 'poll' || _lastVoiceUsed === 'groq-tts')) ||
+                 (picked === 'auto');
+        _vmTS.textContent = (ok ? '\u2713 ' : '\u26A0 fell back to ') + (VU_LABEL[_lastVoiceUsed] || _lastVoiceUsed);
+        _vmTS.style.color = ok ? '#5fd35f' : '#ffb070';
+      }
+      try { refreshVoiceStatus(); } catch(e){}
+    }, 4500);
   };
   // Edge URL + voice picker
   buildEdgeVoiceList();
