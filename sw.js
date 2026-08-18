@@ -1,7 +1,7 @@
 /* Ri Ri — service worker
    Caches the app shell so Ri Ri opens instantly and works offline.
    Bump CACHE on every deploy so phones pull the new build. */
-var CACHE = 'riri-v150-2026-08-18';
+var CACHE = 'riri-v152-2026-08-18';
 
 /* App-shell files to pre-cache. CDN scripts are cached lazily at runtime. */
 var SHELL = [
@@ -67,7 +67,13 @@ self.addEventListener('fetch', function (e) {
     /* BUILD BC — Workers AI bridge */
     'riri-ai.renni32.workers.dev',
     /* BUILD BU — nutrition + exercises */
-    'world.openfoodfacts.org', 'wger.de'
+    'world.openfoodfacts.org', 'wger.de',
+    /* BUILD BX — spending, postcodes, elevation */
+    'api.usaspending.gov', 'api.zippopotam.us', 'api.opentopodata.org',
+    /* BUILD BV — books + providers */
+    'openlibrary.org', 'covers.openlibrary.org', 'npiregistry.cms.hhs.gov',
+    /* BUILD BW — archive + federal register */
+    'archive.org', 'www.federalregister.gov'
   ];
   if (liveHosts.indexOf(url.hostname) !== -1) return;
 
@@ -107,6 +113,25 @@ self.addEventListener('fetch', function (e) {
       }).catch(function () { return cached; });
       return cached || live;
     })
+  );
+});
+
+/* ── BUILD BY — BACKGROUND SYNC ────────────────────────────────────────
+   If a cloud-sync push failed because the phone was offline, the page asks
+   Android to fire this the moment the network is back. All it does is tell
+   every open copy of RIRI to try again — the sync logic itself stays in the
+   page where it already lives. On a browser with no Background Sync this
+   listener simply never fires and nothing else changes. */
+self.addEventListener('sync', function (e) {
+  if (e.tag !== 'riri-sync-retry') return;
+  e.waitUntil(
+    self.clients.matchAll({ type: 'window', includeUncontrolled: true })
+      .then(function (list) {
+        list.forEach(function (c) {
+          try { c.postMessage({ ririSyncRetry: true }); } catch (err) {}
+        });
+      })
+      .catch(function () {})
   );
 });
 
