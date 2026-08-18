@@ -1,7 +1,7 @@
 /* Ri Ri — service worker
    Caches the app shell so Ri Ri opens instantly and works offline.
    Bump CACHE on every deploy so phones pull the new build. */
-var CACHE = 'riri-v148-2026-08-18';
+var CACHE = 'riri-v150-2026-08-18';
 
 /* App-shell files to pre-cache. CDN scripts are cached lazily at runtime. */
 var SHELL = [
@@ -65,7 +65,9 @@ self.addEventListener('fetch', function (e) {
     /* BUILD BA — Whisper ears (Groq speech-to-text) */
     'api.groq.com',
     /* BUILD BC — Workers AI bridge */
-    'riri-ai.renni32.workers.dev'
+    'riri-ai.renni32.workers.dev',
+    /* BUILD BU — nutrition + exercises */
+    'world.openfoodfacts.org', 'wger.de'
   ];
   if (liveHosts.indexOf(url.hostname) !== -1) return;
 
