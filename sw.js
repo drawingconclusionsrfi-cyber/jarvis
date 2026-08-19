@@ -1,7 +1,7 @@
 /* Ri Ri — service worker
    Caches the app shell so Ri Ri opens instantly and works offline.
    Bump CACHE on every deploy so phones pull the new build. */
-var CACHE = 'riri-v155-2026-08-19';
+var CACHE = 'riri-v156-2026-08-19';
 
 /* App-shell files to pre-cache. CDN scripts are cached lazily at runtime. */
 var SHELL = [
@@ -117,7 +117,9 @@ self.addEventListener('fetch', function (e) {
     /* BUILD BV — books + providers */
     'openlibrary.org', 'covers.openlibrary.org', 'npiregistry.cms.hhs.gov',
     /* BUILD BW — archive + federal register */
-    'archive.org', 'www.federalregister.gov'
+    'archive.org', 'www.federalregister.gov',
+    /* BUILD CE — world bank numbers + country facts */
+    'api.worldbank.org', 'countries.dev', 'flagcdn.com'
   ];
   if (liveHosts.indexOf(url.hostname) !== -1) return;
 
