@@ -1,7 +1,7 @@
 /* Ri Ri — service worker
    Caches the app shell so Ri Ri opens instantly and works offline.
    Bump CACHE on every deploy so phones pull the new build. */
-var CACHE = 'riri-v154-2026-08-18';
+var CACHE = 'riri-v155-2026-08-19';
 
 /* App-shell files to pre-cache. CDN scripts are cached lazily at runtime. */
 var SHELL = [
