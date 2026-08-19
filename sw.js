@@ -1,7 +1,7 @@
 /* Ri Ri — service worker
    Caches the app shell so Ri Ri opens instantly and works offline.
    Bump CACHE on every deploy so phones pull the new build. */
-var CACHE = 'riri-v153-2026-08-18';
+var CACHE = 'riri-v154-2026-08-18';
 
 /* App-shell files to pre-cache. CDN scripts are cached lazily at runtime. */
 var SHELL = [
@@ -41,6 +41,48 @@ self.addEventListener('activate', function (e) {
         if (k !== CACHE) return caches.delete(k);
       }));
     }).then(function () { return self.clients.claim(); })
+  );
+});
+
+/* ── BUILD CB — SHARE TARGET ───────────────────────────────────────────
+   Android hands a shared file to us as a POST. This listener is deliberately
+   separate from the caching one below so that nothing about normal fetching
+   changes: it answers ONLY a POST to ./share-target and returns early for
+   everything else, leaving the next listener to do its usual job.
+   The payload is stashed in its own cache and the browser is redirected to
+   the app, which picks it up on load — the page is not running yet at the
+   moment the share happens, so there is nobody to postMessage to. */
+self.addEventListener('fetch', function (e) {
+  var u;
+  try { u = new URL(e.request.url); } catch (err) { return; }
+  if (e.request.method !== 'POST' || !/\/share-target\/?$/.test(u.pathname)) return;
+  e.respondWith(
+    e.request.formData().then(function (fd) {
+      var files = fd.getAll('files') || [];
+      return caches.open('riri-share').then(function (c) {
+        var meta = {
+          title: fd.get('title') || '',
+          text:  fd.get('text')  || '',
+          url:   fd.get('url')   || ''
+        };
+        var jobs = [c.put('meta', new Response(JSON.stringify(meta),
+                     { headers: { 'Content-Type': 'application/json' } }))];
+        var f = files.filter(function (x) { return x && x.size; })[0];
+        if (f) {
+          jobs.push(c.put('file', new Response(f, {
+            headers: {
+              'Content-Type': f.type || 'application/octet-stream',
+              'X-Riri-Name': encodeURIComponent(f.name || 'shared')
+            }
+          })));
+        } else {
+          jobs.push(c.delete('file'));
+        }
+        return Promise.all(jobs);
+      });
+    }).catch(function () {}).then(function () {
+      return Response.redirect('./index.html?shared=1', 303);
+    })
   );
 });
 
