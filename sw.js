@@ -1,7 +1,7 @@
 /* Ri Ri — service worker
    Caches the app shell so Ri Ri opens instantly and works offline.
    Bump CACHE on every deploy so phones pull the new build. */
-var CACHE = 'riri-v156-2026-08-19';
+var CACHE = 'riri-v159-2026-08-24';
 
 /* App-shell files to pre-cache. CDN scripts are cached lazily at runtime. */
 var SHELL = [
@@ -119,7 +119,11 @@ self.addEventListener('fetch', function (e) {
     /* BUILD BW — archive + federal register */
     'archive.org', 'www.federalregister.gov',
     /* BUILD CE — world bank numbers + country facts */
-    'api.worldbank.org', 'countries.dev', 'flagcdn.com'
+    'api.worldbank.org', 'countries.dev', 'flagcdn.com',
+    /* BUILD CH — public holidays + earthquakes.
+       nagerholidays.com is the NEW host; date.nager.at 302s here and a
+       cross-origin redirect needs CORS on both ends, so it is never called. */
+    'nagerholidays.com', 'earthquake.usgs.gov'
   ];
   if (liveHosts.indexOf(url.hostname) !== -1) return;
 
@@ -150,6 +154,7 @@ self.addEventListener('fetch', function (e) {
       var live = fetch(req).then(function (res) {
         if (res && res.status === 200 && (url.origin === location.origin ||
             url.hostname === 'cdnjs.cloudflare.com' ||
+            url.hostname === 'cdn.jsdelivr.net' ||   /* BUILD CG — VAD model + wasm */
             url.hostname === 'fonts.googleapis.com' ||
             url.hostname === 'fonts.gstatic.com')) {
           var copy = res.clone();
