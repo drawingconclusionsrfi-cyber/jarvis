@@ -1,7 +1,7 @@
 /* Ri Ri — service worker
    Caches the app shell so Ri Ri opens instantly and works offline.
    Bump CACHE on every deploy so phones pull the new build. */
-var CACHE = 'riri-v185-2026-09-15';
+var CACHE = 'riri-v186-2026-09-15';
 
 /* App-shell files to pre-cache. CDN scripts are cached lazily at runtime. */
 var SHELL = [
@@ -120,6 +120,10 @@ self.addEventListener('fetch', function (e) {
     'archive.org', 'www.federalregister.gov',
     /* BUILD CE — world bank numbers + country facts */
     'api.worldbank.org', 'countries.dev', 'flagcdn.com',
+    /* BUILD DQ — free-to-use pictures for Nexus posts.
+       commons.wikimedia.org answers the search; the other two serve the
+       photos themselves. All three are anonymous CORS (origin=*), no key. */
+    'commons.wikimedia.org', 'upload.wikimedia.org', 'thumb.wikimedia.org',
     /* BUILD CH — public holidays + earthquakes.
        nagerholidays.com is the NEW host; date.nager.at 302s here and a
        cross-origin redirect needs CORS on both ends, so it is never called. */
