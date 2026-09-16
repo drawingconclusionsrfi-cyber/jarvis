@@ -1,7 +1,7 @@
 /* Ri Ri — service worker
    Caches the app shell so Ri Ri opens instantly and works offline.
    Bump CACHE on every deploy so phones pull the new build. */
-var CACHE = 'riri-v187-2026-09-15';
+var CACHE = 'riri-v188-2026-09-15';
 
 /* App-shell files to pre-cache. CDN scripts are cached lazily at runtime. */
 var SHELL = [
@@ -20,7 +20,16 @@ var SHELL = [
   'tab-contacts.png',
   'skin-ironman.png',
   'skin-knightrider.png',
-  'kari-scanbar.mp4'
+  'kari-scanbar.mp4',
+  /* BUILD DS — Drawn RIRI. Seven files: the face and six mouths. The
+     tongue drawing is not used (TH shows the teeth mouth). */
+  'drawn-face.png',
+  'mouth-closed.png',
+  'mouth-wide.png',
+  'mouth-round.png',
+  'mouth-small-round.png',
+  'mouth-medium.png',
+  'mouth-teeth.png'
 ];
 
 self.addEventListener('install', function (e) {
@@ -124,6 +133,8 @@ self.addEventListener('fetch', function (e) {
        commons.wikimedia.org answers the search; the other two serve the
        photos themselves. All three are anonymous CORS (origin=*), no key. */
     'commons.wikimedia.org', 'upload.wikimedia.org', 'thumb.wikimedia.org',
+    /* BUILD DS — Pixabay: the search, and the photos it points at. */
+    'pixabay.com', 'cdn.pixabay.com',
     /* BUILD CH — public holidays + earthquakes.
        nagerholidays.com is the NEW host; date.nager.at 302s here and a
        cross-origin redirect needs CORS on both ends, so it is never called. */
