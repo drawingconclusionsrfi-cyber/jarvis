@@ -6263,6 +6263,11 @@ function dlRender(msg){
   var ch = 0; _dlLibs.forEach(function(l){ ch += l.hdr.chunks; });
   el.textContent = _dlLibs.length + (_dlLibs.length === 1 ? ' library' : ' libraries') + ' · ' + ch + ' passages';
 }
+function dlNote(msg){
+  var o = $('dlOut'); if (!o) return;
+  while (o.firstChild) o.removeChild(o.firstChild);
+  var d = document.createElement('div'); d.className = 'fhint'; d.textContent = msg; o.appendChild(d);
+}
 function dlRelevant(query, text){
   var q = {}, qn = 0; dlTokens(query).forEach(function(t){ if (!q[t]){ q[t] = 1; qn++; } });
   if (!qn) return false;
@@ -6291,9 +6296,9 @@ function dlConnect(fileList){
     });
     if (!idxs.length && packs.length) msg = 'Pick the .idx file too. It goes with the .pack file.';
     else if (!idxs.length) msg = 'Those are not library files. Pick the .idx and .pack files from the drive.';
-    dlRender(); 
-    if (added){ toast('Drive library connected'); if (msg) toast(msg); }
-    else { toast(msg || 'Nothing connected'); dlRender(msg || 'not connected'); }
+    dlRender();
+    if (added){ toast('Drive library connected'); dlNote(msg || 'Connected. Type a word below and tap SEARCH THE DRIVE.'); }
+    else { toast(msg || 'Nothing connected'); dlNote(msg || 'Nothing connected.'); }
   });
 }
 // Best passages across every connected library. Never rejects.
@@ -6305,7 +6310,7 @@ function dlSearchAll(query, k){
   })).then(function(r){
     var all = []; r.forEach(function(a){ all = all.concat(a); });
     all.sort(function(a, b){ return b.score - a.score; });
-    if (errs && errs === libs.length){ _dlLibs = []; dlRender('drive not reachable. Plug it in and tap CONNECT again.'); }
+    if (errs && errs === libs.length){ _dlLibs = []; dlRender(); dlNote('Cannot read the drive. Plug it in and tap CONNECT again.'); }
     return all.slice(0, k);
   }, function(){ return []; });
 }
